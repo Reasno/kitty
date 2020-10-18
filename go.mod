@@ -7,14 +7,19 @@ require (
 	github.com/go-kit/kit v0.10.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.3
+	github.com/google/wire v0.4.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.0.0
 	github.com/kevinburke/go-bindata v3.21.0+incompatible
 	github.com/metaverse/truss v0.2.0
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/oklog/run v1.0.0
 	github.com/pkg/errors v0.9.1
+	github.com/rakyll/statik v0.1.7
+	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v1.1.0
 	github.com/spf13/viper v1.7.1
+	golang.org/x/tools v0.0.0-20200825202427-b303f430e36d
 	google.golang.org/genproto v0.0.0-20201015140912-32ed001d685c
 	google.golang.org/grpc v1.33.0
 )

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/Reasno/kitty/app/svc"
+	"github.com/Reasno/kitty/pkg/middleware"
 	pb "github.com/Reasno/kitty/proto"
 )
 
@@ -28,6 +29,8 @@ func WrapEndpoints(in svc.Endpoints) svc.Endpoints {
 	// How to apply a middleware to a single endpoint.
 	// in.ExampleEndpoint = authMiddleware(in.ExampleEndpoint)
 
+	in.WrapAllExcept(middleware.NewValidationMiddleware())
+	in.WrapAllExcept(middleware.NewErrorMashallerMiddleware())
 	return in
 }
 

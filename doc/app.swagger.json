@@ -11,7 +11,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/Code": {
+    "/v1/code": {
       "get": {
         "operationId": "App_Code",
         "responses": {

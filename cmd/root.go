@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	kitty_log "github.com/Reasno/kitty/pkg/log"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"os"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -11,15 +14,23 @@ import (
 
 var (
 	// Used for flags.
-	cfgFile     string
-	userLicense string
+	cfgFile string
+
+	logger log.Logger
 
 	rootCmd = &cobra.Command{
 		Use:   "kitty",
 		Short: "A Pragmatic and Opinionated Go Application",
-		Long: `Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+		Long:  `Kitty is a starting point to write 12-factor Go Applications.`,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := viper.ReadInConfig(); err != nil {
+				return err
+			}
+			logger = kitty_log.NewLogger(viper.GetString("app_env"))
+			logger = log.With(logger, "subcommand", cmd.Use)
+			_ = level.Debug(logger).Log("config", viper.ConfigFileUsed())
+			return nil
+		},
 	}
 )
 
@@ -31,17 +42,7 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.cobra.yaml)")
-	rootCmd.PersistentFlags().StringP("author", "a", "YOUR NAME", "author name for copyright attribution")
-	rootCmd.PersistentFlags().StringVarP(&userLicense, "license", "l", "", "name of license for the project")
-	rootCmd.PersistentFlags().Bool("viper", true, "use Viper for configuration")
-	viper.BindPFlag("author", rootCmd.PersistentFlags().Lookup("author"))
-	viper.BindPFlag("useViper", rootCmd.PersistentFlags().Lookup("viper"))
-	viper.SetDefault("author", "NAME HERE <EMAIL ADDRESS>")
-	viper.SetDefault("license", "apache")
-
-	//rootCmd.AddCommand(addCmd)
-	//rootCmd.AddCommand(initCmd)
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/kitty.yaml)")
 }
 
 func er(msg interface{}) {
@@ -61,13 +62,11 @@ func initConfig() {
 		}
 
 		// Search config in home directory with name ".cobra" (without extension).
+		viper.AddConfigPath("./config/")
+		viper.AddConfigPath("../config/")
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".cobra")
+		viper.SetConfigName("kitty")
 	}
 
 	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
 }

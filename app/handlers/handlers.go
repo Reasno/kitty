@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-
+	"fmt"
 	pb "github.com/Reasno/kitty/proto"
 )
 
@@ -11,7 +11,8 @@ func NewService() pb.AppServer {
 	return appService{}
 }
 
-type appService struct{}
+type appService struct {
+}
 
 func (s appService) Create(ctx context.Context, in *pb.UserRequest) (*pb.GenericReply, error) {
 	var resp pb.GenericReply
@@ -20,5 +21,7 @@ func (s appService) Create(ctx context.Context, in *pb.UserRequest) (*pb.Generic
 
 func (s appService) Code(ctx context.Context, in *pb.EmptyRequest) (*pb.GenericReply, error) {
 	var resp pb.GenericReply
-	return &resp, nil
+	return &resp, fmt.Errorf("foo")
+	//resp.Message = "fff"
+	//return &resp, nil
 }

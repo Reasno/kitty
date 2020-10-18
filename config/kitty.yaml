@@ -1,0 +1,5 @@
+app_env: local
+http:
+  addr: :8080
+grpc:
+  addr: :9090
