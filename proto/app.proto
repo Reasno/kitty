@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package app.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "kitty";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "A kitty app";
+    version: "1.0";
+  };
+  consumes: "application/json";
+  produces: "application/json";
+};
+
+service App {
+  rpc Create(UserRequest) returns (GenericReply) {
+    option (google.api.http) = {
+      put: "/v1/create"
+      body: "*"
+    };
+  }
+  rpc Code (EmptyRequest) returns (GenericReply) {
+    option (google.api.http) = {
+      get: "/v1/Code"    // Loudness is accepted in the http path
+    };
+  }
+}
+
+message EmptyRequest {}
+
+message GenericReply {
+  int32 code = 1;
+  string message = 2;
+}
+
+message UserRequest {
+  string nick_name = 2 [(validate.rules).string = {max_len: 10}];
+  string real_name = 3;
+  string real_id = 4; // 身份证号
+
+  enum Gender {
+    UNKNOWN = 0;
+    MALE = 1;
+    FEMALE = 2;
+  }
+
+  Gender gender = 5;
+  string autograph = 6;
+  uint32 age = 7;
+  string mobile = 8 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "手机号"}, (validate.rules).string.len = 5] ;
+  int32 code = 9 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "验证码"}]; // 验证码
+  string wechat_open_id = 10 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "微信 openId"}];
+  string qq_open_id = 11 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {description: "QQ openId"}];
+  map<string, string> third_party_ids = 12;
+}

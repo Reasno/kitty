@@ -1,0 +1,169 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "A kitty app",
+    "version": "1.0"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/Code": {
+      "get": {
+        "operationId": "App_Code",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GenericReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/v1/create": {
+      "put": {
+        "operationId": "App_Create",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GenericReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "App"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "UserRequestGender": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "MALE",
+        "FEMALE"
+      ],
+      "default": "UNKNOWN"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1GenericReply": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UserRequest": {
+      "type": "object",
+      "properties": {
+        "nickName": {
+          "type": "string"
+        },
+        "realName": {
+          "type": "string"
+        },
+        "realId": {
+          "type": "string"
+        },
+        "gender": {
+          "$ref": "#/definitions/UserRequestGender"
+        },
+        "autograph": {
+          "type": "string"
+        },
+        "age": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "mobile": {
+          "type": "string",
+          "description": "手机号"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "验证码"
+        },
+        "wechatOpenId": {
+          "type": "string",
+          "description": "微信 openId"
+        },
+        "qqOpenId": {
+          "type": "string",
+          "description": "QQ openId"
+        },
+        "thirdPartyIds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
