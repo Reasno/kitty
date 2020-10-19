@@ -3,8 +3,9 @@ package middleware
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/go-kit/kit/endpoint"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func NewErrorMashallerMiddleware() endpoint.Middleware {
@@ -12,50 +13,80 @@ func NewErrorMashallerMiddleware() endpoint.Middleware {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			response, err = e(ctx, request)
 			if err != nil {
-				rerr := &JsonError{error: err, Code: -1}
-				if t, ok := err.(BusinessCoder); ok {
-					rerr = rerr.WithBusinessCode(t.BusinessCode())
-				}
-				if t, ok := err.(Detailer); ok {
-					rerr = rerr.WithDetail(t.Detail())
-				}
-				err = *rerr
+				err = newJsonError(err)
 			}
 			return response, err
 		}
 	}
 }
 
-type BusinessCoder interface{
-	BusinessCode() int
-}
-
-type Detailer interface{
-	Detail() interface{}
+func newJsonError(e error) JsonError {
+	s, ok := status.FromError(e)
+	if !ok {
+		s = status.New(codes.Unknown, e.Error())
+	}
+	return JsonError{e, s}
 }
 
 type JsonError struct {
 	error `json:"message"`
-	Code int `json:"code"`
-	Detail interface{} `json:"detail"`
+	status *status.Status
 }
 
-func (e *JsonError) WithDetail(detail interface{}) *JsonError  {
-	e.Detail = detail
-	return e
+type jsonRep struct {
+	Code codes.Code `json:"code"`
+	Message string `json:"message"`
+	Details interface{} `json:"details"`
 }
-
-func (e *JsonError) WithBusinessCode(code int) *JsonError {
-	e.Code = code
-	return e
-}
-
 
 func (e JsonError) MarshalJSON() ([]byte, error) {
-	detail, err := json.Marshal(e.Detail)
-	if err != nil || len(detail) <= 0 {
-		detail = []byte("[]")
+	r := jsonRep{
+		e.status.Code(),
+		e.status.Message(),
+		e.status.Details(),
 	}
-	str := fmt.Sprintf("{\"code\": %d, \"message\":\"%s\", \"detail\": %s}", e.Code, e.Error(), detail)
-	return []byte(str), nil
+	return json.Marshal(r)
 }
+
+func (e JsonError) GRPCStatus() *status.Status {
+	return e.status
+}
+
+// StatusCode Implements https status
+func (e JsonError) StatusCode() int {
+	switch e.status.Code() {
+	case codes.OK:
+		return 200
+	case codes.Canceled:
+		return 499
+	case codes.Unknown:
+		return 500
+	case codes.InvalidArgument:
+		return 400
+	case codes.DeadlineExceeded:
+		return 504
+	case codes.NotFound:
+		return 404
+	case codes.AlreadyExists:
+		return 409
+	case codes.PermissionDenied:
+		return 403
+	case codes.ResourceExhausted:
+		return 429
+	case codes.FailedPrecondition:
+		return 400
+	case codes.Aborted:
+		return 409
+	case codes.OutOfRange:
+		return 400
+	case codes.Unimplemented:
+		return 501
+	case codes.DataLoss:
+		return 500
+	case codes.Unauthenticated:
+		return 401
+	default:
+		return 500
+	}
+}
+

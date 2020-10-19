@@ -12,6 +12,7 @@ import (
 	"go/build"
 	"golang.org/x/tools/go/packages"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -263,6 +264,13 @@ func writeGenFile(file io.Reader, path string) error {
 	if err != nil {
 		return errors.Wrapf(err, "cannot create file %v", path)
 	}
+
+	str, err := ioutil.ReadAll(file)
+	if err != nil {
+		return errors.Wrapf(err, "cannot read file")
+	}
+
+	file = strings.NewReader(strings.Replace(string(str), "github.com/gogo/protobuf/jsonpb", "github.com/golang/protobuf/jsonpb", -1))
 
 	_, err = io.Copy(outFile, file)
 	if err != nil {

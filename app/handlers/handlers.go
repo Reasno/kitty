@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	pb "github.com/Reasno/kitty/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // NewService returns a naïve, stateless implementation of Service.
@@ -21,7 +22,5 @@ func (s appService) Create(ctx context.Context, in *pb.UserRequest) (*pb.Generic
 
 func (s appService) Code(ctx context.Context, in *pb.EmptyRequest) (*pb.GenericReply, error) {
 	var resp pb.GenericReply
-	return &resp, fmt.Errorf("foo")
-	//resp.Message = "fff"
-	//return &resp, nil
+	return &resp, status.Error(codes.Aborted, "test")
 }

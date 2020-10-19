@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package grpc.gateway.protoc_gen_openapiv2.options;
+package options;
 
 option go_package = "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options";
 
