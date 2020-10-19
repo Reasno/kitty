@@ -392,7 +392,7 @@ func cleanupOldFiles(servicePath, serviceName string) {
 func executeWire() error {
 	wireExec := exec.Command(
 		"wire",
-		"./internal",
+		"./...",
 	)
 
 	outBytes, err := wireExec.CombinedOutput()

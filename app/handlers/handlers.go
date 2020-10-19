@@ -16,6 +16,7 @@ type appService struct {
 }
 
 func (s appService) Create(ctx context.Context, in *pb.UserRequest) (*pb.GenericReply, error) {
+	s.log.Log("fff", "bbb")
 	var resp pb.GenericReply
 	return &resp, nil
 }
