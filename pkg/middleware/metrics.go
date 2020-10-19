@@ -2,13 +2,12 @@ package middleware
 
 import (
 	"context"
-	"github.com/Reasno/kitty/app/svc"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/metrics"
 	"time"
 )
 
-func NewMetricsMiddleware(his metrics.Histogram, service string) svc.LabeledMiddleware {
+func NewMetricsMiddleware(his metrics.Histogram, service string) LabeledMiddleware {
 	return func(name string, e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			defer func(begin time.Time) { his.With("service", service, "method", name).Observe(time.Since(begin).Seconds()) }(time.Now())

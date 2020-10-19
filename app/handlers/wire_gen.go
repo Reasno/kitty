@@ -7,14 +7,22 @@ package handlers
 
 import (
 	"github.com/Reasno/kitty/proto"
+	"github.com/opentracing/opentracing-go"
 )
 
 // Injectors from wire.go:
 
 func injectAppServer() kitty.AppServer {
-	logger := provideLogger()
+	logger := ProvideLogger()
 	handlersAppService := appService{
 		log: logger,
 	}
 	return handlersAppService
+}
+
+func InjectOpentracingTracer() opentracing.Tracer {
+	logger := ProvideLogger()
+	jaegerLogger := provideJaegerLogAdatper(logger)
+	opentracingTracer := provideOpentracing(jaegerLogger)
+	return opentracingTracer
 }

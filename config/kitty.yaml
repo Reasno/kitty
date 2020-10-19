@@ -1,5 +1,12 @@
+app_name: kitty
 app_env: local
 http:
   addr: :8080
 grpc:
   addr: :9090
+jaeger:
+  sampler:
+    type: 'const'
+    param: 1
+  log:
+    enable: true
