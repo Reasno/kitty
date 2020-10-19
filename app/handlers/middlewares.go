@@ -31,6 +31,7 @@ func WrapEndpoints(in svc.Endpoints) svc.Endpoints {
 
 	in.WrapAllExcept(middleware.NewValidationMiddleware())
 	in.WrapAllExcept(middleware.NewErrorMashallerMiddleware())
+	in.WrapAllLabeledExcept(middleware.NewMetricsMiddleware(provideHistogramMetrics(), "app"))
 	return in
 }
 

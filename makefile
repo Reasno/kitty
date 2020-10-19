@@ -10,4 +10,5 @@ install:
         github.com/gogo/protobuf/protoc-gen-gogofaster \
         github.com/gogo/protobuf/proto \
         github.com/envoyproxy/protoc-gen-validate \
+        github.com/google/wire \
 

@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"github.com/Reasno/kitty/app/handlers"
-	"github.com/Reasno/kitty/app/svc"
-	"github.com/Reasno/kitty/internal"
-	pb "github.com/Reasno/kitty/proto"
+	"github.com/Reasno/kitty/app/register"
+	kitty_http_middleware "github.com/Reasno/kitty/pkg/middleware/http"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
 	"github.com/oklog/run"
@@ -25,7 +24,16 @@ var serveCmd = &cobra.Command{
 	Short: "Start the server",
 	Long:  `Start the gRPC server and HTTP server`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var g run.Group
+		var (
+			g         run.Group
+			httpProviders []func() http.Handler
+			grpcProviders []func(server2 *grpc.Server)
+		)
+
+		// Register generated services
+		{
+			register.RegisterApp(&httpProviders, &grpcProviders)
+		}
 
 		// Start HTTP Server
 		{
@@ -36,16 +44,8 @@ var serveCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			g.Add(func() error {
-				endpoints := internal.InitializeEndpoints()
-				_ = logger.Log("transport", "HTTP", "addr", httpAddr)
-
-				h := svc.MakeHTTPHandler(endpoints)
-
-				router := mux.NewRouter()
-				//router.Handle("/", http.StripPrefix("/", h))
-				router.PathPrefix("/doc/").Handler(getOpenAPIHandler())
-				router.PathPrefix("/").Handler(h)
-				return http.Serve(ln,  router)
+				h := getHttpHandler(ln, httpProviders...)
+				return http.Serve(ln, h)
 			}, func(err error) {
 				_ = ln.Close()
 			})
@@ -60,12 +60,7 @@ var serveCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			g.Add(func() error {
-				endpoints := internal.InitializeEndpoints()
-				_ = logger.Log("transport", "gRPC", "addr", grpcAddr)
-
-				g := svc.MakeGRPCServer(endpoints)
-				s := grpc.NewServer()
-				pb.RegisterAppServer(s, g)
+				s := getGRPCServer(ln, grpcProviders...)
 				return s.Serve(ln)
 			}, func(err error) {
 				_ = ln.Close()
@@ -95,7 +90,28 @@ var serveCmd = &cobra.Command{
 	},
 }
 
-// getOpenAPIHandler serves an OpenAPI UI.
-func getOpenAPIHandler() http.Handler {
-	return http.StripPrefix("/doc",http.FileServer(http.Dir("./doc")))
+func getHttpHandler(ln net.Listener, providers... func() http.Handler) http.Handler {
+	_ = logger.Log("transport", "HTTP", "addr", ln.Addr())
+
+	var r http.Handler
+	for _, p := range providers {
+		rr := p().(*mux.Router)
+		rr.Handle("/", r)
+		r = rr
+	}
+	r = kitty_http_middleware.AddMetricMiddleware()(r)
+	r = kitty_http_middleware.AddDocMiddleware()(r)
+	r = kitty_http_middleware.AddCorsMiddleware()(r)
+	return r
 }
+
+func getGRPCServer(ln net.Listener, providers... func(s *grpc.Server)) *grpc.Server {
+	_ = logger.Log("transport", "gRPC", "addr", ln.Addr())
+
+	s := grpc.NewServer()
+	for _, p := range providers {
+		p(s)
+	}
+	return s
+}
+

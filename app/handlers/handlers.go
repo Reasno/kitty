@@ -3,16 +3,16 @@ package handlers
 import (
 	"context"
 	pb "github.com/Reasno/kitty/proto"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/go-kit/kit/log"
 )
 
 // NewService returns a naïve, stateless implementation of Service.
 func NewService() pb.AppServer {
-	return appService{}
+	return injectAppServer()
 }
 
 type appService struct {
+	log log.Logger
 }
 
 func (s appService) Create(ctx context.Context, in *pb.UserRequest) (*pb.GenericReply, error) {
@@ -21,6 +21,7 @@ func (s appService) Create(ctx context.Context, in *pb.UserRequest) (*pb.Generic
 }
 
 func (s appService) Code(ctx context.Context, in *pb.EmptyRequest) (*pb.GenericReply, error) {
+	s.log.Log("foo", "bar")
 	var resp pb.GenericReply
-	return &resp, status.Error(codes.Aborted, "test")
+	return &resp, nil
 }
