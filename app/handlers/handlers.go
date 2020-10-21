@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"context"
+	"github.com/Reasno/kitty/app/msg"
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/go-kit/kit/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // NewService returns a naïve, stateless implementation of Service.
@@ -15,14 +18,14 @@ type appService struct {
 	log log.Logger
 }
 
-func (s appService) Create(ctx context.Context, in *pb.UserRequest) (*pb.GenericReply, error) {
-	s.log.Log("fff", "bbb")
-	var resp pb.GenericReply
-	return &resp, nil
-}
+func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserLoginReply, error) {
+	if len(in.Wechat) == 0 && len(in.Mobile) == 0 {
+		return nil, status.Error(codes.InvalidArgument, msg.INVALID_PARAMS)
+	}
+	if len(in.Mobile) != 0 && len(in.Code) == 0 {
+		return nil, status.Error(codes.InvalidArgument, msg.INVALID_PARAMS)
+	}
 
-func (s appService) Code(ctx context.Context, in *pb.EmptyRequest) (*pb.GenericReply, error) {
-	s.log.Log("foo", "bar")
-	var resp pb.GenericReply
+	var resp pb.UserLoginReply
 	return &resp, nil
 }

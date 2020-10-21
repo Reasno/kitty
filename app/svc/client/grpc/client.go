@@ -36,67 +36,39 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.AppServer, error) {
 		grpctransport.ClientBefore(
 			contextValuesToGRPCMetadata(cc.headers)),
 	}
-	var createEndpoint endpoint.Endpoint
+	var loginEndpoint endpoint.Endpoint
 	{
-		createEndpoint = grpctransport.NewClient(
+		loginEndpoint = grpctransport.NewClient(
 			conn,
 			"kitty.App",
-			"Create",
-			EncodeGRPCCreateRequest,
-			DecodeGRPCCreateResponse,
-			pb.GenericReply{},
-			clientOptions...,
-		).Endpoint()
-	}
-
-	var codeEndpoint endpoint.Endpoint
-	{
-		codeEndpoint = grpctransport.NewClient(
-			conn,
-			"kitty.App",
-			"Code",
-			EncodeGRPCCodeRequest,
-			DecodeGRPCCodeResponse,
-			pb.GenericReply{},
+			"Login",
+			EncodeGRPCLoginRequest,
+			DecodeGRPCLoginResponse,
+			pb.UserLoginReply{},
 			clientOptions...,
 		).Endpoint()
 	}
 
 	return svc.Endpoints{
-		CreateEndpoint: createEndpoint,
-		CodeEndpoint:   codeEndpoint,
+		LoginEndpoint: loginEndpoint,
 	}, nil
 }
 
 // GRPC Client Decode
 
-// DecodeGRPCCreateResponse is a transport/grpc.DecodeResponseFunc that converts a
-// gRPC create reply to a user-domain create response. Primarily useful in a client.
-func DecodeGRPCCreateResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*pb.GenericReply)
-	return reply, nil
-}
-
-// DecodeGRPCCodeResponse is a transport/grpc.DecodeResponseFunc that converts a
-// gRPC code reply to a user-domain code response. Primarily useful in a client.
-func DecodeGRPCCodeResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*pb.GenericReply)
+// DecodeGRPCLoginResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC login reply to a user-domain login response. Primarily useful in a client.
+func DecodeGRPCLoginResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.UserLoginReply)
 	return reply, nil
 }
 
 // GRPC Client Encode
 
-// EncodeGRPCCreateRequest is a transport/grpc.EncodeRequestFunc that converts a
-// user-domain create request to a gRPC create request. Primarily useful in a client.
-func EncodeGRPCCreateRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*pb.UserRequest)
-	return req, nil
-}
-
-// EncodeGRPCCodeRequest is a transport/grpc.EncodeRequestFunc that converts a
-// user-domain code request to a gRPC code request. Primarily useful in a client.
-func EncodeGRPCCodeRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*pb.EmptyRequest)
+// EncodeGRPCLoginRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain login request to a gRPC login request. Primarily useful in a client.
+func EncodeGRPCLoginRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.UserLoginRequest)
 	return req, nil
 }
 

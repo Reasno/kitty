@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package app.v1;
 
-import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
@@ -19,18 +18,80 @@ option (options.openapiv2_swagger) = {
 };
 
 service App {
-  rpc Create(UserRequest) returns (GenericReply) {
+  rpc Login(UserLoginRequest) returns (UserLoginReply) {
     option (google.api.http) = {
-      put: "/v1/create"
+      put: "/v1/login"
       body: "*"
     };
   }
-  rpc Code (EmptyRequest) returns (GenericReply) {
-    option (google.api.http) = {
-      get: "/v1/code"    // Loudness is accepted in the http path
-    };
-  }
+//  rpc GetUserInfo(UserInfoRequest) returns (UserInfoReply) {
+//    option (google.api.http) = {
+//      put: "/v1/user-info"
+//      body: "*"
+//    };
+//  }
+//  rpc Code (EmptyRequest) returns (GenericReply) {
+//    option (google.api.http) = {
+//      get: "/v1/code"    // Loudness is accepted in the http path
+//    };
+//  }
 }
+
+message UserLoginRequest {
+  string mobile = 1 [
+    (validate.rules).string.pattern = "(^$|^[\\d]{13}$)",
+    (options.openapiv2_field) = {pattern: "(^$|^[\\d]{13}$)"}
+  ];
+  string code = 2;
+  string wechat = 3;
+  string os = 4;
+  string device_id = 5;
+  string channel = 6;
+  string version_code = 7;
+}
+
+message UserLoginReply {
+  int64 id = 1;
+  string user_name = 2;
+  string wechat = 3;
+  string head_img = 4;
+  Gender gender = 5;
+  string birthday = 6;
+  string mobile = 7;
+  int32 read_time = 8;
+  string device_id = 9;
+  string os = 10;
+  string channel = 11;
+  string version_code = 12;
+  bool is_del = 13;
+  string invite_code = 14;
+}
+
+message User {
+  int64 id = 1;
+  string user_name = 2;
+  string wechat = 3;
+  string head_img = 4;
+  Gender gender = 5;
+  string birthday = 6;
+  string mobile = 7;
+  int32 read_time = 8;
+  string device_id = 9;
+  string os = 10;
+  string channel = 11;
+  string version_code = 12;
+  bool is_del = 13;
+  string invite_code = 14;
+}
+
+enum Gender {
+  GENDER_UNKNOWN = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+}
+
+
+message UserInfoRequest {}
 
 message EmptyRequest {
 

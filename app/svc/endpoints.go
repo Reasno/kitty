@@ -33,45 +33,25 @@ import (
 // single type that implements the Service interface. For example, you might
 // construct individual endpoints using transport/http.NewClient, combine them into an Endpoints, and return it to the caller as a Service.
 type Endpoints struct {
-	CreateEndpoint endpoint.Endpoint
-	CodeEndpoint   endpoint.Endpoint
+	LoginEndpoint endpoint.Endpoint
 }
 
 // Endpoints
 
-func (e Endpoints) Create(ctx context.Context, in *pb.UserRequest) (*pb.GenericReply, error) {
-	response, err := e.CreateEndpoint(ctx, in)
+func (e Endpoints) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserLoginReply, error) {
+	response, err := e.LoginEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return response.(*pb.GenericReply), nil
-}
-
-func (e Endpoints) Code(ctx context.Context, in *pb.EmptyRequest) (*pb.GenericReply, error) {
-	response, err := e.CodeEndpoint(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-	return response.(*pb.GenericReply), nil
+	return response.(*pb.UserLoginReply), nil
 }
 
 // Make Endpoints
 
-func MakeCreateEndpoint(s pb.AppServer) endpoint.Endpoint {
+func MakeLoginEndpoint(s pb.AppServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*pb.UserRequest)
-		v, err := s.Create(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return v, nil
-	}
-}
-
-func MakeCodeEndpoint(s pb.AppServer) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*pb.EmptyRequest)
-		v, err := s.Code(ctx, req)
+		req := request.(*pb.UserLoginRequest)
+		v, err := s.Login(ctx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -86,8 +66,7 @@ func MakeCodeEndpoint(s pb.AppServer) endpoint.Endpoint {
 // WrapAllExcept(middleware, "Status", "Ping")
 func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...string) {
 	included := map[string]struct{}{
-		"Create": {},
-		"Code":   {},
+		"Login": {},
 	}
 
 	for _, ex := range excluded {
@@ -98,11 +77,8 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 	}
 
 	for inc := range included {
-		if inc == "Create" {
-			e.CreateEndpoint = middleware(e.CreateEndpoint)
-		}
-		if inc == "Code" {
-			e.CodeEndpoint = middleware(e.CodeEndpoint)
+		if inc == "Login" {
+			e.LoginEndpoint = middleware(e.LoginEndpoint)
 		}
 	}
 }
@@ -118,8 +94,7 @@ type LabeledMiddleware func(string, endpoint.Endpoint) endpoint.Endpoint
 // functionality.
 func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoint) endpoint.Endpoint, excluded ...string) {
 	included := map[string]struct{}{
-		"Create": {},
-		"Code":   {},
+		"Login": {},
 	}
 
 	for _, ex := range excluded {
@@ -130,11 +105,8 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 	}
 
 	for inc := range included {
-		if inc == "Create" {
-			e.CreateEndpoint = middleware("Create", e.CreateEndpoint)
-		}
-		if inc == "Code" {
-			e.CodeEndpoint = middleware("Code", e.CodeEndpoint)
+		if inc == "Login" {
+			e.LoginEndpoint = middleware("Login", e.LoginEndpoint)
 		}
 	}
 }
