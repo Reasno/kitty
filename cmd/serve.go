@@ -102,6 +102,7 @@ func getHttpHandler(ln net.Listener, providers... func() http.Handler) http.Hand
 	r = kitty_http_middleware.AddMetricMiddleware()(r)
 	r = kitty_http_middleware.AddDocMiddleware()(r)
 	r = kitty_http_middleware.AddCorsMiddleware()(r)
+	r = kitty_http_middleware.AddHealthCheck()(r)
 	return r
 }
 

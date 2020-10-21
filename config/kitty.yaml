@@ -1,5 +1,8 @@
 app_name: kitty
 app_env: local
+security:
+  enable: true
+  key: kitt is too good
 http:
   addr: :8080
 grpc:
