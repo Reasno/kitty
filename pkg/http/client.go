@@ -8,11 +8,17 @@ import (
 
 type Client struct {
 	tracer opentracing.Tracer
-	http.Client
+	*http.Client
 }
 
-func NewClient( tracer opentracing.Tracer) *http.Client {
-	return &http.Client{Transport:  &nethttp.Transport{}}
+type Doer interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+
+func NewClient(tracer opentracing.Tracer) *Client {
+	baseClient := &http.Client{Transport:  &nethttp.Transport{}}
+	return &Client{tracer, baseClient}
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {

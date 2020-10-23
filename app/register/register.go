@@ -18,11 +18,11 @@ func RegisterApp(httpProviders *[]func(router *mux.Router), grpcProvider *[]func
 	appServer := handlers.NewService()
 	endpoints := server.NewEndpoints(appServer)
 	*httpProviders = append(*httpProviders, func(r *mux.Router) {
-		r.NotFoundHandler = svc.MakeHTTPHandler(endpoints,
+		r.Handle("/", svc.MakeHTTPHandler(endpoints,
 			httptransport.ServerBefore(opentracing.HTTPToContext(
 				handlers.InjectOpentracingTracer(), "app", handlers.ProvideLogger())),
 			httptransport.ServerBefore(jwt.HTTPToContext()),
-		)
+		))
 	})
 	*grpcProvider = append(*grpcProvider, func(s *grpc.Server) {
 		pb.RegisterAppServer(s, svc.MakeGRPCServer(endpoints,

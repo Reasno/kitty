@@ -29,23 +29,25 @@ func InjectDb() (*gorm.DB, error) {
 
 func injectAppServer() (kitty.AppServer, func(), error) {
 	logger := ProvideLogger()
-	universalClient, cleanup := provideRedis(logger)
-	codeRepo := repository.NewCodeRepo(universalClient)
 	dialector := provideDialector()
 	config := provideGormConfig(logger)
 	db, err := provideGormDB(dialector, config)
 	if err != nil {
-		cleanup()
 		return nil, nil, err
 	}
 	userRepo := repository.NewUserRepo(db)
-	senderConfig := provideSmsConfig()
-	sender := sms.NewSender(senderConfig)
+	universalClient, cleanup := provideRedis(logger)
+	codeRepo := repository.NewCodeRepo(universalClient)
+	jaegerLogger := provideJaegerLogAdatper(logger)
+	tracer := provideOpentracing(jaegerLogger)
+	client := provideHttpClient(tracer)
+	transportConfig := provideSmsConfig(client)
+	transport := sms.NewTransport(transportConfig)
 	handlersAppService := appService{
 		log:    logger,
-		cr:     codeRepo,
 		ur:     userRepo,
-		sender: sender,
+		cr:     codeRepo,
+		sender: transport,
 	}
 	return handlersAppService, func() {
 		cleanup()
@@ -61,4 +63,13 @@ func InjectOpentracingTracer() opentracing.Tracer {
 
 // wire.go:
 
-var DbSet = wire.NewSet(ProvideLogger, provideDialector, provideGormConfig, provideGormDB)
+var DbSet = wire.NewSet(
+	provideDialector,
+	provideGormConfig,
+	provideGormDB,
+)
+
+var OpenTracingSet = wire.NewSet(
+	provideJaegerLogAdatper,
+	provideOpentracing,
+)

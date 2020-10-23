@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	kitty_log "github.com/Reasno/kitty/pkg/log"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -46,7 +45,7 @@ func init() {
 }
 
 func er(msg interface{}) {
-	fmt.Println("Error:", msg)
+	level.Error(logger).Log("err", msg)
 	os.Exit(1)
 }
 
@@ -61,9 +60,8 @@ func initConfig() {
 			er(err)
 		}
 
-		// Search config in home directory with name ".cobra" (without extension).
+		// Search config in home directory with name "kitty" (without extension).
 		viper.AddConfigPath("./config/")
-		viper.AddConfigPath("../config/")
 		viper.AddConfigPath(home)
 		viper.SetConfigName("kitty")
 	}

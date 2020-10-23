@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/Reasno/kitty/app/handlers"
 	"github.com/Reasno/kitty/app/register"
-	kittyhttp "github.com/Reasno/kitty/pkg/middleware/http"
+	kittyhttp "github.com/Reasno/kitty/pkg/http"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
 	"github.com/oklog/run"

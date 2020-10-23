@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+	kittyhttp "github.com/Reasno/kitty/pkg/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -13,30 +14,30 @@ import (
 
 const DATETIMESTRING = "20060102150405"
 
-type Sender struct {
+type Transport struct {
 	tag        string
 	sendUrl    string
 	balanceUrl string
 	userName   string
 	password   string
 	keyPrefix  string
-	client *http.Client
+	client  kittyhttp.Doer
 }
 
-type SenderConfig struct {
+type TransportConfig struct {
 	Tag        string
 	SendUrl    string
 	BalanceUrl string
 	UserName   string
 	Password   string
-	Client *http.Client
+	Client kittyhttp.Doer
 }
 
-func NewSender(config *SenderConfig) *Sender {
+func NewTransport(config *TransportConfig) *Transport {
 	if config.Client == nil {
 		config.Client = http.DefaultClient
 	}
-	return &Sender{
+	return &Transport{
 		tag:        config.Tag,
 		sendUrl:    config.SendUrl,
 		balanceUrl: config.BalanceUrl,
@@ -46,7 +47,7 @@ func NewSender(config *SenderConfig) *Sender {
 	}
 }
 
-func (s *Sender) Send(ctx context.Context, mobile string, content string) error {
+func (s *Transport) Send(ctx context.Context, mobile string, content string) error {
 	now := time.Now().Format(DATETIMESTRING)
 	args := url.Values{}
 	args.Add("content", s.tag+content)
@@ -75,7 +76,7 @@ func (s *Sender) Send(ctx context.Context, mobile string, content string) error 
 	return nil
 }
 
-func (s *Sender) GetBalance(ctx context.Context) (int64, error) {
+func (s *Transport) GetBalance(ctx context.Context) (int64, error) {
 	now := time.Now().Format(DATETIMESTRING)
 	args := url.Values{}
 

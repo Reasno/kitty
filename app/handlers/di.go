@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"fmt"
+	kittyhttp "github.com/Reasno/kitty/pkg/http"
 	logging "github.com/Reasno/kitty/pkg/log"
 	"github.com/Reasno/kitty/pkg/middleware"
-	kittyhttp "github.com/Reasno/kitty/pkg/middleware/http"
 	"github.com/Reasno/kitty/pkg/otgorm"
 	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/Reasno/kitty/pkg/sms"
@@ -22,8 +22,10 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"io"
-	"net/http"
 )
+func provideConfig() *viper {
+	viper.New().WriteConfig()
+}
 
 func ProvideLogger() log.Logger {
 	return log.With(logging.NewLogger(viper.GetString("app_env")), "service", "app")
@@ -39,7 +41,7 @@ func provideHistogramMetrics() metrics.Histogram {
 	return his
 }
 
-func provideHttpClient(tracer opentracing.Tracer) *http.Client {
+func provideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
 	return kittyhttp.NewClient(tracer)
 }
 
@@ -51,13 +53,14 @@ func provideSeurityConfig() *middleware.SecurityConfig {
 	}
 }
 
-func provideSmsConfig() *sms.SenderConfig {
-	return &sms.SenderConfig{
+func provideSmsConfig(doer kittyhttp.Doer) *sms.TransportConfig {
+	return &sms.TransportConfig{
 		Tag:        viper.GetString("sms.tag"),
 		SendUrl:    viper.GetString("sms.send_url"),
 		BalanceUrl: viper.GetString("sms.balance_url"),
 		UserName:   viper.GetString("sms.username"),
 		Password:   viper.GetString("sms.password"),
+		Client:     doer,
 	}
 }
 
