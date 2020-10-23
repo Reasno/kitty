@@ -29,13 +29,13 @@ func newJsonError(e error) JsonError {
 }
 
 type JsonError struct {
-	error `json:"message"`
+	error  `json:"message"`
 	status *status.Status
 }
 
 type jsonRep struct {
-	Code codes.Code `json:"code"`
-	Message string `json:"message"`
+	Code    codes.Code  `json:"code"`
+	Message string      `json:"message"`
 	Details interface{} `json:"details"`
 }
 
@@ -89,4 +89,3 @@ func (e JsonError) StatusCode() int {
 		return 500
 	}
 }
-

@@ -36,12 +36,11 @@ var (
 
 // Execute executes the root command.
 func Execute() error {
+	cobra.OnInitialize(initConfig)
 	return rootCmd.Execute()
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/kitty.yaml)")
 }
 

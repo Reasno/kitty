@@ -68,10 +68,6 @@ var generateCmd = &cobra.Command{
 		}
 
 		cleanupOldFiles(cfg.ServicePath, strings.ToLower(sd.Service.Name))
-
-		//if err = executeWire(); err != nil {
-		//	log.Fatal(err)
-		//}
 	},
 }
 
@@ -403,5 +399,3 @@ func executeWire() error {
 	}
 	return nil
 }
-
-

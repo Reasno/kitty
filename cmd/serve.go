@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/Reasno/kitty/app/handlers"
 	"github.com/Reasno/kitty/app/register"
-	kitty_http_middleware "github.com/Reasno/kitty/pkg/middleware/http"
+	kittyhttp "github.com/Reasno/kitty/pkg/middleware/http"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
 	"github.com/oklog/run"
@@ -25,14 +25,17 @@ var serveCmd = &cobra.Command{
 	Long:  `Start the gRPC server and HTTP server`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var (
-			g         run.Group
-			httpProviders []func() http.Handler
-			grpcProviders []func(server2 *grpc.Server)
+			g             run.Group
+			httpProviders []func(router *mux.Router)
+			grpcProviders []func(server *grpc.Server)
 		)
 
 		// Register generated services
 		{
 			register.RegisterApp(&httpProviders, &grpcProviders)
+			kittyhttp.RegisterDoc(&httpProviders, &grpcProviders)
+			kittyhttp.RegisterHealthCheck(&httpProviders, &grpcProviders)
+			kittyhttp.RegisterMetrics(&httpProviders, &grpcProviders)
 		}
 
 		// Start HTTP Server
@@ -90,23 +93,19 @@ var serveCmd = &cobra.Command{
 	},
 }
 
-func getHttpHandler(ln net.Listener, providers... func() http.Handler) http.Handler {
+func getHttpHandler(ln net.Listener, providers ...func(*mux.Router)) http.Handler {
 	_ = logger.Log("transport", "HTTP", "addr", ln.Addr())
 
-	var r http.Handler
+	var handler http.Handler
+	var router = mux.NewRouter()
 	for _, p := range providers {
-		rr := p().(*mux.Router)
-		rr.Handle("/", r)
-		r = rr
+		p(router)
 	}
-	r = kitty_http_middleware.AddMetricMiddleware()(r)
-	r = kitty_http_middleware.AddDocMiddleware()(r)
-	r = kitty_http_middleware.AddCorsMiddleware()(r)
-	r = kitty_http_middleware.AddHealthCheck()(r)
-	return r
+	handler = kittyhttp.AddCorsMiddleware()(handler)
+	return handler
 }
 
-func getGRPCServer(ln net.Listener, providers... func(s *grpc.Server)) *grpc.Server {
+func getGRPCServer(ln net.Listener, providers ...func(s *grpc.Server)) *grpc.Server {
 	_ = logger.Log("transport", "gRPC", "addr", ln.Addr())
 
 	s := grpc.NewServer()
@@ -115,4 +114,3 @@ func getGRPCServer(ln net.Listener, providers... func(s *grpc.Server)) *grpc.Ser
 	}
 	return s
 }
-

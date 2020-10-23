@@ -16,7 +16,14 @@ func AddDocMiddleware() func(handler http.Handler) http.Handler {
 	}
 }
 
+func RegisterDoc(httpProviders *[]func(router *mux.Router), _ interface{}) {
+	*httpProviders = append(*httpProviders, func(router *mux.Router) {
+		router.PathPrefix("/doc/").Handler(getOpenAPIHandler())
+		router.PathPrefix("/doc").Handler(http.RedirectHandler("/doc/", 302))
+	})
+}
+
 // getOpenAPIHandler serves an OpenAPI UI.
 func getOpenAPIHandler() http.Handler {
-	return http.StripPrefix("/doc",http.FileServer(http.Dir("./doc")))
+	return http.StripPrefix("/doc", http.FileServer(http.Dir("./doc")))
 }

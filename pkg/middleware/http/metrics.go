@@ -1,4 +1,4 @@
-package http// AddDocMiddleware returns a documentation path at /doc/
+package http // AddDocMiddleware returns a documentation path at /doc/
 import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -12,4 +12,10 @@ func AddMetricMiddleware() func(handler http.Handler) http.Handler {
 		router.PathPrefix("/").Handler(handler)
 		return router
 	}
+}
+
+func RegisterMetrics(httpProviders *[]func(router *mux.Router), _ interface{}) {
+	*httpProviders = append(*httpProviders, func(router *mux.Router) {
+		router.PathPrefix("/metrics").Handler(promhttp.Handler())
+	})
 }

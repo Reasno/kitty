@@ -5,6 +5,7 @@ package app.v1;
 import "google/api/annotations.proto";
 import "protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "kitty";
 
@@ -20,16 +21,15 @@ option (options.openapiv2_swagger) = {
 service App {
   rpc Login(UserLoginRequest) returns (UserLoginReply) {
     option (google.api.http) = {
-      put: "/v1/login"
+      post: "/v1/login"
       body: "*"
     };
   }
-//  rpc GetUserInfo(UserInfoRequest) returns (UserInfoReply) {
-//    option (google.api.http) = {
-//      put: "/v1/user-info"
-//      body: "*"
-//    };
-//  }
+  rpc GetCode(GetCodeRequest) returns (GenericReply) {
+    option (google.api.http) = {
+      get: "/v1/code"
+    };
+  }
 //  rpc Code (EmptyRequest) returns (GenericReply) {
 //    option (google.api.http) = {
 //      get: "/v1/code"    // Loudness is accepted in the http path
@@ -44,44 +44,34 @@ message UserLoginRequest {
   ];
   string code = 2;
   string wechat = 3;
-  string os = 4;
-  string device_id = 5;
-  string channel = 6;
-  string version_code = 7;
+  Device device = 4;
+  string channel = 5;
+  string version_code = 6;
+}
+
+message Device {
+  enum OS {
+    OS_UNKNOWN = 0;
+    IOS = 1;
+    ANDROID = 2;
+  }
+  string imei = 1;
+  string idfa = 2;
+  string android_id = 3;
+  string suuid = 4;
+  string mac = 5;
+  OS os = 6;
+  string oaid = 7;
 }
 
 message UserLoginReply {
-  int64 id = 1;
+  uint64 id = 1;
   string user_name = 2;
   string wechat = 3;
   string head_img = 4;
   Gender gender = 5;
   string birthday = 6;
-  string mobile = 7;
-  int32 read_time = 8;
-  string device_id = 9;
-  string os = 10;
-  string channel = 11;
-  string version_code = 12;
-  bool is_del = 13;
-  string invite_code = 14;
-}
-
-message User {
-  int64 id = 1;
-  string user_name = 2;
-  string wechat = 3;
-  string head_img = 4;
-  Gender gender = 5;
-  string birthday = 6;
-  string mobile = 7;
-  int32 read_time = 8;
-  string device_id = 9;
-  string os = 10;
-  string channel = 11;
-  string version_code = 12;
-  bool is_del = 13;
-  string invite_code = 14;
+  string token = 7;
 }
 
 enum Gender {
@@ -90,6 +80,12 @@ enum Gender {
   GENDER_FEMALE = 2;
 }
 
+message GetCodeRequest {
+  string mobile = 1 [
+    (options.openapiv2_field) = {required: "true", pattern: "^[\\d]{13}$"},
+    (validate.rules).string = {pattern: "^[\\d]{13}$"}
+  ];
+}
 
 message UserInfoRequest {}
 
@@ -98,9 +94,8 @@ message EmptyRequest {
 }
 
 message GenericReply {
-  int32 code = 1;
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
   string message = 2;
-
 }
 
 message UserRequest {

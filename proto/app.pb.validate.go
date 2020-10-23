@@ -55,9 +55,15 @@ func (m *UserLoginRequest) Validate() error {
 
 	// no validation rules for Wechat
 
-	// no validation rules for Os
-
-	// no validation rules for DeviceId
+	if v, ok := interface{}(m.GetDevice()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserLoginRequestValidationError{
+				field:  "Device",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	// no validation rules for Channel
 
@@ -122,6 +128,84 @@ var _ interface {
 
 var _UserLoginRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{13}$)")
 
+// Validate checks the field values on Device with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Device) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Imei
+
+	// no validation rules for Idfa
+
+	// no validation rules for AndroidId
+
+	// no validation rules for Suuid
+
+	// no validation rules for Mac
+
+	// no validation rules for Os
+
+	// no validation rules for Oaid
+
+	return nil
+}
+
+// DeviceValidationError is the validation error returned by Device.Validate if
+// the designated constraints aren't met.
+type DeviceValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeviceValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeviceValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeviceValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeviceValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeviceValidationError) ErrorName() string { return "DeviceValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DeviceValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDevice.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeviceValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeviceValidationError{}
+
 // Validate checks the field values on UserLoginReply with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
@@ -142,21 +226,7 @@ func (m *UserLoginReply) Validate() error {
 
 	// no validation rules for Birthday
 
-	// no validation rules for Mobile
-
-	// no validation rules for ReadTime
-
-	// no validation rules for DeviceId
-
-	// no validation rules for Os
-
-	// no validation rules for Channel
-
-	// no validation rules for VersionCode
-
-	// no validation rules for IsDel
-
-	// no validation rules for InviteCode
+	// no validation rules for Token
 
 	return nil
 }
@@ -215,47 +285,27 @@ var _ interface {
 	ErrorName() string
 } = UserLoginReplyValidationError{}
 
-// Validate checks the field values on User with the rules defined in the proto
-// definition for this message. If any rules are violated, an error is returned.
-func (m *User) Validate() error {
+// Validate checks the field values on GetCodeRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *GetCodeRequest) Validate() error {
 	if m == nil {
 		return nil
 	}
 
-	// no validation rules for Id
-
-	// no validation rules for UserName
-
-	// no validation rules for Wechat
-
-	// no validation rules for HeadImg
-
-	// no validation rules for Gender
-
-	// no validation rules for Birthday
-
-	// no validation rules for Mobile
-
-	// no validation rules for ReadTime
-
-	// no validation rules for DeviceId
-
-	// no validation rules for Os
-
-	// no validation rules for Channel
-
-	// no validation rules for VersionCode
-
-	// no validation rules for IsDel
-
-	// no validation rules for InviteCode
+	if !_GetCodeRequest_Mobile_Pattern.MatchString(m.GetMobile()) {
+		return GetCodeRequestValidationError{
+			field:  "Mobile",
+			reason: "value does not match regex pattern \"^[\\\\d]{13}$\"",
+		}
+	}
 
 	return nil
 }
 
-// UserValidationError is the validation error returned by User.Validate if the
-// designated constraints aren't met.
-type UserValidationError struct {
+// GetCodeRequestValidationError is the validation error returned by
+// GetCodeRequest.Validate if the designated constraints aren't met.
+type GetCodeRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -263,22 +313,22 @@ type UserValidationError struct {
 }
 
 // Field function returns field value.
-func (e UserValidationError) Field() string { return e.field }
+func (e GetCodeRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e UserValidationError) Reason() string { return e.reason }
+func (e GetCodeRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e UserValidationError) Cause() error { return e.cause }
+func (e GetCodeRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e UserValidationError) Key() bool { return e.key }
+func (e GetCodeRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e UserValidationError) ErrorName() string { return "UserValidationError" }
+func (e GetCodeRequestValidationError) ErrorName() string { return "GetCodeRequestValidationError" }
 
 // Error satisfies the builtin error interface
-func (e UserValidationError) Error() string {
+func (e GetCodeRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -290,14 +340,14 @@ func (e UserValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sUser.%s: %s%s",
+		"invalid %sGetCodeRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = UserValidationError{}
+var _ error = GetCodeRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -305,7 +355,9 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = UserValidationError{}
+} = GetCodeRequestValidationError{}
+
+var _GetCodeRequest_Mobile_Pattern = regexp.MustCompile("^[\\d]{13}$")
 
 // Validate checks the field values on UserInfoRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an

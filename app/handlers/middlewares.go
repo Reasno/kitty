@@ -30,7 +30,7 @@ func WrapEndpoints(in svc.Endpoints) svc.Endpoints {
 	// in.ExampleEndpoint = authMiddleware(in.ExampleEndpoint)
 
 	in.WrapAllExcept(middleware.NewValidationMiddleware())
-	in.WrapAllExcept(middleware.NewAuthenticationMiddleware())
+	in.WrapAllExcept(middleware.NewAuthenticationMiddleware(provideSeurityConfig()), "Login", "GetCode")
 	in.WrapAllExcept(middleware.NewErrorMashallerMiddleware())
 	in.WrapAllLabeledExcept(middleware.NewMetricsMiddleware(provideHistogramMetrics(), "app"))
 	in.WrapAllLabeledExcept(middleware.NewTraceMiddleware(InjectOpentracingTracer(), "app"))

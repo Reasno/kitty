@@ -2,18 +2,22 @@ package handlers
 
 import (
 	"fmt"
+	logging "github.com/Reasno/kitty/pkg/log"
+	"github.com/Reasno/kitty/pkg/middleware"
+	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/kit/metrics"
 	"github.com/go-kit/kit/metrics/prometheus"
+	"github.com/go-redis/redis/v8"
 	"github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
-	logging "github.com/Reasno/kitty/pkg/log"
-	jaegermetric "github.com/uber/jaeger-lib/metrics"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
-
-	"github.com/go-kit/kit/metrics"
+	jaegermetric "github.com/uber/jaeger-lib/metrics"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"io"
 )
 
 func ProvideLogger() log.Logger {
@@ -24,31 +28,51 @@ func provideHistogramMetrics() metrics.Histogram {
 	var his metrics.Histogram = prometheus.NewHistogramFrom(stdprometheus.HistogramOpts{
 		Namespace: viper.GetString("app_name"),
 		Subsystem: viper.GetString("app_env"),
-		Name:     "request_duration_seconds",
-		Help:     "Total time spent serving requests.",
+		Name:      "request_duration_seconds",
+		Help:      "Total time spent serving requests.",
 	}, []string{"service", "method"})
 	return his
 }
 
-type logAdapter struct {
-	logging log.Logger
+func provideSeurityConfig() *middleware.SecurityConfig {
+	return &middleware.SecurityConfig{
+		Enable: viper.GetBool("security.enable"),
+		JwtKey: viper.GetString("security.key"),
+		JwtId:  viper.GetString("security.kid"),
+	}
 }
 
-func (l logAdapter) Infof(msg string, args... interface{})  {
-	level.Info(l.logging).Log("msg", fmt.Sprintf(msg, args...))
+func provideSmsConfig() *sms.SenderConfig {
+	return &sms.SenderConfig{
+		Tag:        viper.GetString("sms.tag"),
+		SendUrl:    viper.GetString("sms.send_url"),
+		BalanceUrl: viper.GetString("sms.balance_url"),
+		UserName:   viper.GetString("sms.username"),
+		Password:   viper.GetString("sms.password"),
+	}
 }
 
-func (l logAdapter) Error(msg string) {
-	level.Error(l.logging).Log("msg", msg)
-}
-func provideJaegerLogAdatper(logging log.Logger) jaeger.Logger {
-	return logAdapter{logging: logging}
+func provideRedis() *redis.Client {
+	return redis.NewClient(&redis.Options{})
 }
 
-var tracer opentracing.Tracer
+func provideDialector() gorm.Dialector {
+	return sqlite.Open("test.db")
+}
+
+func provideGormConfig(l log.Logger) *gorm.Config {
+	return &gorm.Config{
+		Logger: &logging.GormLogAdapter{l},
+	}
+}
+
+func provideJaegerLogAdatper(l log.Logger) jaeger.Logger {
+	return &logging.JaegerLogAdapter{Logging: l}
+}
+
 func provideOpentracing(log jaeger.Logger) opentracing.Tracer {
-	if tracer != nil {
-		return tracer
+	if opentracing.IsGlobalTracerRegistered() {
+		return opentracing.GlobalTracer()
 	}
 	cfg := jaegercfg.Configuration{
 		Sampler: &jaegercfg.SamplerConfig{
@@ -66,15 +90,25 @@ func provideOpentracing(log jaeger.Logger) opentracing.Tracer {
 	jMetricsFactory := jaegermetric.NullFactory
 
 	// Initialize tracer with a logger and a metrics factory
-	var err error
-	jaegerCloser, err = cfg.InitGlobalTracer(
+	var (
+		tracer   opentracing.Tracer
+		canceler io.Closer
+		err      error
+	)
+	canceler, err = cfg.InitGlobalTracer(
 		viper.GetString("app_name"),
 		jaegercfg.Logger(jLogger),
 		jaegercfg.Metrics(jMetricsFactory),
 	)
 	if err != nil {
 		log.Error(fmt.Sprintf("Could not initialize jaeger tracer: %s", err.Error()))
+		panic(err)
 	}
 	tracer = opentracing.GlobalTracer()
+	destruct.Add(func() {
+		if err := canceler.Close(); err != nil {
+			log.Error(err.Error())
+		}
+	})
 	return tracer
 }

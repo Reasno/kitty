@@ -35,12 +35,19 @@ func MakeGRPCServer(endpoints Endpoints, options ...grpctransport.ServerOption) 
 			EncodeGRPCLoginResponse,
 			serverOptions...,
 		),
+		getcode: grpctransport.NewServer(
+			endpoints.GetCodeEndpoint,
+			DecodeGRPCGetCodeRequest,
+			EncodeGRPCGetCodeResponse,
+			serverOptions...,
+		),
 	}
 }
 
 // grpcServer implements the AppServer interface
 type grpcServer struct {
-	login grpctransport.Handler
+	login   grpctransport.Handler
+	getcode grpctransport.Handler
 }
 
 // Methods for grpcServer to implement AppServer interface
@@ -53,6 +60,14 @@ func (s *grpcServer) Login(ctx context.Context, req *pb.UserLoginRequest) (*pb.U
 	return rep.(*pb.UserLoginReply), nil
 }
 
+func (s *grpcServer) GetCode(ctx context.Context, req *pb.GetCodeRequest) (*pb.GenericReply, error) {
+	_, rep, err := s.getcode.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.GenericReply), nil
+}
+
 // Server Decode
 
 // DecodeGRPCLoginRequest is a transport/grpc.DecodeRequestFunc that converts a
@@ -62,12 +77,26 @@ func DecodeGRPCLoginRequest(_ context.Context, grpcReq interface{}) (interface{}
 	return req, nil
 }
 
+// DecodeGRPCGetCodeRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC getcode request to a user-domain getcode request. Primarily useful in a server.
+func DecodeGRPCGetCodeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetCodeRequest)
+	return req, nil
+}
+
 // Server Encode
 
 // EncodeGRPCLoginResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain login response to a gRPC login reply. Primarily useful in a server.
 func EncodeGRPCLoginResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.UserLoginReply)
+	return resp, nil
+}
+
+// EncodeGRPCGetCodeResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain getcode response to a gRPC getcode reply. Primarily useful in a server.
+func EncodeGRPCGetCodeResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.GenericReply)
 	return resp, nil
 }
 

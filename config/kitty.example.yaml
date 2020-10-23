@@ -1,0 +1,22 @@
+app_name: kitty
+app_env: local
+security:
+  enable: true
+  kid: kitty
+  key: asdvAScvy82d
+http:
+  addr: :8080
+grpc:
+  addr: :9090
+jaeger:
+  sampler:
+    type: 'const'
+    param: 1
+  log:
+    enable: true
+sms:
+  send_url: "http://hy.mix2.zthysms.com/sendSms.do"
+  balance_url: "http://hy.mix2.zthysms.com/balance.do"
+  username: ""
+  password: ""
+  tag: "【KITTY】"

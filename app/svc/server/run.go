@@ -60,11 +60,13 @@ func NewEndpoints(service pb.AppServer) svc.Endpoints {
 
 	// Endpoint domain.
 	var (
-		loginEndpoint = svc.MakeLoginEndpoint(service)
+		loginEndpoint   = svc.MakeLoginEndpoint(service)
+		getcodeEndpoint = svc.MakeGetCodeEndpoint(service)
 	)
 
 	endpoints := svc.Endpoints{
-		LoginEndpoint: loginEndpoint,
+		LoginEndpoint:   loginEndpoint,
+		GetCodeEndpoint: getcodeEndpoint,
 	}
 
 	// Wrap selected Endpoints with middlewares. See handlers/middlewares.go

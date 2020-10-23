@@ -11,6 +11,6 @@ type LabeledMiddleware func(string, endpoint.Endpoint) endpoint.Endpoint
 
 func NewTraceMiddleware(tracer stdtracing.Tracer, service string) LabeledMiddleware {
 	return func(s string, endpoint endpoint.Endpoint) endpoint.Endpoint {
-		return opentracing.TraceServer(tracer,service + "." + s)(endpoint)
+		return opentracing.TraceServer(tracer, service+"."+s)(endpoint)
 	}
 }

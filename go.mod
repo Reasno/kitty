@@ -7,6 +7,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.4.1
 	github.com/go-kit/kit v0.10.0
+	github.com/go-redis/redis/v8 v8.3.2
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.3
 	github.com/google/wire v0.4.0
@@ -30,4 +31,6 @@ require (
 	google.golang.org/genproto v0.0.0-20201015140912-32ed001d685c
 	google.golang.org/grpc v1.33.0
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
+	gorm.io/driver/sqlite v1.1.3
+	gorm.io/gorm v1.20.4
 )

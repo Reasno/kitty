@@ -11,8 +11,38 @@
     "application/json"
   ],
   "paths": {
+    "/v1/code": {
+      "get": {
+        "operationId": "App_GetCode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GenericReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "mobile",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "App"
+        ]
+      }
+    },
     "/v1/login": {
-      "put": {
+      "post": {
         "operationId": "App_Login",
         "responses": {
           "200": {
@@ -45,6 +75,15 @@
     }
   },
   "definitions": {
+    "DeviceOS": {
+      "type": "string",
+      "enum": [
+        "OS_UNKNOWN",
+        "IOS",
+        "ANDROID"
+      ],
+      "default": "OS_UNKNOWN"
+    },
     "appv1Gender": {
       "type": "string",
       "enum": [
@@ -84,12 +123,50 @@
         }
       }
     },
+    "v1Device": {
+      "type": "object",
+      "properties": {
+        "imei": {
+          "type": "string"
+        },
+        "idfa": {
+          "type": "string"
+        },
+        "androidId": {
+          "type": "string"
+        },
+        "suuid": {
+          "type": "string"
+        },
+        "mac": {
+          "type": "string"
+        },
+        "os": {
+          "$ref": "#/definitions/DeviceOS"
+        },
+        "oaid": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GenericReply": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
     "v1UserLoginReply": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string",
-          "format": "int64"
+          "format": "uint64"
         },
         "userName": {
           "type": "string"
@@ -106,29 +183,7 @@
         "birthday": {
           "type": "string"
         },
-        "mobile": {
-          "type": "string"
-        },
-        "readTime": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "deviceId": {
-          "type": "string"
-        },
-        "os": {
-          "type": "string"
-        },
-        "channel": {
-          "type": "string"
-        },
-        "versionCode": {
-          "type": "string"
-        },
-        "isDel": {
-          "type": "boolean"
-        },
-        "inviteCode": {
+        "token": {
           "type": "string"
         }
       }
@@ -146,11 +201,8 @@
         "wechat": {
           "type": "string"
         },
-        "os": {
-          "type": "string"
-        },
-        "deviceId": {
-          "type": "string"
+        "device": {
+          "$ref": "#/definitions/v1Device"
         },
         "channel": {
           "type": "string"

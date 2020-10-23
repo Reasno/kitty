@@ -18,8 +18,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/jsonpb"
 
 	"context"
 
@@ -55,9 +55,16 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 	serverOptions = append(serverOptions, options...)
 	m := mux.NewRouter()
 
-	m.Methods("PUT").Path("/v1/login").Handler(httptransport.NewServer(
+	m.Methods("POST").Path("/v1/login").Handler(httptransport.NewServer(
 		endpoints.LoginEndpoint,
 		DecodeHTTPLoginZeroRequest,
+		EncodeHTTPGenericResponse,
+		serverOptions...,
+	))
+
+	m.Methods("GET").Path("/v1/code").Handler(httptransport.NewServer(
+		endpoints.GetCodeEndpoint,
+		DecodeHTTPGetCodeZeroRequest,
 		EncodeHTTPGenericResponse,
 		serverOptions...,
 	))
@@ -146,6 +153,48 @@ func DecodeHTTPLoginZeroRequest(_ context.Context, r *http.Request) (interface{}
 
 	queryParams := r.URL.Query()
 	_ = queryParams
+
+	return &req, err
+}
+
+// DecodeHTTPGetCodeZeroRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded getcode request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPGetCodeZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	defer r.Body.Close()
+	var req pb.GetCodeRequest
+	buf, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read body of http request")
+	}
+	if len(buf) > 0 {
+		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
+		unmarshaller := jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		}
+		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
+			const size = 8196
+			if len(buf) > size {
+				buf = buf[:size]
+			}
+			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
+				http.StatusBadRequest,
+				nil,
+			}
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := r.URL.Query()
+	_ = queryParams
+
+	if MobileGetCodeStrArr, ok := queryParams["mobile"]; ok {
+		MobileGetCodeStr := MobileGetCodeStrArr[0]
+		MobileGetCode := MobileGetCodeStr
+		req.Mobile = MobileGetCode
+	}
 
 	return &req, err
 }

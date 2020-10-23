@@ -53,16 +53,27 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 	var LoginZeroEndpoint endpoint.Endpoint
 	{
 		LoginZeroEndpoint = httptransport.NewClient(
-			"PUT",
+			"POST",
 			copyURL(u, "/v1/login"),
 			EncodeHTTPLoginZeroRequest,
 			DecodeHTTPLoginResponse,
 			options...,
 		).Endpoint()
 	}
+	var GetCodeZeroEndpoint endpoint.Endpoint
+	{
+		GetCodeZeroEndpoint = httptransport.NewClient(
+			"GET",
+			copyURL(u, "/v1/code"),
+			EncodeHTTPGetCodeZeroRequest,
+			DecodeHTTPGetCodeResponse,
+			options...,
+		).Endpoint()
+	}
 
 	return svc.Endpoints{
-		LoginEndpoint: LoginZeroEndpoint,
+		LoginEndpoint:   LoginZeroEndpoint,
+		GetCodeEndpoint: GetCodeZeroEndpoint,
 	}, nil
 }
 
@@ -116,6 +127,33 @@ func DecodeHTTPLoginResponse(_ context.Context, r *http.Response) (interface{}, 
 	return &resp, nil
 }
 
+// DecodeHTTPGetCodeResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded GenericReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPGetCodeResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.GenericReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
 // HTTP Client Encode
 
 // EncodeHTTPLoginZeroRequest is a transport/http.EncodeRequestFunc
@@ -159,9 +197,7 @@ func EncodeHTTPLoginZeroRequest(_ context.Context, r *http.Request, request inte
 
 	toRet.Wechat = req.Wechat
 
-	toRet.Os = req.Os
-
-	toRet.DeviceId = req.DeviceId
+	toRet.Device = req.Device
 
 	toRet.Channel = req.Channel
 
@@ -173,6 +209,42 @@ func EncodeHTTPLoginZeroRequest(_ context.Context, r *http.Request, request inte
 		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
 	}
 	r.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// EncodeHTTPGetCodeZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a getcode request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPGetCodeZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.GetCodeRequest)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"v1",
+		"code",
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	values.Add("mobile", fmt.Sprint(req.Mobile))
+
+	r.URL.RawQuery = values.Encode()
 	return nil
 }
 

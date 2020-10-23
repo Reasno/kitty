@@ -6,23 +6,56 @@
 package handlers
 
 import (
+	"github.com/Reasno/kitty/app/repository"
+	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/proto"
+	"github.com/google/wire"
 	"github.com/opentracing/opentracing-go"
+	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
 
-func injectAppServer() kitty.AppServer {
+func InjectDb() (*gorm.DB, error) {
+	dialector := provideDialector()
 	logger := ProvideLogger()
-	handlersAppService := appService{
-		log: logger,
+	config := provideGormConfig(logger)
+	db, err := gorm.Open(dialector, config)
+	if err != nil {
+		return nil, err
 	}
-	return handlersAppService
+	return db, nil
+}
+
+func injectAppServer() (kitty.AppServer, error) {
+	logger := ProvideLogger()
+	client := provideRedis()
+	codeRepo := repository.NewCodeRepo(client)
+	dialector := provideDialector()
+	config := provideGormConfig(logger)
+	db, err := gorm.Open(dialector, config)
+	if err != nil {
+		return nil, err
+	}
+	userRepo := repository.NewUserRepo(db)
+	senderConfig := provideSmsConfig()
+	sender := sms.NewSender(senderConfig)
+	handlersAppService := appService{
+		log:    logger,
+		cr:     codeRepo,
+		ur:     userRepo,
+		sender: sender,
+	}
+	return handlersAppService, nil
 }
 
 func InjectOpentracingTracer() opentracing.Tracer {
 	logger := ProvideLogger()
 	jaegerLogger := provideJaegerLogAdatper(logger)
-	opentracingTracer := provideOpentracing(jaegerLogger)
-	return opentracingTracer
+	tracer := provideOpentracing(jaegerLogger)
+	return tracer
 }
+
+// wire.go:
+
+var DbSet = wire.NewSet(ProvideLogger, provideDialector, provideGormConfig, gorm.Open)
