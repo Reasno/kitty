@@ -20,22 +20,23 @@ func InjectDb() (*gorm.DB, error) {
 	dialector := provideDialector()
 	logger := ProvideLogger()
 	config := provideGormConfig(logger)
-	db, err := gorm.Open(dialector, config)
+	db, err := provideGormDB(dialector, config)
 	if err != nil {
 		return nil, err
 	}
 	return db, nil
 }
 
-func injectAppServer() (kitty.AppServer, error) {
+func injectAppServer() (kitty.AppServer, func(), error) {
 	logger := ProvideLogger()
-	client := provideRedis()
-	codeRepo := repository.NewCodeRepo(client)
+	universalClient, cleanup := provideRedis(logger)
+	codeRepo := repository.NewCodeRepo(universalClient)
 	dialector := provideDialector()
 	config := provideGormConfig(logger)
-	db, err := gorm.Open(dialector, config)
+	db, err := provideGormDB(dialector, config)
 	if err != nil {
-		return nil, err
+		cleanup()
+		return nil, nil, err
 	}
 	userRepo := repository.NewUserRepo(db)
 	senderConfig := provideSmsConfig()
@@ -46,7 +47,9 @@ func injectAppServer() (kitty.AppServer, error) {
 		ur:     userRepo,
 		sender: sender,
 	}
-	return handlersAppService, nil
+	return handlersAppService, func() {
+		cleanup()
+	}, nil
 }
 
 func InjectOpentracingTracer() opentracing.Tracer {
@@ -58,4 +61,4 @@ func InjectOpentracingTracer() opentracing.Tracer {
 
 // wire.go:
 
-var DbSet = wire.NewSet(ProvideLogger, provideDialector, provideGormConfig, gorm.Open)
+var DbSet = wire.NewSet(ProvideLogger, provideDialector, provideGormConfig, provideGormDB)

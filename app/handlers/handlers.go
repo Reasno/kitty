@@ -20,10 +20,11 @@ import (
 
 // NewService returns a naïve, stateless implementation of Service.
 func NewService() pb.AppServer {
-	server, err := injectAppServer()
+	server, cleanUp, err := injectAppServer()
 	if err != nil {
 		panic(err)
 	}
+	destruct.Add(cleanUp)
 	return server
 }
 
@@ -90,7 +91,14 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	// Create jwt token
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
-		kittyjwt.NewClaim(uint64(u.ID), viper.GetString("app_name"), in.Device.Suuid, time.Hour*24*30),
+		kittyjwt.NewClaim(
+			uint64(u.ID),
+			viper.GetString("app_name"),
+			in.Device.Suuid,
+			in.Channel,
+			in.VersionCode,
+			time.Hour*24*30,
+		),
 	)
 	token.Header["kid"] = viper.GetString("security.kid")
 	tokenString, err := token.SignedString(viper.GetString("security.key"))

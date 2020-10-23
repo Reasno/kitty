@@ -9,9 +9,11 @@ type Claim struct {
 	stdjwt.StandardClaims
 	Uid   uint64
 	Suuid string
+	Channel string
+	VersionCode string
 }
 
-func NewClaim(uid uint64, issuer, suuid string, ttl time.Duration) *Claim {
+func NewClaim(uid uint64, issuer, suuid, channel, versionCode string, ttl time.Duration) *Claim {
 	return &Claim{
 		StandardClaims: stdjwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ttl).Unix(),
@@ -20,6 +22,8 @@ func NewClaim(uid uint64, issuer, suuid string, ttl time.Duration) *Claim {
 		},
 		Uid:   uid,
 		Suuid: suuid,
+		Channel: channel,
+		VersionCode: versionCode,
 	}
 }
 

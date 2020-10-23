@@ -28,7 +28,8 @@ var (
 			}
 			logger = kitty_log.NewLogger(viper.GetString("app_env"))
 			logger = log.With(logger, "subcommand", cmd.Use)
-			_ = level.Debug(logger).Log("config", viper.ConfigFileUsed())
+			logger = level.Info(logger)
+			logger.Log("config", viper.ConfigFileUsed())
 			return nil
 		},
 	}

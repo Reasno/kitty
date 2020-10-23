@@ -296,7 +296,7 @@ func (m *GetCodeRequest) Validate() error {
 	if !_GetCodeRequest_Mobile_Pattern.MatchString(m.GetMobile()) {
 		return GetCodeRequestValidationError{
 			field:  "Mobile",
-			reason: "value does not match regex pattern \"^[\\\\d]{13}$\"",
+			reason: "value does not match regex pattern \"\\\\d{11}\"",
 		}
 	}
 
@@ -357,7 +357,7 @@ var _ interface {
 	ErrorName() string
 } = GetCodeRequestValidationError{}
 
-var _GetCodeRequest_Mobile_Pattern = regexp.MustCompile("^[\\d]{13}$")
+var _GetCodeRequest_Mobile_Pattern = regexp.MustCompile("\\d{11}")
 
 // Validate checks the field values on UserInfoRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an

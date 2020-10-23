@@ -70,11 +70,12 @@ func (g GormLogAdapter) Error(ctx context.Context, s string, i ...interface{}) {
 func (g GormLogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	sql, rows := fc()
 	elapsed := time.Since(begin)
+
 	var l log.Logger
 	if err == nil {
 		l = level.Debug(g.Logging)
 	} else {
-		l = level.Error(g.Logging)
+		l = level.Warn(g.Logging)
 	}
 	if rows == -1 {
 		l.Log("sql", sql, "duration", elapsed, "rows", "-", "err", err)

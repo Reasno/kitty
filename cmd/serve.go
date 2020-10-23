@@ -30,7 +30,7 @@ var serveCmd = &cobra.Command{
 			grpcProviders []func(server *grpc.Server)
 		)
 
-		// Register generated services
+		// Register services
 		{
 			register.RegisterApp(&httpProviders, &grpcProviders)
 			kittyhttp.RegisterDoc(&httpProviders, &grpcProviders)
@@ -101,7 +101,7 @@ func getHttpHandler(ln net.Listener, providers ...func(*mux.Router)) http.Handle
 	for _, p := range providers {
 		p(router)
 	}
-	handler = kittyhttp.AddCorsMiddleware()(handler)
+	handler = kittyhttp.AddCorsMiddleware()(router)
 	return handler
 }
 

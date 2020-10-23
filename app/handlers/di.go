@@ -4,8 +4,12 @@ import (
 	"fmt"
 	logging "github.com/Reasno/kitty/pkg/log"
 	"github.com/Reasno/kitty/pkg/middleware"
+	kittyhttp "github.com/Reasno/kitty/pkg/middleware/http"
+	"github.com/Reasno/kitty/pkg/otgorm"
+	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/go-kit/kit/metrics"
 	"github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-redis/redis/v8"
@@ -18,6 +22,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"io"
+	"net/http"
 )
 
 func ProvideLogger() log.Logger {
@@ -32,6 +37,10 @@ func provideHistogramMetrics() metrics.Histogram {
 		Help:      "Total time spent serving requests.",
 	}, []string{"service", "method"})
 	return his
+}
+
+func provideHttpClient(tracer opentracing.Tracer) *http.Client {
+	return kittyhttp.NewClient(tracer)
 }
 
 func provideSeurityConfig() *middleware.SecurityConfig {
@@ -52,8 +61,20 @@ func provideSmsConfig() *sms.SenderConfig {
 	}
 }
 
-func provideRedis() *redis.Client {
-	return redis.NewClient(&redis.Options{})
+func provideRedis(logging log.Logger) (redis.UniversalClient, func()) {
+	client := redis.NewUniversalClient(
+		&redis.UniversalOptions{
+			Addrs: viper.GetStringSlice("redis.addrs"),
+			DB:    viper.GetInt("redis.database"),
+		})
+	client.AddHook(
+		otredis.NewHook(viper.GetStringSlice("redis.addrs"),
+			viper.GetInt("redis.database")))
+	return client, func() {
+		if err := client.Close(); err != nil {
+			level.Error(logging).Log("err", err.Error())
+		}
+	}
 }
 
 func provideDialector() gorm.Dialector {
@@ -64,6 +85,15 @@ func provideGormConfig(l log.Logger) *gorm.Config {
 	return &gorm.Config{
 		Logger: &logging.GormLogAdapter{l},
 	}
+}
+
+func provideGormDB(dialector gorm.Dialector, config *gorm.Config) (*gorm.DB, error) {
+	db, err := gorm.Open(dialector, config)
+	if err != nil {
+		return nil, err
+	}
+	otgorm.AddGormCallbacks(db)
+	return db, nil
 }
 
 func provideJaegerLogAdatper(l log.Logger) jaeger.Logger {

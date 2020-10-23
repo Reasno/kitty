@@ -20,6 +20,7 @@ type Sender struct {
 	userName   string
 	password   string
 	keyPrefix  string
+	client *http.Client
 }
 
 type SenderConfig struct {
@@ -28,15 +29,20 @@ type SenderConfig struct {
 	BalanceUrl string
 	UserName   string
 	Password   string
+	Client *http.Client
 }
 
 func NewSender(config *SenderConfig) *Sender {
+	if config.Client == nil {
+		config.Client = http.DefaultClient
+	}
 	return &Sender{
 		tag:        config.Tag,
 		sendUrl:    config.SendUrl,
 		balanceUrl: config.BalanceUrl,
 		userName:   config.UserName,
 		password:   config.Password,
+		client:     config.Client,
 	}
 }
 
@@ -55,7 +61,7 @@ func (s *Sender) Send(ctx context.Context, mobile string, content string) error 
 		return errors.Wrap(err, "cannot create post request")
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "cannot send post request in sender")
 	}
@@ -84,7 +90,7 @@ func (s *Sender) GetBalance(ctx context.Context) (int64, error) {
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := s.client.Do(req)
 	if err != nil {
 		return 0, err
 	}

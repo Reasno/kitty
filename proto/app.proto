@@ -82,8 +82,8 @@ enum Gender {
 
 message GetCodeRequest {
   string mobile = 1 [
-    (options.openapiv2_field) = {required: "true", pattern: "^[\\d]{13}$"},
-    (validate.rules).string = {pattern: "^[\\d]{13}$"}
+    (options.openapiv2_field) = {required: "true", pattern: "\\d{11}"},
+    (validate.rules).string = {pattern: "\\d{11}"}
   ];
 }
 

@@ -18,8 +18,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/gogo/protobuf/proto"
 
 	"context"
 

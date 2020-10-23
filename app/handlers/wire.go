@@ -12,13 +12,13 @@ import (
 	"gorm.io/gorm"
 )
 
-var DbSet = wire.NewSet(ProvideLogger, provideDialector, provideGormConfig, gorm.Open)
+var DbSet = wire.NewSet(ProvideLogger, provideDialector, provideGormConfig, provideGormDB)
 
 func InjectDb() (*gorm.DB, error) {
 	panic(wire.Build(DbSet))
 }
 
-func injectAppServer() (pb.AppServer, error) {
+func injectAppServer() (pb.AppServer, func(), error) {
 	panic(wire.Build(
 		provideSmsConfig,
 		DbSet,
@@ -27,7 +27,7 @@ func injectAppServer() (pb.AppServer, error) {
 		repository.NewUserRepo,
 		repository.NewCodeRepo,
 		wire.Struct(new(appService), "log", "cr", "ur", "sender"),
-		wire.Bind(new(redis.Cmdable), new(*redis.Client)),
+		wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)),
 		wire.Bind(new(Sender), new(*sms.Sender)),
 		wire.Bind(new(pb.AppServer), new(appService)),
 		wire.Bind(new(UserRepository), new(*repository.UserRepo)),
