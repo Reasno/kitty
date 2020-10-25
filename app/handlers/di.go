@@ -23,9 +23,6 @@ import (
 	"gorm.io/gorm"
 	"io"
 )
-func provideConfig() *viper {
-	viper.New().WriteConfig()
-}
 
 func ProvideLogger() log.Logger {
 	return log.With(logging.NewLogger(viper.GetString("app_env")), "service", "app")
@@ -45,7 +42,7 @@ func provideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
 	return kittyhttp.NewClient(tracer)
 }
 
-func provideSeurityConfig() *middleware.SecurityConfig {
+func provideSecurityConfig() *middleware.SecurityConfig {
 	return &middleware.SecurityConfig{
 		Enable: viper.GetBool("security.enable"),
 		JwtKey: viper.GetString("security.key"),

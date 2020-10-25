@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
-	"github.com/Reasno/kitty/app/repository"
 	kittyjwt "github.com/Reasno/kitty/pkg/jwt"
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/dgrijalva/jwt-go"
@@ -42,10 +41,6 @@ type CodeRepository interface {
 
 type Sender interface {
 	Send(ctx context.Context, mobile, content string) error
-}
-
-func test(u UserRepository) {
-	test(repository.NewUserRepo(nil))
 }
 
 type UserRepository interface {
