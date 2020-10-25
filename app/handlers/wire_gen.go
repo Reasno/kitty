@@ -9,6 +9,7 @@ import (
 	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/proto"
+	"github.com/go-kit/kit/log"
 	"github.com/google/wire"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
@@ -16,9 +17,13 @@ import (
 
 // Injectors from wire.go:
 
-func InjectDb() (*gorm.DB, error) {
+func injectDb() (*gorm.DB, error) {
 	dialector := provideDialector()
-	logger := ProvideLogger()
+	viper, err := provideConfig()
+	if err != nil {
+		return nil, err
+	}
+	logger := provideLogger(viper)
 	config := provideGormConfig(logger)
 	db, err := provideGormDB(dialector, config)
 	if err != nil {
@@ -28,7 +33,11 @@ func InjectDb() (*gorm.DB, error) {
 }
 
 func injectAppServer() (kitty.AppServer, func(), error) {
-	logger := ProvideLogger()
+	viper, err := provideConfig()
+	if err != nil {
+		return nil, nil, err
+	}
+	logger := provideLogger(viper)
 	dialector := provideDialector()
 	config := provideGormConfig(logger)
 	db, err := provideGormDB(dialector, config)
@@ -36,12 +45,12 @@ func injectAppServer() (kitty.AppServer, func(), error) {
 		return nil, nil, err
 	}
 	userRepo := repository.NewUserRepo(db)
-	universalClient, cleanup := provideRedis(logger)
+	universalClient, cleanup := provideRedis(logger, viper)
 	codeRepo := repository.NewCodeRepo(universalClient)
 	jaegerLogger := provideJaegerLogAdatper(logger)
-	tracer := provideOpentracing(jaegerLogger)
-	client := provideHttpClient(tracer)
-	transportConfig := provideSmsConfig(client)
+	opentracingTracer, cleanup2 := provideOpentracing(jaegerLogger, viper)
+	client := provideHttpClient(opentracingTracer)
+	transportConfig := provideSmsConfig(client, viper)
 	transport := sms.NewTransport(transportConfig)
 	handlersAppService := appService{
 		log:    logger,
@@ -50,15 +59,31 @@ func injectAppServer() (kitty.AppServer, func(), error) {
 		sender: transport,
 	}
 	return handlersAppService, func() {
+		cleanup2()
 		cleanup()
 	}, nil
 }
 
-func InjectOpentracingTracer() opentracing.Tracer {
-	logger := ProvideLogger()
+func injectLogger() (log.Logger, error) {
+	viper, err := provideConfig()
+	if err != nil {
+		return nil, err
+	}
+	logger := provideLogger(viper)
+	return logger, nil
+}
+
+func injectOpentracingTracer() (opentracing.Tracer, func(), error) {
+	viper, err := provideConfig()
+	if err != nil {
+		return nil, nil, err
+	}
+	logger := provideLogger(viper)
 	jaegerLogger := provideJaegerLogAdatper(logger)
-	tracer := provideOpentracing(jaegerLogger)
-	return tracer
+	opentracingTracer, cleanup := provideOpentracing(jaegerLogger, viper)
+	return opentracingTracer, func() {
+		cleanup()
+	}, nil
 }
 
 // wire.go:

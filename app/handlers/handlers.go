@@ -18,13 +18,8 @@ import (
 )
 
 // NewService returns a naïve, stateless implementation of Service.
-func NewService() pb.AppServer {
-	server, cleanUp, err := injectAppServer()
-	if err != nil {
-		panic(err)
-	}
-	destruct.Add(cleanUp)
-	return server
+func NewService() (pb.AppServer, func(), error) {
+	return injectAppServer()
 }
 
 type appService struct {

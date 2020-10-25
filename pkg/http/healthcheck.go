@@ -16,9 +16,7 @@ func AddHealthCheck() func(handler http.Handler) http.Handler {
 	}
 }
 
-func RegisterHealthCheck(httpProviders *[]func(router *mux.Router), _ interface{}) {
-	*httpProviders = append(*httpProviders, func(router *mux.Router) {
-		router.PathPrefix("/live").Handler(healthcheck.NewHandler())
-		router.PathPrefix("/ready").Handler(healthcheck.NewHandler())
-	})
+func HealthCheck(router *mux.Router) {
+	router.PathPrefix("/live").Handler(healthcheck.NewHandler())
+	router.PathPrefix("/ready").Handler(healthcheck.NewHandler())
 }

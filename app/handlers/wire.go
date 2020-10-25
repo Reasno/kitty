@@ -11,6 +11,7 @@ import (
 	"github.com/google/wire"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
+	"github.com/go-kit/kit/log"
 )
 
 var DbSet = wire.NewSet(
@@ -24,13 +25,14 @@ var OpenTracingSet = wire.NewSet(
 	provideOpentracing,
 )
 
-func InjectDb() (*gorm.DB, error) {
-	panic(wire.Build(ProvideLogger, DbSet))
+func injectDb() (*gorm.DB, error) {
+	panic(wire.Build(provideLogger, provideConfig, DbSet))
 }
 
 func injectAppServer() (pb.AppServer, func(), error) {
 	panic(wire.Build(
-		ProvideLogger,
+		provideConfig,
+		provideLogger,
 		provideSmsConfig,
 		DbSet,
 		OpenTracingSet,
@@ -49,6 +51,10 @@ func injectAppServer() (pb.AppServer, func(), error) {
 	))
 }
 
-func InjectOpentracingTracer() opentracing.Tracer {
-	panic(wire.Build(ProvideLogger, OpenTracingSet))
+func injectLogger() (log.Logger, error) {
+	panic(wire.Build(provideConfig, provideLogger))
+}
+
+func injectOpentracingTracer() (opentracing.Tracer, func(), error) {
+	panic(wire.Build(provideConfig, provideLogger, OpenTracingSet))
 }

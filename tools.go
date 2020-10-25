@@ -11,5 +11,4 @@ import (
 	_ "github.com/golang/protobuf/protoc-gen-go"
 	_ "github.com/google/wire/cmd/wire"
 	_ "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2"
-	_ "github.com/kevinburke/go-bindata/go-bindata"
 )

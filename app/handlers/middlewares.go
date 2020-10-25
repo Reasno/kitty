@@ -23,17 +23,24 @@ func WrapEndpoints(in svc.Endpoints) svc.Endpoints {
 	// These middlewares get passed the endpoints name as their first argument when applied.
 	// This can be used to write generic metric gathering middlewares that can
 	// report the endpoint name for free.
-	// github.com/metaverse/truss/_example/middlewares/labeledmiddlewares.go for examples.
+	// github.com/Reasno/tr/_example/middlewares/labeledmiddlewares.go for examples.
 	// in.WrapAllLabeledExcept(errorCounter(statsdCounter), "Status", "Ping")
 
 	// How to apply a middleware to a single endpoint.
 	// in.ExampleEndpoint = authMiddleware(in.ExampleEndpoint)
-
+	config, err := provideConfig()
+	if err != nil {
+		panic(err)
+	}
+	tracer, _, err := injectOpentracingTracer()
+	if err != nil {
+		panic(err)
+	}
 	in.WrapAllExcept(middleware.NewValidationMiddleware())
-	in.WrapAllExcept(middleware.NewAuthenticationMiddleware(provideSecurityConfig()), "Login", "GetCode")
+	in.WrapAllExcept(middleware.NewAuthenticationMiddleware(provideSecurityConfig(config)), "Login", "GetCode")
 	in.WrapAllExcept(middleware.NewErrorMashallerMiddleware())
-	in.WrapAllLabeledExcept(middleware.NewMetricsMiddleware(provideHistogramMetrics(), "app"))
-	in.WrapAllLabeledExcept(middleware.NewTraceMiddleware(InjectOpentracingTracer(), "app"))
+	in.WrapAllLabeledExcept(middleware.NewMetricsMiddleware(provideHistogramMetrics(config), "app"))
+	in.WrapAllLabeledExcept(middleware.NewTraceMiddleware(tracer, "app"))
 	return in
 }
 

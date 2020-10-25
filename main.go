@@ -1,4 +1,4 @@
-//go:generate tr proto/app.proto --svcout app
+//go:generate tr proto/app.proto
 
 package main
 

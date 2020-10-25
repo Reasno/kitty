@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.0 // indirect
-	github.com/Reasno/tr v0.4.2 // indirect
+	github.com/Reasno/tr v0.4.3
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.4.1
 	github.com/go-kit/kit v0.10.0
@@ -15,7 +15,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.0.0
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
-	github.com/kevinburke/go-bindata v3.21.0+incompatible
 	github.com/metaverse/truss v0.2.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/oklog/run v1.0.0

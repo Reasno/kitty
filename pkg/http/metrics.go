@@ -14,8 +14,6 @@ func AddMetricMiddleware() func(handler http.Handler) http.Handler {
 	}
 }
 
-func RegisterMetrics(httpProviders *[]func(router *mux.Router), _ interface{}) {
-	*httpProviders = append(*httpProviders, func(router *mux.Router) {
-		router.PathPrefix("/metrics").Handler(promhttp.Handler())
-	})
+func Metrics(router *mux.Router) {
+	router.PathPrefix("/metrics").Handler(promhttp.Handler())
 }
