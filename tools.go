@@ -3,6 +3,7 @@
 package tools
 
 import (
+	_ "github.com/Reasno/tr"
 	_ "github.com/envoyproxy/protoc-gen-validate"
 	_ "github.com/gogo/protobuf/proto@21df5aa0e680850681b8643f0024f92d3b09930c"
 	_ "github.com/gogo/protobuf/protoc-gen-gogo@21df5aa0e680850681b8643f0024f92d3b09930c"
