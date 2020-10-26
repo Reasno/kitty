@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
+	"github.com/Reasno/kitty/pkg/contract"
 	kittyjwt "github.com/Reasno/kitty/pkg/jwt"
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/dgrijalva/jwt-go"
@@ -17,25 +18,16 @@ import (
 	"time"
 )
 
-// NewService returns a naïve, stateless implementation of Service.
-func NewService() (pb.AppServer, func(), error) {
-	return injectAppServer()
-}
-
 type appService struct {
 	log    log.Logger
 	ur     UserRepository
 	cr     CodeRepository
-	sender Sender
+	sender contract.SmsSender
 }
 
 type CodeRepository interface {
 	CheckCode(ctx context.Context, mobile, code string) (bool, error)
 	AddCode(ctx context.Context, mobile string) (code string, err error)
-}
-
-type Sender interface {
-	Send(ctx context.Context, mobile, content string) error
 }
 
 type UserRepository interface {

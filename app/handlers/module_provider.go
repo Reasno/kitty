@@ -5,31 +5,33 @@ import (
 	"github.com/Reasno/kitty/app/svc"
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/go-kit/kit/auth/jwt"
+	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
+	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
-type AppProvider struct {
+type AppModule struct {
+	logger log.Logger
+	tracer stdopentracing.Tracer
 	cleanup   func()
 	endpoints svc.Endpoints
 }
 
 
-func New() *AppProvider {
-	appServer, cleanup, err := NewService()
+func New() *AppModule {
+	appModule, cleanup, err := injectModule()
 	if err != nil {
 		panic(err)
 	}
-	return &AppProvider{
-		cleanup,
-		NewEndpoints(appServer),
-	}
+	appModule.cleanup = cleanup
+	return appModule
 }
 
-func (a *AppProvider) ProvideMigration() error {
+func (a *AppModule) ProvideMigration() error {
 	db, err := injectDb()
 	if err != nil {
 		return err
@@ -45,28 +47,23 @@ func (a *AppProvider) ProvideMigration() error {
 	return nil
 }
 
-func (a *AppProvider) ProvideCloser() {
+func (a *AppModule) ProvideCloser() {
 	a.cleanup()
 }
 
-func (a *AppProvider) ProvideGrpc(server *grpc.Server) {
-	tracer, _, _ := injectOpentracingTracer()
-	logger, _ := injectLogger()
+func (a *AppModule) ProvideGrpc(server *grpc.Server) {
 	pb.RegisterAppServer(server, svc.MakeGRPCServer(a.endpoints,
 		grpctransport.ServerBefore(opentracing.GRPCToContext(
-			tracer, "app", logger),
+			a.tracer, "app", a.logger),
 		),
 		grpctransport.ServerBefore(jwt.GRPCToContext()),
 	))
 }
 
-func (a *AppProvider) ProvideHttp(router *mux.Router) {
-	tracer, _, _ := injectOpentracingTracer()
-	logger, _ := injectLogger()
-
+func (a *AppModule) ProvideHttp(router *mux.Router) {
 	router.PathPrefix("/v1/").Handler(svc.MakeHTTPHandler(a.endpoints,
 		httptransport.ServerBefore(opentracing.HTTPToContext(
-			tracer, "app", logger)),
+			a.tracer, "app", a.logger)),
 		httptransport.ServerBefore(jwt.HTTPToContext()),
 	))
 }

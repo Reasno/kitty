@@ -5,7 +5,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-type ServiceContainer struct {
+type ModuleContainer struct {
 	HttpProviders []func(router *mux.Router)
 	GrpcProviders []func(server *grpc.Server)
 	CloserProviders []func()
@@ -13,8 +13,8 @@ type ServiceContainer struct {
 	MigrationProvider []func() error
 }
 
-func NewServiceContainer() ServiceContainer {
-	return ServiceContainer{
+func NewModuleContainer() ModuleContainer {
+	return ModuleContainer{
 		HttpProviders:    []func(router *mux.Router){},
 		GrpcProviders:    []func(server *grpc.Server){},
 		CloserProviders:  []func(){},
@@ -55,7 +55,7 @@ func (h HttpFunc) ProvideHttp(router *mux.Router) {
 	h(router)
 }
 
-func (s *ServiceContainer) Register(app interface{})  {
+func (s *ModuleContainer) Register(app interface{})  {
 	if p, ok := app.(HttpProvider); ok {
 		s.HttpProviders = append(s.HttpProviders, p.ProvideHttp)
 	}

@@ -3,10 +3,10 @@ package sms
 import (
 	"bytes"
 	"context"
+	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
-	kittyhttp "github.com/Reasno/kitty/pkg/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -21,7 +21,7 @@ type Transport struct {
 	userName   string
 	password   string
 	keyPrefix  string
-	client  kittyhttp.Doer
+	client     contract.HttpDoer
 }
 
 type TransportConfig struct {
@@ -30,7 +30,7 @@ type TransportConfig struct {
 	BalanceUrl string
 	UserName   string
 	Password   string
-	Client kittyhttp.Doer
+	Client     contract.HttpDoer
 }
 
 func NewTransport(config *TransportConfig) *Transport {

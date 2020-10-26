@@ -11,11 +11,6 @@ type Client struct {
 	*http.Client
 }
 
-type Doer interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
-
 func NewClient(tracer opentracing.Tracer) *Client {
 	baseClient := &http.Client{Transport:  &nethttp.Transport{}}
 	return &Client{tracer, baseClient}

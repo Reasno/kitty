@@ -7,19 +7,24 @@ package handlers
 
 import (
 	"github.com/Reasno/kitty/app/repository"
+	"github.com/Reasno/kitty/pkg/contract"
+	"github.com/Reasno/kitty/pkg/http"
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/proto"
-	"github.com/go-kit/kit/log"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
-	"github.com/opentracing/opentracing-go"
+	"github.com/spf13/viper"
 	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
 
 func injectDb() (*gorm.DB, error) {
-	dialector := provideDialector()
 	viper, err := provideConfig()
+	if err != nil {
+		return nil, err
+	}
+	dialector, err := provideDialector(viper)
 	if err != nil {
 		return nil, err
 	}
@@ -32,24 +37,35 @@ func injectDb() (*gorm.DB, error) {
 	return db, nil
 }
 
-func injectAppServer() (kitty.AppServer, func(), error) {
+func injectModule() (*AppModule, func(), error) {
 	viper, err := provideConfig()
 	if err != nil {
 		return nil, nil, err
 	}
 	logger := provideLogger(viper)
-	dialector := provideDialector()
-	config := provideGormConfig(logger)
-	db, err := provideGormDB(dialector, config)
+	jaegerLogger := provideJaegerLogAdatper(logger)
+	tracer, cleanup, err := provideOpentracing(jaegerLogger, viper)
 	if err != nil {
 		return nil, nil, err
 	}
+	securityConfig := provideSecurityConfig(viper)
+	histogram := provideHistogramMetrics(viper)
+	handlersOverallMiddleware := provideEndpointsMiddleware(securityConfig, histogram, tracer)
+	dialector, err := provideDialector(viper)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	config := provideGormConfig(logger)
+	db, err := provideGormDB(dialector, config)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
 	userRepo := repository.NewUserRepo(db)
-	universalClient, cleanup := provideRedis(logger, viper)
+	universalClient, cleanup2 := provideRedis(logger, viper)
 	codeRepo := repository.NewCodeRepo(universalClient)
-	jaegerLogger := provideJaegerLogAdatper(logger)
-	opentracingTracer, cleanup2 := provideOpentracing(jaegerLogger, viper)
-	client := provideHttpClient(opentracingTracer)
+	client := provideHttpClient(tracer)
 	transportConfig := provideSmsConfig(client, viper)
 	transport := sms.NewTransport(transportConfig)
 	handlersAppService := appService{
@@ -58,35 +74,16 @@ func injectAppServer() (kitty.AppServer, func(), error) {
 		cr:     codeRepo,
 		sender: transport,
 	}
-	return handlersAppService, func() {
+	appModule := provideModule(tracer, logger, handlersOverallMiddleware, handlersAppService)
+	return appModule, func() {
 		cleanup2()
 		cleanup()
 	}, nil
 }
 
-func injectLogger() (log.Logger, error) {
-	viper, err := provideConfig()
-	if err != nil {
-		return nil, err
-	}
-	logger := provideLogger(viper)
-	return logger, nil
-}
-
-func injectOpentracingTracer() (opentracing.Tracer, func(), error) {
-	viper, err := provideConfig()
-	if err != nil {
-		return nil, nil, err
-	}
-	logger := provideLogger(viper)
-	jaegerLogger := provideJaegerLogAdatper(logger)
-	opentracingTracer, cleanup := provideOpentracing(jaegerLogger, viper)
-	return opentracingTracer, func() {
-		cleanup()
-	}, nil
-}
-
 // wire.go:
+
+var ConfigSet = wire.NewSet(provideConfig, wire.Bind(new(contract.ConfigReader), new(*viper.Viper)))
 
 var DbSet = wire.NewSet(
 	provideDialector,
@@ -97,4 +94,14 @@ var DbSet = wire.NewSet(
 var OpenTracingSet = wire.NewSet(
 	provideJaegerLogAdatper,
 	provideOpentracing,
+)
+
+var AppServerSet = wire.NewSet(
+	ConfigSet,
+	provideLogger,
+	provideSmsConfig,
+	DbSet,
+	OpenTracingSet,
+	provideHttpClient,
+	provideRedis, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.HttpDoer), new(*http.Client)), wire.Bind(new(kitty.AppServer), new(appService)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)),
 )

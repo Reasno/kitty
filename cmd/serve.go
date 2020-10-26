@@ -24,6 +24,7 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the server",
 	Long:  `Start the gRPC server and HTTP server`,
+	PreRunE: initServiceContainer,
 	Run: func(cmd *cobra.Command, args []string) {
 		var g run.Group
 

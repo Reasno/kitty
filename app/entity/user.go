@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"bytes"
 	"crypto/md5"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -49,11 +48,11 @@ type Device struct {
 	Mac       string
 	AndroidId string
 	// 仅供数据库去重使用，应用不应依赖该字段，以免去重条件发生变化
-	Hash []byte `gorm:"uniqueIndex:hash_index,sort:desc"`
+	Hash string `gorm:"type:varchar(255);uniqueIndex:hash_index,sort:desc"`
 }
 
 // HashCode 生成唯一键
-func (my Device) HashCode() []byte {
+func (my Device) HashCode() string {
 	m := md5.New()
 	m.Write(uint64ToBytes(my.ID))
 	m.Write([]byte(my.Idfa))
@@ -62,11 +61,11 @@ func (my Device) HashCode() []byte {
 	m.Write([]byte(my.Suuid))
 	m.Write([]byte(my.Mac))
 	m.Write([]byte(my.AndroidId))
-	return m.Sum(nil)
+	return string(m.Sum(nil))
 }
 
 func (my Device) Equals(that *Device) bool {
-	return bytes.Equal(my.HashCode(), that.HashCode())
+	return my.HashCode() == that.HashCode()
 }
 
 func uint64ToBytes(n uint) []byte {

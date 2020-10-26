@@ -15,6 +15,7 @@ var migrateCommand = &cobra.Command{
 	Use:   "migrate",
 	Short: "Migrate gorm tables",
 	Long:  `Run all gorm table migrations.`,
+	PreRunE: initServiceContainer,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, f := range serviceContainer.MigrationProvider {
 			if err := f(); err != nil {
