@@ -68,6 +68,20 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		EncodeHTTPGenericResponse,
 		serverOptions...,
 	))
+
+	m.Methods("GET").Path("/v1/info").Handler(httptransport.NewServer(
+		endpoints.GetInfoEndpoint,
+		DecodeHTTPGetInfoZeroRequest,
+		EncodeHTTPGenericResponse,
+		serverOptions...,
+	))
+
+	m.Methods("POST").Path("/v1/info").Handler(httptransport.NewServer(
+		endpoints.UpdateInfoEndpoint,
+		DecodeHTTPUpdateInfoZeroRequest,
+		EncodeHTTPGenericResponse,
+		serverOptions...,
+	))
 	return m
 }
 
@@ -195,6 +209,84 @@ func DecodeHTTPGetCodeZeroRequest(_ context.Context, r *http.Request) (interface
 		MobileGetCode := MobileGetCodeStr
 		req.Mobile = MobileGetCode
 	}
+
+	return &req, err
+}
+
+// DecodeHTTPGetInfoZeroRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded getinfo request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPGetInfoZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	defer r.Body.Close()
+	var req pb.UserInfoRequest
+	buf, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read body of http request")
+	}
+	if len(buf) > 0 {
+		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
+		unmarshaller := jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		}
+		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
+			const size = 8196
+			if len(buf) > size {
+				buf = buf[:size]
+			}
+			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
+				http.StatusBadRequest,
+				nil,
+			}
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := r.URL.Query()
+	_ = queryParams
+
+	if IdGetInfoStrArr, ok := queryParams["id"]; ok {
+		IdGetInfoStr := IdGetInfoStrArr[0]
+		IdGetInfo := IdGetInfoStr
+		req.Id = IdGetInfo
+	}
+
+	return &req, err
+}
+
+// DecodeHTTPUpdateInfoZeroRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded updateinfo request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPUpdateInfoZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	defer r.Body.Close()
+	var req pb.UserInfoUpdateRequest
+	buf, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read body of http request")
+	}
+	if len(buf) > 0 {
+		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
+		unmarshaller := jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		}
+		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
+			const size = 8196
+			if len(buf) > size {
+				buf = buf[:size]
+			}
+			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
+				http.StatusBadRequest,
+				nil,
+			}
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := r.URL.Query()
+	_ = queryParams
 
 	return &req, err
 }

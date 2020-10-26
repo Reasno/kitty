@@ -2,6 +2,7 @@ package entity
 
 import (
 	"crypto/md5"
+	"fmt"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -61,7 +62,7 @@ func (my Device) HashCode() string {
 	m.Write([]byte(my.Suuid))
 	m.Write([]byte(my.Mac))
 	m.Write([]byte(my.AndroidId))
-	return string(m.Sum(nil))
+	return fmt.Sprintf("%x", m.Sum(nil))
 }
 
 func (my Device) Equals(that *Device) bool {

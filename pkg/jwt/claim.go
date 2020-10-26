@@ -1,7 +1,9 @@
 package jwt
 
 import (
+	"context"
 	stdjwt "github.com/dgrijalva/jwt-go"
+	"github.com/go-kit/kit/auth/jwt"
 	"time"
 )
 
@@ -11,9 +13,10 @@ type Claim struct {
 	Suuid string
 	Channel string
 	VersionCode string
+	Wechat string
 }
 
-func NewClaim(uid uint64, issuer, suuid, channel, versionCode string, ttl time.Duration) *Claim {
+func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat string, ttl time.Duration) *Claim {
 	return &Claim{
 		StandardClaims: stdjwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ttl).Unix(),
@@ -24,7 +27,13 @@ func NewClaim(uid uint64, issuer, suuid, channel, versionCode string, ttl time.D
 		Suuid: suuid,
 		Channel: channel,
 		VersionCode: versionCode,
+		Wechat: wechat,
 	}
+}
+
+func GetClaim(ctx context.Context) *Claim {
+	claim := ctx.Value(jwt.JWTClaimsContextKey).(Claim)
+	return &claim
 }
 
 func ClaimFactory() stdjwt.Claims {

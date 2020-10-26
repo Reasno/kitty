@@ -6,6 +6,8 @@ const (
 	ERROR_SIGN_INVALID               = "认证失败"
 	ERROR_NEED_LOGIN                 = "用户未登录"
 	ERROR_WECHAT_FAILUER             = "微信服务器通讯异常"
+	ERROR_UPLOAD                     = "无法上传图片"
+	ERROR_MISSING_OPENID             = "OpenID缺失"
 	INVALID_PARAMS                   = "请求参数错误"
 	ERROR_UPLOAD_SAVE_IMAGE_FAIL     = "保存图片失败"
 	ERROR_UPLOAD_CHECK_IMAGE_FAIL    = "检查图片失败"

@@ -28,7 +28,7 @@ func (r *UserRepo) GetFromMobile(ctx context.Context, mobile string, device *ent
 	var (
 		u entity.User
 	)
-	r.db.WithContext(ctx).Where(entity.User{Mobile: mobile}).FirstOrCreate(&u)
+	r.db.WithContext(ctx).Where(entity.User{Mobile: mobile}).Attrs(entity.User{Birthday: "2020-01-01"}).FirstOrCreate(&u)
 	u.AddNewDevice(device)
 	r.db.WithContext(ctx).Save(device)
 	return &u, nil

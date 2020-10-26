@@ -14,6 +14,22 @@ option (options.openapiv2_swagger) = {
     title: "A kitty app";
     version: "1.0";
   };
+  security_definitions: {
+    security: {
+      key: "JWT",
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+      }
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "JWT";
+      value: {};
+    }
+  }
   consumes: "application/json";
   produces: "application/json";
 };
@@ -30,17 +46,23 @@ service App {
       get: "/v1/code"
     };
   }
-//  rpc Code (EmptyRequest) returns (GenericReply) {
-//    option (google.api.http) = {
-//      get: "/v1/code"    // Loudness is accepted in the http path
-//    };
-//  }
+  rpc GetInfo (UserInfoRequest) returns (UserInfoReply) {
+    option (google.api.http) = {
+      get: "/v1/info"    // Loudness is accepted in the http path
+    };
+  }
+  rpc UpdateInfo (UserInfoUpdateRequest) returns (UserInfoReply) {
+    option (google.api.http) = {
+      post: "/v1/info"
+      body: "*"
+    };
+  }
 }
 
 message UserLoginRequest {
   string mobile = 1 [
-    (validate.rules).string.pattern = "(^$|^[\\d]{13}$)",
-    (options.openapiv2_field) = {pattern: "(^$|^[\\d]{13}$)"}
+    (validate.rules).string.pattern = "(^$|^[\\d]{11}$)",
+    (options.openapiv2_field) = {pattern: "(^$|^[\\d]{11}$)"}
   ];
   string code = 2;
   string wechat = 3;
@@ -87,7 +109,36 @@ message GetCodeRequest {
   ];
 }
 
-message UserInfoRequest {}
+message UserInfoRequest {
+  string id = 1;
+}
+
+message UserInfoReply {
+  uint64 id = 1;
+  string user_name = 2;
+  string wechat = 3;
+  string head_img = 4;
+  Gender gender = 5;
+  string birthday = 6;
+}
+
+message UserInfoUpdateRequest {
+  string user_name = 2 [
+    (options.openapiv2_field).minimum = 2,
+    (options.openapiv2_field).maximum = 10,
+    (validate.rules).string.min_len = 2,
+    (validate.rules).string.max_len = 10
+  ];
+  string head_img = 4 [
+    (options.openapiv2_field) = {pattern: "^(|https?://.*)$"},
+    (validate.rules).string = {pattern: "^(|https?://.*)$"}
+  ];
+  Gender gender = 5;
+  string birthday = 6 [
+    (options.openapiv2_field) = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"},
+    (validate.rules).string = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"}
+  ];
+}
 
 message EmptyRequest {
 

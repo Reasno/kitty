@@ -6,6 +6,7 @@ import (
 	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/pkg/contract"
 	kittyhttp "github.com/Reasno/kitty/pkg/http"
+	"github.com/Reasno/kitty/pkg/ots3"
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/pkg/wechat"
 	pb "github.com/Reasno/kitty/proto"
@@ -38,6 +39,7 @@ var AppServerSet = wire.NewSet(
 	DbSet,
 	OpenTracingSet,
 	provideHttpClient,
+	provideUploadManager,
 	provideRedis,
 	provideWechatConfig,
 	wechat.NewTransport,
@@ -47,6 +49,7 @@ var AppServerSet = wire.NewSet(
 	wire.Struct(new(appService), "*"),
 	wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)),
 	wire.Bind(new(contract.SmsSender), new(*sms.Transport)),
+	wire.Bind(new(contract.Uploader), new(*ots3.Manager)),
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
 	wire.Bind(new(pb.AppServer), new(appService)),
 	wire.Bind(new(UserRepository), new(*repository.UserRepo)),

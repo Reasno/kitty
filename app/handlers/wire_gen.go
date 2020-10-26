@@ -9,6 +9,7 @@ import (
 	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/Reasno/kitty/pkg/http"
+	"github.com/Reasno/kitty/pkg/ots3"
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/pkg/wechat"
 	"github.com/Reasno/kitty/proto"
@@ -71,12 +72,14 @@ func injectModule() (*AppModule, func(), error) {
 	transport := sms.NewTransport(transportConfig)
 	wechatConfig := provideWechatConfig(viper, client)
 	wechatTransport := wechat.NewTransport(wechatConfig)
+	manager := provideUploadManager(tracer, viper, client)
 	handlersAppService := appService{
-		log:    logger,
-		ur:     userRepo,
-		cr:     codeRepo,
-		sender: transport,
-		wechat: wechatTransport,
+		log:      logger,
+		ur:       userRepo,
+		cr:       codeRepo,
+		sender:   transport,
+		wechat:   wechatTransport,
+		uploader: manager,
 	}
 	appModule := provideModule(tracer, logger, handlersOverallMiddleware, handlersAppService)
 	return appModule, func() {
@@ -107,6 +110,7 @@ var AppServerSet = wire.NewSet(
 	DbSet,
 	OpenTracingSet,
 	provideHttpClient,
+	provideUploadManager,
 	provideRedis,
-	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.HttpDoer), new(*http.Client)), wire.Bind(new(kitty.AppServer), new(appService)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)),
+	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*http.Client)), wire.Bind(new(kitty.AppServer), new(appService)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)),
 )

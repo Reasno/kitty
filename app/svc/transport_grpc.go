@@ -41,13 +41,27 @@ func MakeGRPCServer(endpoints Endpoints, options ...grpctransport.ServerOption) 
 			EncodeGRPCGetCodeResponse,
 			serverOptions...,
 		),
+		getinfo: grpctransport.NewServer(
+			endpoints.GetInfoEndpoint,
+			DecodeGRPCGetInfoRequest,
+			EncodeGRPCGetInfoResponse,
+			serverOptions...,
+		),
+		updateinfo: grpctransport.NewServer(
+			endpoints.UpdateInfoEndpoint,
+			DecodeGRPCUpdateInfoRequest,
+			EncodeGRPCUpdateInfoResponse,
+			serverOptions...,
+		),
 	}
 }
 
 // grpcServer implements the AppServer interface
 type grpcServer struct {
-	login   grpctransport.Handler
-	getcode grpctransport.Handler
+	login      grpctransport.Handler
+	getcode    grpctransport.Handler
+	getinfo    grpctransport.Handler
+	updateinfo grpctransport.Handler
 }
 
 // Methods for grpcServer to implement AppServer interface
@@ -68,6 +82,22 @@ func (s *grpcServer) GetCode(ctx context.Context, req *pb.GetCodeRequest) (*pb.G
 	return rep.(*pb.GenericReply), nil
 }
 
+func (s *grpcServer) GetInfo(ctx context.Context, req *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
+	_, rep, err := s.getinfo.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.UserInfoReply), nil
+}
+
+func (s *grpcServer) UpdateInfo(ctx context.Context, req *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
+	_, rep, err := s.updateinfo.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.UserInfoReply), nil
+}
+
 // Server Decode
 
 // DecodeGRPCLoginRequest is a transport/grpc.DecodeRequestFunc that converts a
@@ -84,6 +114,20 @@ func DecodeGRPCGetCodeRequest(_ context.Context, grpcReq interface{}) (interface
 	return req, nil
 }
 
+// DecodeGRPCGetInfoRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC getinfo request to a user-domain getinfo request. Primarily useful in a server.
+func DecodeGRPCGetInfoRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.UserInfoRequest)
+	return req, nil
+}
+
+// DecodeGRPCUpdateInfoRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC updateinfo request to a user-domain updateinfo request. Primarily useful in a server.
+func DecodeGRPCUpdateInfoRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.UserInfoUpdateRequest)
+	return req, nil
+}
+
 // Server Encode
 
 // EncodeGRPCLoginResponse is a transport/grpc.EncodeResponseFunc that converts a
@@ -97,6 +141,20 @@ func EncodeGRPCLoginResponse(_ context.Context, response interface{}) (interface
 // user-domain getcode response to a gRPC getcode reply. Primarily useful in a server.
 func EncodeGRPCGetCodeResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.GenericReply)
+	return resp, nil
+}
+
+// EncodeGRPCGetInfoResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain getinfo response to a gRPC getinfo reply. Primarily useful in a server.
+func EncodeGRPCGetInfoResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.UserInfoReply)
+	return resp, nil
+}
+
+// EncodeGRPCUpdateInfoResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain updateinfo response to a gRPC updateinfo reply. Primarily useful in a server.
+func EncodeGRPCUpdateInfoResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.UserInfoReply)
 	return resp, nil
 }
 

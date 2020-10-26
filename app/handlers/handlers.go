@@ -20,11 +20,12 @@ import (
 )
 
 type appService struct {
-	log    log.Logger
-	ur     UserRepository
-	cr     CodeRepository
-	sender contract.SmsSender
-	wechat *wechat.Transport
+	log      log.Logger
+	ur       UserRepository
+	cr       CodeRepository
+	sender   contract.SmsSender
+	wechat   *wechat.Transport
+	uploader contract.Uploader
 }
 
 type CodeRepository interface {
@@ -76,6 +77,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 			in.Device.Suuid,
 			in.Channel,
 			in.VersionCode,
+			in.Wechat,
 			time.Hour*24*30,
 		),
 	)
@@ -134,27 +136,27 @@ func (s appService) error(err error) {
 func (s appService) handleWechatLogin(ctx context.Context, wechat string, device *entity.Device) (*entity.User, error) {
 	wxRes, err := s.wechat.GetWechatLoginResponse(ctx, wechat)
 	if err != nil {
-		s.error(err)
 		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
 	}
 	if wxRes.Openid == "" {
-		err := errors.New("OpenID缺失")
-		s.error(err)
+		err := errors.New(msg.ERROR_MISSING_OPENID)
 		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
 	}
 	wxInfo, err := s.wechat.GetWechatUserInfoResult(ctx, wxRes)
 	if err != nil {
-		s.error(err)
 		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
+	}
+	headImg, err := s.uploader.UploadFromUrl(ctx, wxInfo.Headimgurl)
+	if err != nil {
+		return nil, errors.Wrap(err, msg.ERROR_UPLOAD)
 	}
 	wechatUser := entity.User{
 		UserName: wxInfo.Nickname,
-		HeadImg: wxInfo.Headimgurl, //todo: 下载
-		Wechat: wxInfo.Openid,
+		HeadImg:  headImg,
+		Wechat:   wxInfo.Openid,
 	}
 	u, err := s.ur.GetFromWechat(ctx, wxInfo.Openid, device, wechatUser)
 	if err != nil {
-		s.error(err)
 		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
 	}
 	return u, nil
@@ -168,4 +170,16 @@ func (s appService) handleMobileLogin(ctx context.Context, mobile, code string, 
 		return nil, status.Error(codes.Unauthenticated, msg.ERROR_MOBILE_NOEXIST)
 	}
 	return s.ur.GetFromMobile(ctx, mobile, device)
+}
+
+func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
+	var resp pb.UserInfoReply
+	return &resp, nil
+}
+
+func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
+	userId := kittyjwt.GetClaim(ctx).Uid
+	var resp pb.UserInfoReply
+	resp.Id = userId
+	return &resp, nil
 }

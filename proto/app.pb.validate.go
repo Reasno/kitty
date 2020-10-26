@@ -47,7 +47,7 @@ func (m *UserLoginRequest) Validate() error {
 	if !_UserLoginRequest_Mobile_Pattern.MatchString(m.GetMobile()) {
 		return UserLoginRequestValidationError{
 			field:  "Mobile",
-			reason: "value does not match regex pattern \"(^$|^[\\\\d]{13}$)\"",
+			reason: "value does not match regex pattern \"(^$|^[\\\\d]{11}$)\"",
 		}
 	}
 
@@ -126,7 +126,7 @@ var _ interface {
 	ErrorName() string
 } = UserLoginRequestValidationError{}
 
-var _UserLoginRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{13}$)")
+var _UserLoginRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{11}$)")
 
 // Validate checks the field values on Device with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -367,6 +367,8 @@ func (m *UserInfoRequest) Validate() error {
 		return nil
 	}
 
+	// no validation rules for Id
+
 	return nil
 }
 
@@ -423,6 +425,177 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserInfoRequestValidationError{}
+
+// Validate checks the field values on UserInfoReply with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *UserInfoReply) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	// no validation rules for UserName
+
+	// no validation rules for Wechat
+
+	// no validation rules for HeadImg
+
+	// no validation rules for Gender
+
+	// no validation rules for Birthday
+
+	return nil
+}
+
+// UserInfoReplyValidationError is the validation error returned by
+// UserInfoReply.Validate if the designated constraints aren't met.
+type UserInfoReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoReplyValidationError) ErrorName() string { return "UserInfoReplyValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserInfoReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfoReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoReplyValidationError{}
+
+// Validate checks the field values on UserInfoUpdateRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UserInfoUpdateRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetUserName()); l < 2 || l > 10 {
+		return UserInfoUpdateRequestValidationError{
+			field:  "UserName",
+			reason: "value length must be between 2 and 10 runes, inclusive",
+		}
+	}
+
+	if !_UserInfoUpdateRequest_HeadImg_Pattern.MatchString(m.GetHeadImg()) {
+		return UserInfoUpdateRequestValidationError{
+			field:  "HeadImg",
+			reason: "value does not match regex pattern \"^(|https?://.*)$\"",
+		}
+	}
+
+	// no validation rules for Gender
+
+	if !_UserInfoUpdateRequest_Birthday_Pattern.MatchString(m.GetBirthday()) {
+		return UserInfoUpdateRequestValidationError{
+			field:  "Birthday",
+			reason: "value does not match regex pattern \"^(|\\\\d{4}-\\\\d{1,2}-\\\\d{1,2})$\"",
+		}
+	}
+
+	return nil
+}
+
+// UserInfoUpdateRequestValidationError is the validation error returned by
+// UserInfoUpdateRequest.Validate if the designated constraints aren't met.
+type UserInfoUpdateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoUpdateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoUpdateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoUpdateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoUpdateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoUpdateRequestValidationError) ErrorName() string {
+	return "UserInfoUpdateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserInfoUpdateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfoUpdateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoUpdateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoUpdateRequestValidationError{}
+
+var _UserInfoUpdateRequest_HeadImg_Pattern = regexp.MustCompile("^(|https?://.*)$")
+
+var _UserInfoUpdateRequest_Birthday_Pattern = regexp.MustCompile("^(|\\d{4}-\\d{1,2}-\\d{1,2})$")
 
 // Validate checks the field values on EmptyRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, an error

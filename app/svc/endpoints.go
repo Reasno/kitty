@@ -33,8 +33,10 @@ import (
 // single type that implements the Service interface. For example, you might
 // construct individual endpoints using transport/http.NewClient, combine them into an Endpoints, and return it to the caller as a Service.
 type Endpoints struct {
-	LoginEndpoint   endpoint.Endpoint
-	GetCodeEndpoint endpoint.Endpoint
+	LoginEndpoint      endpoint.Endpoint
+	GetCodeEndpoint    endpoint.Endpoint
+	GetInfoEndpoint    endpoint.Endpoint
+	UpdateInfoEndpoint endpoint.Endpoint
 }
 
 // Endpoints
@@ -53,6 +55,22 @@ func (e Endpoints) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.Gene
 		return nil, err
 	}
 	return response.(*pb.GenericReply), nil
+}
+
+func (e Endpoints) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
+	response, err := e.GetInfoEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.UserInfoReply), nil
+}
+
+func (e Endpoints) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
+	response, err := e.UpdateInfoEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.UserInfoReply), nil
 }
 
 // Make Endpoints
@@ -79,6 +97,28 @@ func MakeGetCodeEndpoint(s pb.AppServer) endpoint.Endpoint {
 	}
 }
 
+func MakeGetInfoEndpoint(s pb.AppServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.UserInfoRequest)
+		v, err := s.GetInfo(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeUpdateInfoEndpoint(s pb.AppServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.UserInfoUpdateRequest)
+		v, err := s.UpdateInfo(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 // WrapAllExcept wraps each Endpoint field of struct Endpoints with a
 // go-kit/kit/endpoint.Middleware.
 // Use this for applying a set of middlewares to every endpoint in the service.
@@ -86,8 +126,10 @@ func MakeGetCodeEndpoint(s pb.AppServer) endpoint.Endpoint {
 // WrapAllExcept(middleware, "Status", "Ping")
 func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...string) {
 	included := map[string]struct{}{
-		"Login":   {},
-		"GetCode": {},
+		"Login":      {},
+		"GetCode":    {},
+		"GetInfo":    {},
+		"UpdateInfo": {},
 	}
 
 	for _, ex := range excluded {
@@ -104,6 +146,12 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		if inc == "GetCode" {
 			e.GetCodeEndpoint = middleware(e.GetCodeEndpoint)
 		}
+		if inc == "GetInfo" {
+			e.GetInfoEndpoint = middleware(e.GetInfoEndpoint)
+		}
+		if inc == "UpdateInfo" {
+			e.UpdateInfoEndpoint = middleware(e.UpdateInfoEndpoint)
+		}
 	}
 }
 
@@ -118,8 +166,10 @@ type LabeledMiddleware func(string, endpoint.Endpoint) endpoint.Endpoint
 // functionality.
 func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoint) endpoint.Endpoint, excluded ...string) {
 	included := map[string]struct{}{
-		"Login":   {},
-		"GetCode": {},
+		"Login":      {},
+		"GetCode":    {},
+		"GetInfo":    {},
+		"UpdateInfo": {},
 	}
 
 	for _, ex := range excluded {
@@ -135,6 +185,12 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		}
 		if inc == "GetCode" {
 			e.GetCodeEndpoint = middleware("GetCode", e.GetCodeEndpoint)
+		}
+		if inc == "GetInfo" {
+			e.GetInfoEndpoint = middleware("GetInfo", e.GetInfoEndpoint)
+		}
+		if inc == "UpdateInfo" {
+			e.UpdateInfoEndpoint = middleware("UpdateInfo", e.UpdateInfoEndpoint)
 		}
 	}
 }

@@ -15,13 +15,17 @@ func NewEndpoints(service pb.AppServer) svc.Endpoints {
 
 	// Endpoint domain.
 	var (
-		loginEndpoint   = svc.MakeLoginEndpoint(service)
-		getcodeEndpoint = svc.MakeGetCodeEndpoint(service)
+		loginEndpoint      = svc.MakeLoginEndpoint(service)
+		getcodeEndpoint    = svc.MakeGetCodeEndpoint(service)
+		getinfoEndpoint    = svc.MakeGetInfoEndpoint(service)
+		updateinfoEndpoint = svc.MakeUpdateInfoEndpoint(service)
 	)
 
 	endpoints := svc.Endpoints{
-		LoginEndpoint:   loginEndpoint,
-		GetCodeEndpoint: getcodeEndpoint,
+		LoginEndpoint:      loginEndpoint,
+		GetCodeEndpoint:    getcodeEndpoint,
+		GetInfoEndpoint:    getinfoEndpoint,
+		UpdateInfoEndpoint: updateinfoEndpoint,
 	}
 
 	return endpoints

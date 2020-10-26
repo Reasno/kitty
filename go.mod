@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.0 // indirect
 	github.com/Reasno/tr v0.4.3
+	github.com/aws/aws-sdk-go v1.29.5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.4.1
 	github.com/go-kit/kit v0.10.0
@@ -17,8 +18,10 @@ require (
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/oklog/run v1.0.0
+	github.com/opentracing-contrib/go-aws-sdk v0.0.0-20200219142134-2e00fb2121c5
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.1.0
+	github.com/pborman/uuid v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.3.0
 	github.com/rs/cors v1.7.0

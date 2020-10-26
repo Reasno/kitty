@@ -10,6 +10,7 @@ import (
 	"github.com/Reasno/kitty/pkg/middleware"
 	"github.com/Reasno/kitty/pkg/otgorm"
 	"github.com/Reasno/kitty/pkg/otredis"
+	"github.com/Reasno/kitty/pkg/ots3"
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/pkg/wechat"
 	kitty "github.com/Reasno/kitty/proto"
@@ -51,6 +52,21 @@ func provideHistogramMetrics(conf contract.ConfigReader) metrics.Histogram {
 
 func provideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
 	return kittyhttp.NewClient(tracer)
+}
+
+func provideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader, client contract.HttpDoer) *ots3.Manager {
+	return ots3.NewManager(
+		conf.GetString("s3.accessKey"),
+		conf.GetString("s3.accessSecret"),
+		conf.GetString("s3.region"),
+		conf.GetString("s3.endpoint"),
+		conf.GetString("s3.bucket"),
+		ots3.WithTracer(tracer),
+		ots3.WithHttpClient(client),
+		ots3.WithLocationFunc(func(location string) (url string) {
+			return fmt.Sprintf(conf.GetString("s3.cdnUrl"), location)
+		}),
+	)
 }
 
 func provideSecurityConfig(conf contract.ConfigReader) *middleware.SecurityConfig {

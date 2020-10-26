@@ -70,10 +70,32 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 			options...,
 		).Endpoint()
 	}
+	var GetInfoZeroEndpoint endpoint.Endpoint
+	{
+		GetInfoZeroEndpoint = httptransport.NewClient(
+			"GET",
+			copyURL(u, "/v1/info"),
+			EncodeHTTPGetInfoZeroRequest,
+			DecodeHTTPGetInfoResponse,
+			options...,
+		).Endpoint()
+	}
+	var UpdateInfoZeroEndpoint endpoint.Endpoint
+	{
+		UpdateInfoZeroEndpoint = httptransport.NewClient(
+			"POST",
+			copyURL(u, "/v1/info"),
+			EncodeHTTPUpdateInfoZeroRequest,
+			DecodeHTTPUpdateInfoResponse,
+			options...,
+		).Endpoint()
+	}
 
 	return svc.Endpoints{
-		LoginEndpoint:   LoginZeroEndpoint,
-		GetCodeEndpoint: GetCodeZeroEndpoint,
+		LoginEndpoint:      LoginZeroEndpoint,
+		GetCodeEndpoint:    GetCodeZeroEndpoint,
+		GetInfoEndpoint:    GetInfoZeroEndpoint,
+		UpdateInfoEndpoint: UpdateInfoZeroEndpoint,
 	}, nil
 }
 
@@ -147,6 +169,60 @@ func DecodeHTTPGetCodeResponse(_ context.Context, r *http.Response) (interface{}
 	}
 
 	var resp pb.GenericReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
+// DecodeHTTPGetInfoResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded UserInfoReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPGetInfoResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.UserInfoReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
+// DecodeHTTPUpdateInfoResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded UserInfoReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPUpdateInfoResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.UserInfoReply
 	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
 		return nil, errorDecoder(buf)
 	}
@@ -245,6 +321,94 @@ func EncodeHTTPGetCodeZeroRequest(_ context.Context, r *http.Request, request in
 	values.Add("mobile", fmt.Sprint(req.Mobile))
 
 	r.URL.RawQuery = values.Encode()
+	return nil
+}
+
+// EncodeHTTPGetInfoZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a getinfo request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPGetInfoZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.UserInfoRequest)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"v1",
+		"info",
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	values.Add("id", fmt.Sprint(req.Id))
+
+	r.URL.RawQuery = values.Encode()
+	return nil
+}
+
+// EncodeHTTPUpdateInfoZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a updateinfo request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPUpdateInfoZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.UserInfoUpdateRequest)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"v1",
+		"info",
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	r.URL.RawQuery = values.Encode()
+	// Set the body parameters
+	var buf bytes.Buffer
+	toRet := request.(*pb.UserInfoUpdateRequest)
+
+	toRet.UserName = req.UserName
+
+	toRet.HeadImg = req.HeadImg
+
+	toRet.Gender = req.Gender
+
+	toRet.Birthday = req.Birthday
+
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(toRet); err != nil {
+		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
+	}
+	r.Body = ioutil.NopCloser(&buf)
 	return nil
 }
 
