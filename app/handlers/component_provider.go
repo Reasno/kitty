@@ -11,6 +11,7 @@ import (
 	"github.com/Reasno/kitty/pkg/otgorm"
 	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/Reasno/kitty/pkg/sms"
+	"github.com/Reasno/kitty/pkg/wechat"
 	kitty "github.com/Reasno/kitty/proto"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -57,6 +58,16 @@ func provideSecurityConfig(conf contract.ConfigReader) *middleware.SecurityConfi
 		Enable: conf.GetBool("security.enable"),
 		JwtKey: conf.GetString("security.key"),
 		JwtId:  conf.GetString("security.kid"),
+	}
+}
+
+func provideWechatConfig(conf contract.ConfigReader, client contract.HttpDoer) *wechat.WechatConfig {
+	return &wechat.WechatConfig{
+		WechatAccessTokenUrl: conf.GetString("wechat.wechatAccessTokenUrl"),
+		WeChatGetUserInfoUrl: conf.GetString("wechat.weChatGetUserInfoUrl"),
+		AppId:                conf.GetString("wechat.appId"),
+		AppSecret:            conf.GetString("wechat.appSecret"),
+		Client:               client,
 	}
 }
 

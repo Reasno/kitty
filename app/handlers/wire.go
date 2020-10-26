@@ -7,6 +7,7 @@ import (
 	"github.com/Reasno/kitty/pkg/contract"
 	kittyhttp "github.com/Reasno/kitty/pkg/http"
 	"github.com/Reasno/kitty/pkg/sms"
+	"github.com/Reasno/kitty/pkg/wechat"
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
@@ -38,6 +39,8 @@ var AppServerSet = wire.NewSet(
 	OpenTracingSet,
 	provideHttpClient,
 	provideRedis,
+	provideWechatConfig,
+	wechat.NewTransport,
 	sms.NewTransport,
 	repository.NewUserRepo,
 	repository.NewCodeRepo,

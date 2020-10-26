@@ -14,11 +14,11 @@ func NewUserRepo(db *gorm.DB) *UserRepo {
 	return &UserRepo{db}
 }
 
-func (r *UserRepo) GetFromWechat(ctx context.Context, wechat string, device *entity.Device) (*entity.User, error) {
+func (r *UserRepo) GetFromWechat(ctx context.Context, wechat string, device *entity.Device, wechatUser entity.User) (*entity.User, error) {
 	var (
 		u entity.User
 	)
-	r.db.WithContext(ctx).Where(entity.User{Wechat: wechat}).FirstOrCreate(&u)
+	r.db.WithContext(ctx).Where(entity.User{Wechat: wechat}).Attrs(wechatUser).FirstOrCreate(&u)
 	u.AddNewDevice(device)
 	r.db.WithContext(ctx).Save(device)
 	return &u, nil

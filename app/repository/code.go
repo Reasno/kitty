@@ -36,8 +36,13 @@ func (c *CodeRepo) CheckCode(ctx context.Context, mobile, code string) (bool, er
 		return false, errors.Wrap(err, "cannot query code in redis")
 	}
 	return value == code, nil
-
 }
+
+func (c *CodeRepo) DeleteCode(ctx context.Context, mobile string) (err error) {
+	_, err = c.client.Del(ctx, "CodeRepo:"+mobile).Result()
+	return err
+}
+
 
 func pad(n int) string {
 	s := strconv.Itoa(n)

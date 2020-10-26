@@ -7,6 +7,7 @@ import (
 	"github.com/Reasno/kitty/app/msg"
 	"github.com/Reasno/kitty/pkg/contract"
 	kittyjwt "github.com/Reasno/kitty/pkg/jwt"
+	"github.com/Reasno/kitty/pkg/wechat"
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/log"
@@ -23,27 +24,23 @@ type appService struct {
 	ur     UserRepository
 	cr     CodeRepository
 	sender contract.SmsSender
+	wechat *wechat.Transport
 }
 
 type CodeRepository interface {
 	CheckCode(ctx context.Context, mobile, code string) (bool, error)
 	AddCode(ctx context.Context, mobile string) (code string, err error)
+	DeleteCode(ctx context.Context, mobile string) (err error)
 }
 
 type UserRepository interface {
-	GetFromWechat(ctx context.Context, wechat string, device *entity.Device) (user *entity.User, err error)
+	GetFromWechat(ctx context.Context, wechat string, device *entity.Device, wechatUser entity.User) (user *entity.User, err error)
 	GetFromMobile(ctx context.Context, mobile string, device *entity.Device) (user *entity.User, err error)
 }
 
 func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserLoginReply, error) {
 	if len(in.Wechat) == 0 && len(in.Mobile) == 0 {
 		return nil, status.Error(codes.InvalidArgument, msg.INVALID_PARAMS)
-	}
-	if len(in.Mobile) != 0 && len(in.Code) == 0 {
-		return nil, status.Error(codes.InvalidArgument, msg.INVALID_PARAMS)
-	}
-	if len(in.Mobile) != 0 && !s.verify(ctx, in.Mobile, in.Code) {
-		return nil, status.Error(codes.Unauthenticated, msg.ERROR_MOBILE_NOEXIST)
 	}
 
 	var (
@@ -62,9 +59,9 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		AndroidId: in.Device.AndroidId,
 	}
 	if len(in.Wechat) != 0 {
-		u, err = s.ur.GetFromWechat(ctx, in.Wechat, device)
+		u, err = s.handleWechatLogin(ctx, in.Wechat, device)
 	} else {
-		u, err = s.ur.GetFromMobile(ctx, in.Mobile, device)
+		u, err = s.handleMobileLogin(ctx, in.Mobile, in.Code, device)
 	}
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
@@ -103,6 +100,12 @@ func (s appService) verify(ctx context.Context, mobile string, code string) bool
 	if err != nil {
 		level.Error(s.log).Log("err", err)
 	}
+	if result {
+		err = s.cr.DeleteCode(ctx, mobile)
+		if err != nil {
+			s.error(err)
+		}
+	}
 	return result
 }
 
@@ -123,4 +126,46 @@ func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.Gen
 
 func (s appService) debug(msg string, args ...interface{}) {
 	level.Debug(s.log).Log("msg", fmt.Sprintf(msg, args...))
+}
+func (s appService) error(err error) {
+	level.Error(s.log).Log("err", err)
+}
+
+func (s appService) handleWechatLogin(ctx context.Context, wechat string, device *entity.Device) (*entity.User, error) {
+	wxRes, err := s.wechat.GetWechatLoginResponse(ctx, wechat)
+	if err != nil {
+		s.error(err)
+		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
+	}
+	if wxRes.Openid == "" {
+		err := errors.New("OpenID缺失")
+		s.error(err)
+		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
+	}
+	wxInfo, err := s.wechat.GetWechatUserInfoResult(ctx, wxRes)
+	if err != nil {
+		s.error(err)
+		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
+	}
+	wechatUser := entity.User{
+		UserName: wxInfo.Nickname,
+		HeadImg: wxInfo.Headimgurl, //todo: 下载
+		Wechat: wxInfo.Openid,
+	}
+	u, err := s.ur.GetFromWechat(ctx, wxInfo.Openid, device, wechatUser)
+	if err != nil {
+		s.error(err)
+		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
+	}
+	return u, nil
+}
+
+func (s appService) handleMobileLogin(ctx context.Context, mobile, code string, device *entity.Device) (*entity.User, error) {
+	if len(code) == 0 {
+		return nil, status.Error(codes.InvalidArgument, msg.INVALID_PARAMS)
+	}
+	if !s.verify(ctx, mobile, code) {
+		return nil, status.Error(codes.Unauthenticated, msg.ERROR_MOBILE_NOEXIST)
+	}
+	return s.ur.GetFromMobile(ctx, mobile, device)
 }
