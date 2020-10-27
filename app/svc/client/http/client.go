@@ -74,7 +74,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 	{
 		GetInfoZeroEndpoint = httptransport.NewClient(
 			"GET",
-			copyURL(u, "/v1/info"),
+			copyURL(u, "/v1/info/"),
 			EncodeHTTPGetInfoZeroRequest,
 			DecodeHTTPGetInfoResponse,
 			options...,
@@ -123,7 +123,7 @@ func CtxValuesToSend(keys ...string) httptransport.ClientOption {
 // HTTP Client Decode
 
 // DecodeHTTPLoginResponse is a transport/http.DecodeResponseFunc that decodes
-// a JSON-encoded UserLoginReply response from the HTTP response body.
+// a JSON-encoded UserInfoReply response from the HTTP response body.
 // If the response has a non-200 status code, we will interpret that as an
 // error and attempt to decode the specific error message from the response
 // body. Primarily useful in a client.
@@ -141,7 +141,7 @@ func DecodeHTTPLoginResponse(_ context.Context, r *http.Response) (interface{}, 
 		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
 	}
 
-	var resp pb.UserLoginReply
+	var resp pb.UserInfoReply
 	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
 		return nil, errorDecoder(buf)
 	}
@@ -341,6 +341,7 @@ func EncodeHTTPGetInfoZeroRequest(_ context.Context, r *http.Request, request in
 		"",
 		"v1",
 		"info",
+		fmt.Sprint(req.Id),
 	}, "/")
 	u, err := url.Parse(path)
 	if err != nil {
@@ -353,8 +354,6 @@ func EncodeHTTPGetInfoZeroRequest(_ context.Context, r *http.Request, request in
 	values := r.URL.Query()
 	var tmp []byte
 	_ = tmp
-
-	values.Add("id", fmt.Sprint(req.Id))
 
 	r.URL.RawQuery = values.Encode()
 	return nil

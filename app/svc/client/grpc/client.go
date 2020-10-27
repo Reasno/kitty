@@ -44,7 +44,7 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.AppServer, error) {
 			"Login",
 			EncodeGRPCLoginRequest,
 			DecodeGRPCLoginResponse,
-			pb.UserLoginReply{},
+			pb.UserInfoReply{},
 			clientOptions...,
 		).Endpoint()
 	}
@@ -101,7 +101,7 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.AppServer, error) {
 // DecodeGRPCLoginResponse is a transport/grpc.DecodeResponseFunc that converts a
 // gRPC login reply to a user-domain login response. Primarily useful in a client.
 func DecodeGRPCLoginResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*pb.UserLoginReply)
+	reply := grpcReply.(*pb.UserInfoReply)
 	return reply, nil
 }
 

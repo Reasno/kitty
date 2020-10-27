@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func NewErrorMashallerMiddleware() endpoint.Middleware {
+func NewErrorMarshallerMiddleware() endpoint.Middleware {
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			response, err = e(ctx, request)
@@ -88,4 +89,17 @@ func (e JsonError) StatusCode() int {
 	default:
 		return 500
 	}
+}
+
+// Unwrap implements go's standard errors.Unwrap() interface
+func (e JsonError) Unwrap() error {
+	return e.error
+}
+
+// StackTrace implements the interface of errors.Wrap()
+func (e JsonError) StackTrace() errors.StackTrace {
+	if err, ok := e.error.(stackTracer); ok {
+		return err.StackTrace()
+	}
+	return errors.Wrap(e.error, "").(stackTracer).StackTrace()
 }

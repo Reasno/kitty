@@ -16,7 +16,7 @@ func NewLogger(env string) (logger log.Logger) {
 
 	if strings.ToUpper(env) != "LOCAL" && env != "" {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
-		return logger
+		return log.With(logger, "caller", log.DefaultCaller)
 	}
 	// Color by level value
 	colorFn := func(keyvals ...interface{}) term.FgBgColor {
@@ -44,7 +44,7 @@ func NewLogger(env string) (logger log.Logger) {
 		return term.FgBgColor{}
 	}
 	logger = term.NewLogger(os.Stdout, log.NewLogfmtLogger, colorFn)
-	return logger
+	return log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 }
 
 type GormLogAdapter struct {

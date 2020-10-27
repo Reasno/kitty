@@ -27,7 +27,7 @@ func NewAuthenticationMiddleware(securityConfig *SecurityConfig) endpoint.Middle
 			return e
 		}
 		kf := func(token *stdjwt.Token) (interface{}, error) {
-			return securityConfig.JwtKey, nil
+			return []byte(securityConfig.JwtKey), nil
 		}
 		e = jwt.NewParser(kf, stdjwt.SigningMethodHS256, kittyjwt.ClaimFactory)(e)
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {

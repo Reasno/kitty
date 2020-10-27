@@ -24,16 +24,11 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the server",
 	Long:  `Start the gRPC server and HTTP server`,
-	PreRunE: initServiceContainer,
 	Run: func(cmd *cobra.Command, args []string) {
-		var g run.Group
+		initModules()
+		defer shutdownModules()
 
-		// Run all exit logic
-		defer func() {
-			for _, f := range serviceContainer.CloserProviders {
-				f()
-			}
-		}()
+		var g run.Group
 
 		// Start HTTP Server
 		{
@@ -44,7 +39,7 @@ var serveCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			g.Add(func() error {
-				h := getHttpHandler(ln, serviceContainer.HttpProviders...)
+				h := getHttpHandler(ln, moduleContainer.HttpProviders...)
 				return http.Serve(ln, h)
 			}, func(err error) {
 				_ = ln.Close()
@@ -60,7 +55,7 @@ var serveCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			g.Add(func() error {
-				s := getGRPCServer(ln, serviceContainer.GrpcProviders...)
+				s := getGRPCServer(ln, moduleContainer.GrpcProviders...)
 				return s.Serve(ln)
 			}, func(err error) {
 				_ = ln.Close()
@@ -80,7 +75,7 @@ var serveCmd = &cobra.Command{
 		}
 
 		// Additional run groups
-		for _, s := range serviceContainer.RunProviders {
+		for _, s := range moduleContainer.RunProviders {
 			g.Add(s.Loop, s.Exit)
 		}
 

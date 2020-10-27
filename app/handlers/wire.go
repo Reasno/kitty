@@ -12,10 +12,8 @@ import (
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
-	"github.com/spf13/viper"
 	"gorm.io/gorm"
 )
-var ConfigSet = wire.NewSet(provideConfig, wire.Bind(new(contract.ConfigReader), new(*viper.Viper)))
 
 var DbSet = wire.NewSet(
 	provideDialector,
@@ -24,16 +22,11 @@ var DbSet = wire.NewSet(
 )
 
 var OpenTracingSet = wire.NewSet(
-	provideJaegerLogAdatper,
+	provideJaegerLogAdapter,
 	provideOpentracing,
 )
 
-func injectDb() (*gorm.DB, error) {
-	panic(wire.Build(ConfigSet, provideLogger, DbSet))
-}
-
 var AppServerSet = wire.NewSet(
-	ConfigSet,
 	provideLogger,
 	provideSmsConfig,
 	DbSet,
@@ -46,6 +39,7 @@ var AppServerSet = wire.NewSet(
 	sms.NewTransport,
 	repository.NewUserRepo,
 	repository.NewCodeRepo,
+	repository.NewFileRepo,
 	wire.Struct(new(appService), "*"),
 	wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)),
 	wire.Bind(new(contract.SmsSender), new(*sms.Transport)),
@@ -54,8 +48,21 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(pb.AppServer), new(appService)),
 	wire.Bind(new(UserRepository), new(*repository.UserRepo)),
 	wire.Bind(new(CodeRepository), new(*repository.CodeRepo)),
+	wire.Bind(new(FileRepository), new(*repository.FileRepo)),
 )
 
-func injectModule() (*AppModule, func(), error){
-	panic(wire.Build(AppServerSet, provideSecurityConfig, provideHistogramMetrics, provideEndpointsMiddleware, provideModule))
+func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
+	panic(wire.Build(
+		AppServerSet,
+		provideSecurityConfig,
+		provideHistogramMetrics,
+		provideEndpointsMiddleware,
+		provideModule))
+}
+
+func injectTestDb(conf contract.ConfigReader) (*gorm.DB, func(), error) {
+	panic(wire.Build(
+		provideLogger,
+		DbSet,
+	))
 }

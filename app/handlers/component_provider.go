@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"github.com/Reasno/kitty/app/svc"
-	"github.com/Reasno/kitty/pkg/config"
 	"github.com/Reasno/kitty/pkg/contract"
 	kittyhttp "github.com/Reasno/kitty/pkg/http"
 	logging "github.com/Reasno/kitty/pkg/log"
@@ -21,7 +20,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/opentracing/opentracing-go"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
-	"github.com/spf13/viper"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegermetric "github.com/uber/jaeger-lib/metrics"
@@ -31,13 +29,8 @@ import (
 	"io"
 )
 
-
-func provideConfig() (*viper.Viper, error) {
-	return config.ProvideChildConfig("app", "global")
-}
-
 func provideLogger(conf contract.ConfigReader) log.Logger {
-	return log.With(logging.NewLogger(conf.GetString("env")), "service", "app")
+	return log.With(logging.NewLogger(conf.GetString("env")), "module", "app")
 }
 
 func provideHistogramMetrics(conf contract.ConfigReader) metrics.Histogram {
@@ -46,7 +39,7 @@ func provideHistogramMetrics(conf contract.ConfigReader) metrics.Histogram {
 		Subsystem: conf.GetString("env"),
 		Name:      "request_duration_seconds",
 		Help:      "Total time spent serving requests.",
-	}, []string{"service", "method"})
+	}, []string{"module", "method"})
 	return his
 }
 
@@ -131,16 +124,20 @@ func provideGormConfig(l log.Logger) *gorm.Config {
 	}
 }
 
-func provideGormDB(dialector gorm.Dialector, config *gorm.Config) (*gorm.DB, error) {
+func provideGormDB(dialector gorm.Dialector, config *gorm.Config) (*gorm.DB, func(), error) {
 	db, err := gorm.Open(dialector, config)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	otgorm.AddGormCallbacks(db)
-	return db, nil
+	return db, func() {
+		if sqlDb, err := db.DB(); err == nil {
+			sqlDb.Close()
+		}
+	}, nil
 }
 
-func provideJaegerLogAdatper(l log.Logger) jaeger.Logger {
+func provideJaegerLogAdapter(l log.Logger) jaeger.Logger {
 	return &logging.JaegerLogAdapter{Logging: l}
 }
 
@@ -182,19 +179,21 @@ func provideOpentracing(log jaeger.Logger, conf contract.ConfigReader) (opentrac
 
 type overallMiddleware func(endpoints svc.Endpoints) svc.Endpoints
 
-func provideEndpointsMiddleware(securityConfig *middleware.SecurityConfig, hist metrics.Histogram, tracer opentracing.Tracer) overallMiddleware {
+func provideEndpointsMiddleware(l log.Logger, securityConfig *middleware.SecurityConfig, hist metrics.Histogram, tracer opentracing.Tracer) overallMiddleware {
 	return func(in svc.Endpoints) svc.Endpoints {
 		in.WrapAllExcept(middleware.NewValidationMiddleware())
 		in.WrapAllExcept(middleware.NewAuthenticationMiddleware(securityConfig), "Login", "GetCode")
-		in.WrapAllExcept(middleware.NewErrorMashallerMiddleware())
+		in.WrapAllExcept(middleware.NewErrorMarshallerMiddleware())
+		in.WrapAllLabeledExcept(middleware.NewLoggingMiddleware(l))
 		in.WrapAllLabeledExcept(middleware.NewMetricsMiddleware(hist, "app"))
 		in.WrapAllLabeledExcept(middleware.NewTraceMiddleware(tracer, "app"))
 		return in
 	}
 }
 
-func provideModule(tracer opentracing.Tracer, logger log.Logger, middleware overallMiddleware, server kitty.AppServer) *AppModule {
+func provideModule(db *gorm.DB, tracer opentracing.Tracer, logger log.Logger, middleware overallMiddleware, server kitty.AppServer) *AppModule {
 	return &AppModule{
+		db: db,
 		logger:    logger,
 		tracer:    tracer,
 		endpoints: middleware(NewEndpoints(server)),

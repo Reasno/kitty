@@ -15,82 +15,76 @@ import (
 	"github.com/Reasno/kitty/proto"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
-	"github.com/spf13/viper"
 	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
 
-func injectDb() (*gorm.DB, error) {
-	viper, err := provideConfig()
+func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
+	dialector, err := provideDialector(reader)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	dialector, err := provideDialector(viper)
-	if err != nil {
-		return nil, err
-	}
-	logger := provideLogger(viper)
+	logger := provideLogger(reader)
 	config := provideGormConfig(logger)
-	db, err := provideGormDB(dialector, config)
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
-
-func injectModule() (*AppModule, func(), error) {
-	viper, err := provideConfig()
+	db, cleanup, err := provideGormDB(dialector, config)
 	if err != nil {
 		return nil, nil, err
 	}
-	logger := provideLogger(viper)
-	jaegerLogger := provideJaegerLogAdatper(logger)
-	tracer, cleanup, err := provideOpentracing(jaegerLogger, viper)
-	if err != nil {
-		return nil, nil, err
-	}
-	securityConfig := provideSecurityConfig(viper)
-	histogram := provideHistogramMetrics(viper)
-	handlersOverallMiddleware := provideEndpointsMiddleware(securityConfig, histogram, tracer)
-	dialector, err := provideDialector(viper)
+	jaegerLogger := provideJaegerLogAdapter(logger)
+	tracer, cleanup2, err := provideOpentracing(jaegerLogger, reader)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	config := provideGormConfig(logger)
-	db, err := provideGormDB(dialector, config)
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
+	securityConfig := provideSecurityConfig(reader)
+	histogram := provideHistogramMetrics(reader)
+	handlersOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer)
 	userRepo := repository.NewUserRepo(db)
-	universalClient, cleanup2 := provideRedis(logger, viper)
+	universalClient, cleanup3 := provideRedis(logger, reader)
 	codeRepo := repository.NewCodeRepo(universalClient)
 	client := provideHttpClient(tracer)
-	transportConfig := provideSmsConfig(client, viper)
+	transportConfig := provideSmsConfig(client, reader)
 	transport := sms.NewTransport(transportConfig)
-	wechatConfig := provideWechatConfig(viper, client)
+	wechatConfig := provideWechatConfig(reader, client)
 	wechatTransport := wechat.NewTransport(wechatConfig)
-	manager := provideUploadManager(tracer, viper, client)
+	manager := provideUploadManager(tracer, reader, client)
+	fileRepo := repository.NewFileRepo(manager, client)
 	handlersAppService := appService{
+		conf:     reader,
 		log:      logger,
 		ur:       userRepo,
 		cr:       codeRepo,
 		sender:   transport,
 		wechat:   wechatTransport,
 		uploader: manager,
+		fr:       fileRepo,
 	}
-	appModule := provideModule(tracer, logger, handlersOverallMiddleware, handlersAppService)
+	appModule := provideModule(db, tracer, logger, handlersOverallMiddleware, handlersAppService)
 	return appModule, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
 }
 
-// wire.go:
+func injectTestDb(conf contract.ConfigReader) (*gorm.DB, func(), error) {
+	dialector, err := provideDialector(conf)
+	if err != nil {
+		return nil, nil, err
+	}
+	logger := provideLogger(conf)
+	config := provideGormConfig(logger)
+	db, cleanup, err := provideGormDB(dialector, config)
+	if err != nil {
+		return nil, nil, err
+	}
+	return db, func() {
+		cleanup()
+	}, nil
+}
 
-var ConfigSet = wire.NewSet(provideConfig, wire.Bind(new(contract.ConfigReader), new(*viper.Viper)))
+// wire.go:
 
 var DbSet = wire.NewSet(
 	provideDialector,
@@ -99,12 +93,11 @@ var DbSet = wire.NewSet(
 )
 
 var OpenTracingSet = wire.NewSet(
-	provideJaegerLogAdatper,
+	provideJaegerLogAdapter,
 	provideOpentracing,
 )
 
 var AppServerSet = wire.NewSet(
-	ConfigSet,
 	provideLogger,
 	provideSmsConfig,
 	DbSet,
@@ -112,5 +105,5 @@ var AppServerSet = wire.NewSet(
 	provideHttpClient,
 	provideUploadManager,
 	provideRedis,
-	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*http.Client)), wire.Bind(new(kitty.AppServer), new(appService)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)),
+	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*http.Client)), wire.Bind(new(kitty.AppServer), new(appService)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(FileRepository), new(*repository.FileRepo)),
 )

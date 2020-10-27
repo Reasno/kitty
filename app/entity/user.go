@@ -10,16 +10,18 @@ import (
 // User describes a user
 type User struct {
 	gorm.Model
-	UserName    string `json:"user_name"`
-	Wechat      string `json:"wechat"`
-	HeadImg     string `json:"head_img"`
-	Gender      int    `json:"gender"`
-	Birthday    string `json:"birthday"`
-	Mobile      string `json:"mobile"`
-	Devices     []Device
-	Channel     string `json:"channel"`
-	VersionCode string `json:"version_code"`
-	InviteCode  string `json:"invite_code"`
+	UserName      string `json:"user_name" gorm:"default:游客"`
+	WechatOpenId  string `json:"wechat_openid"`
+	WechatUnionId string `json:"wechat_unionid"`
+	HeadImg       string `json:"head_img"`
+	Gender        int    `json:"gender"`
+	Birthday      string `json:"birthday" gorm:"default:2000-01-01"`
+	Mobile        string `json:"mobile"`
+	CommonSUUID string `json:"common_suuid"`
+	Devices       []Device
+	Channel       string `json:"channel"`
+	VersionCode   string `json:"version_code"`
+	InviteCode    string `json:"invite_code"`
 }
 
 func (user *User) HasDevice(device *Device) bool {

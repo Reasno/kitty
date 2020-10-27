@@ -69,7 +69,7 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		serverOptions...,
 	))
 
-	m.Methods("GET").Path("/v1/info").Handler(httptransport.NewServer(
+	m.Methods("GET").Path("/v1/info/{id}").Handler(httptransport.NewServer(
 		endpoints.GetInfoEndpoint,
 		DecodeHTTPGetInfoZeroRequest,
 		EncodeHTTPGenericResponse,
@@ -246,11 +246,12 @@ func DecodeHTTPGetInfoZeroRequest(_ context.Context, r *http.Request) (interface
 	queryParams := r.URL.Query()
 	_ = queryParams
 
-	if IdGetInfoStrArr, ok := queryParams["id"]; ok {
-		IdGetInfoStr := IdGetInfoStrArr[0]
-		IdGetInfo := IdGetInfoStr
-		req.Id = IdGetInfo
+	IdGetInfoStr := pathParams["id"]
+	IdGetInfo, err := strconv.ParseUint(IdGetInfoStr, 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting IdGetInfo from path, pathParams: %v", pathParams))
 	}
+	req.Id = IdGetInfo
 
 	return &req, err
 }

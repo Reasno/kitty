@@ -66,12 +66,12 @@ type grpcServer struct {
 
 // Methods for grpcServer to implement AppServer interface
 
-func (s *grpcServer) Login(ctx context.Context, req *pb.UserLoginRequest) (*pb.UserLoginReply, error) {
+func (s *grpcServer) Login(ctx context.Context, req *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
 	_, rep, err := s.login.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*pb.UserLoginReply), nil
+	return rep.(*pb.UserInfoReply), nil
 }
 
 func (s *grpcServer) GetCode(ctx context.Context, req *pb.GetCodeRequest) (*pb.GenericReply, error) {
@@ -133,7 +133,7 @@ func DecodeGRPCUpdateInfoRequest(_ context.Context, grpcReq interface{}) (interf
 // EncodeGRPCLoginResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain login response to a gRPC login reply. Primarily useful in a server.
 func EncodeGRPCLoginResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.UserLoginReply)
+	resp := response.(*pb.UserInfoReply)
 	return resp, nil
 }
 

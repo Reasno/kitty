@@ -86,7 +86,7 @@ func NewManager(accessKey, accessSecret, endpoint, region, bucket string, opts..
 	return m
 }
 
-func (m *Manager) UploadFromIOReader(ctx context.Context, reader io.Reader) (url string, err error) {
+func (m *Manager) Upload(ctx context.Context, reader io.Reader) (url string, err error) {
 
 	// Create an uploader with the session and default options
 	uploader := s3manager.NewUploader(m.sess)
@@ -115,7 +115,7 @@ func (m *Manager) UploadFromUrl(ctx context.Context, url string) (newUrl string,
 	}
 	body := resp.Body
 	defer body.Close()
-	return m.UploadFromIOReader(ctx, body)
+	return m.Upload(ctx, body)
 }
 
 func (m *Manager) otHandler() func(*request.Request) {

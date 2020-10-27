@@ -4,6 +4,7 @@
     "title": "A kitty app",
     "version": "1.0"
   },
+  "basePath": "/app",
   "consumes": [
     "application/json"
   ],
@@ -42,34 +43,6 @@
       }
     },
     "/v1/info": {
-      "get": {
-        "operationId": "App_GetInfo",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "App"
-        ]
-      },
       "post": {
         "operationId": "App_UpdateInfo",
         "responses": {
@@ -101,6 +74,37 @@
         ]
       }
     },
+    "/v1/info/{id}": {
+      "get": {
+        "operationId": "App_GetInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UserInfoReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "App"
+        ]
+      }
+    },
     "/v1/login": {
       "post": {
         "operationId": "App_Login",
@@ -108,7 +112,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserLoginReply"
+              "$ref": "#/definitions/v1UserInfoReply"
             }
           },
           "default": {
@@ -221,52 +225,7 @@
         }
       }
     },
-    "v1UserInfoReply": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "uint64"
-        },
-        "userName": {
-          "type": "string"
-        },
-        "wechat": {
-          "type": "string"
-        },
-        "headImg": {
-          "type": "string"
-        },
-        "gender": {
-          "$ref": "#/definitions/appv1Gender"
-        },
-        "birthday": {
-          "type": "string"
-        }
-      }
-    },
-    "v1UserInfoUpdateRequest": {
-      "type": "object",
-      "properties": {
-        "userName": {
-          "type": "string",
-          "maximum": 10,
-          "minimum": 2
-        },
-        "headImg": {
-          "type": "string",
-          "pattern": "^(|https?://.*)$"
-        },
-        "gender": {
-          "$ref": "#/definitions/appv1Gender"
-        },
-        "birthday": {
-          "type": "string",
-          "pattern": "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"
-        }
-      }
-    },
-    "v1UserLoginReply": {
+    "v1UserInfo": {
       "type": "object",
       "properties": {
         "id": {
@@ -290,6 +249,42 @@
         },
         "token": {
           "type": "string"
+        }
+      }
+    },
+    "v1UserInfoReply": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/v1UserInfo"
+        }
+      }
+    },
+    "v1UserInfoUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "userName": {
+          "type": "string",
+          "maximum": 10,
+          "minimum": 2
+        },
+        "headImg": {
+          "type": "string",
+          "pattern": "^(|https?://.*)$"
+        },
+        "gender": {
+          "$ref": "#/definitions/appv1Gender"
+        },
+        "birthday": {
+          "type": "string",
+          "pattern": "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"
         }
       }
     },

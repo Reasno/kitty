@@ -206,10 +206,9 @@ var _ interface {
 	ErrorName() string
 } = DeviceValidationError{}
 
-// Validate checks the field values on UserLoginReply with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
-func (m *UserLoginReply) Validate() error {
+// Validate checks the field values on UserInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *UserInfo) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -231,9 +230,9 @@ func (m *UserLoginReply) Validate() error {
 	return nil
 }
 
-// UserLoginReplyValidationError is the validation error returned by
-// UserLoginReply.Validate if the designated constraints aren't met.
-type UserLoginReplyValidationError struct {
+// UserInfoValidationError is the validation error returned by
+// UserInfo.Validate if the designated constraints aren't met.
+type UserInfoValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -241,22 +240,22 @@ type UserLoginReplyValidationError struct {
 }
 
 // Field function returns field value.
-func (e UserLoginReplyValidationError) Field() string { return e.field }
+func (e UserInfoValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e UserLoginReplyValidationError) Reason() string { return e.reason }
+func (e UserInfoValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e UserLoginReplyValidationError) Cause() error { return e.cause }
+func (e UserInfoValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e UserLoginReplyValidationError) Key() bool { return e.key }
+func (e UserInfoValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e UserLoginReplyValidationError) ErrorName() string { return "UserLoginReplyValidationError" }
+func (e UserInfoValidationError) ErrorName() string { return "UserInfoValidationError" }
 
 // Error satisfies the builtin error interface
-func (e UserLoginReplyValidationError) Error() string {
+func (e UserInfoValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -268,14 +267,14 @@ func (e UserLoginReplyValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sUserLoginReply.%s: %s%s",
+		"invalid %sUserInfo.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = UserLoginReplyValidationError{}
+var _ error = UserInfoValidationError{}
 
 var _ interface {
 	Field() string
@@ -283,7 +282,86 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = UserLoginReplyValidationError{}
+} = UserInfoValidationError{}
+
+// Validate checks the field values on UserInfoReply with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *UserInfoReply) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserInfoReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UserInfoReplyValidationError is the validation error returned by
+// UserInfoReply.Validate if the designated constraints aren't met.
+type UserInfoReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoReplyValidationError) ErrorName() string { return "UserInfoReplyValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserInfoReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfoReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoReplyValidationError{}
 
 // Validate checks the field values on GetCodeRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
@@ -425,83 +503,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserInfoRequestValidationError{}
-
-// Validate checks the field values on UserInfoReply with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
-func (m *UserInfoReply) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for Id
-
-	// no validation rules for UserName
-
-	// no validation rules for Wechat
-
-	// no validation rules for HeadImg
-
-	// no validation rules for Gender
-
-	// no validation rules for Birthday
-
-	return nil
-}
-
-// UserInfoReplyValidationError is the validation error returned by
-// UserInfoReply.Validate if the designated constraints aren't met.
-type UserInfoReplyValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e UserInfoReplyValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e UserInfoReplyValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e UserInfoReplyValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e UserInfoReplyValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e UserInfoReplyValidationError) ErrorName() string { return "UserInfoReplyValidationError" }
-
-// Error satisfies the builtin error interface
-func (e UserInfoReplyValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sUserInfoReply.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = UserInfoReplyValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = UserInfoReplyValidationError{}
 
 // Validate checks the field values on UserInfoUpdateRequest with the rules
 // defined in the proto definition for this message. If any rules are

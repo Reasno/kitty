@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"github.com/Reasno/kitty/app/handlers"
 	"github.com/Reasno/kitty/config"
-	"github.com/Reasno/kitty/pkg/container"
-	kittyhttp "github.com/Reasno/kitty/pkg/http"
 	kitty_log "github.com/Reasno/kitty/pkg/log"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -17,7 +14,7 @@ var (
 	// Used for flags.
 	cfgFile string
 	cfgCheck bool
-	serviceContainer container.ModuleContainer
+
 	logger log.Logger
 
 	rootCmd = &cobra.Command{
@@ -82,14 +79,5 @@ func initLogger(cmd *cobra.Command, _ []string) error {
 	logger = level.Info(logger)
 	logger.Log("config", viper.ConfigFileUsed())
 
-	return nil
-}
-
-func initServiceContainer(_ *cobra.Command, _ []string) error {
-	serviceContainer = container.NewModuleContainer()
-	serviceContainer.Register(handlers.New())
-	serviceContainer.Register(container.HttpFunc(kittyhttp.Doc))
-	serviceContainer.Register(container.HttpFunc(kittyhttp.HealthCheck))
-	serviceContainer.Register(container.HttpFunc(kittyhttp.Metrics))
 	return nil
 }

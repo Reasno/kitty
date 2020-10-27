@@ -41,12 +41,12 @@ type Endpoints struct {
 
 // Endpoints
 
-func (e Endpoints) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserLoginReply, error) {
+func (e Endpoints) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
 	response, err := e.LoginEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return response.(*pb.UserLoginReply), nil
+	return response.(*pb.UserInfoReply), nil
 }
 
 func (e Endpoints) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.GenericReply, error) {
