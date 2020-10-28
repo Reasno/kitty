@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package app.v1;
 
-import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-validate/validate/validate.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "kitty";
 
@@ -14,22 +14,160 @@ option (options.openapiv2_swagger) = {
     title: "A kitty app";
     version: "1.0";
   };
+  base_path: "/app"
+  security_definitions: {
+    security: {
+      key: "JWT",
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+      }
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "JWT";
+      value: {};
+    }
+  }
   consumes: "application/json";
   produces: "application/json";
 };
 
 service App {
-  rpc Create(UserRequest) returns (GenericReply) {
+  rpc Login(UserLoginRequest) returns (UserInfoReply) {
     option (google.api.http) = {
-      put: "/v1/create"
+      post: "/v1/login"
       body: "*"
     };
   }
-  rpc Code (EmptyRequest) returns (GenericReply) {
+  rpc GetCode(GetCodeRequest) returns (GenericReply) {
     option (google.api.http) = {
-      get: "/v1/code"    // Loudness is accepted in the http path
+      get: "/v1/code"
     };
   }
+  rpc GetInfo (UserInfoRequest) returns (UserInfoReply) {
+    option (google.api.http) = {
+      get: "/v1/info/{id}"
+    };
+  }
+  rpc UpdateInfo (UserInfoUpdateRequest) returns (UserInfoReply) {
+    option (google.api.http) = {
+      post: "/v1/info"
+      body: "*"
+    };
+  }
+  rpc Bind (UserBindRequest) returns (UserInfoReply) {
+    option (google.api.http) = {
+      post: "/v1/bind"
+      body: "*"
+    };
+  }
+  rpc Unbind (UserUnbindRequest) returns (UserInfoReply) {
+    option (google.api.http) = {
+      post: "/v1/unbind"
+      body: "*"
+    };
+  }
+}
+
+message UserBindRequest {
+  string mobile = 1 [
+    (validate.rules).string.pattern = "(^$|^[\\d]{11}$)",
+    (options.openapiv2_field) = {pattern: "(^$|^[\\d]{11}$)"}
+  ];
+  string code = 2;
+  string wechat = 3;
+}
+
+message UserUnbindRequest {
+  bool mobile = 1;
+  bool wechat = 2;
+}
+
+message UserLoginRequest {
+  string mobile = 1 [
+    (validate.rules).string.pattern = "(^$|^[\\d]{11}$)",
+    (options.openapiv2_field) = {pattern: "(^$|^[\\d]{11}$)"}
+  ];
+  string code = 2;
+  string wechat = 3;
+  Device device = 4;
+  string channel = 5 [
+    (options.openapiv2_field) = {required: "true"},
+    (validate.rules).string.min_len = 1
+  ];
+  string version_code = 6 [
+    (options.openapiv2_field) = {required: "true"},
+    (validate.rules).string.min_len = 1
+  ];
+}
+
+message Device {
+  enum OS {
+    OS_UNKNOWN = 0;
+    IOS = 1;
+    ANDROID = 2;
+  }
+  string imei = 1;
+  string idfa = 2;
+  string android_id = 3;
+  string suuid = 4;
+  string mac = 5;
+  OS os = 6;
+  string oaid = 7;
+}
+
+message UserInfo {
+  uint64 id = 1;
+  string user_name = 2;
+  string wechat = 3;
+  string head_img = 4;
+  Gender gender = 5;
+  string birthday = 6;
+  string token = 7;
+}
+
+message UserInfoReply {
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  string message = 2;
+  UserInfo data = 3;
+}
+
+enum Gender {
+  GENDER_UNKNOWN = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+}
+
+message GetCodeRequest {
+  string mobile = 1 [
+    (options.openapiv2_field) = {required: "true", pattern: "\\d{11}"},
+    (validate.rules).string = {pattern: "\\d{11}"}
+  ];
+}
+
+message UserInfoRequest {
+  uint64 id = 1;
+}
+
+message UserInfoUpdateRequest {
+  string user_name = 2 [
+    (options.openapiv2_field).minimum = 2,
+    (options.openapiv2_field).maximum = 10,
+    (validate.rules).string.min_len = 2,
+    (validate.rules).string.max_len = 10
+  ];
+  string head_img = 4 [
+    (options.openapiv2_field) = {pattern: "^(|https?://.*)$"},
+    (validate.rules).string = {pattern: "^(|https?://.*)$"}
+  ];
+  Gender gender = 5;
+  string birthday = 6 [
+    (options.openapiv2_field) = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"},
+    (validate.rules).string = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"}
+  ];
 }
 
 message EmptyRequest {
@@ -37,9 +175,8 @@ message EmptyRequest {
 }
 
 message GenericReply {
-  int32 code = 1;
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
   string message = 2;
-
 }
 
 message UserRequest {

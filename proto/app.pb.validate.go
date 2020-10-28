@@ -36,6 +36,727 @@ var (
 // define the regex for a UUID once up-front
 var _app_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on UserBindRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UserBindRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_UserBindRequest_Mobile_Pattern.MatchString(m.GetMobile()) {
+		return UserBindRequestValidationError{
+			field:  "Mobile",
+			reason: "value does not match regex pattern \"(^$|^[\\\\d]{11}$)\"",
+		}
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Wechat
+
+	return nil
+}
+
+// UserBindRequestValidationError is the validation error returned by
+// UserBindRequest.Validate if the designated constraints aren't met.
+type UserBindRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserBindRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserBindRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserBindRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserBindRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserBindRequestValidationError) ErrorName() string { return "UserBindRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserBindRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserBindRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserBindRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserBindRequestValidationError{}
+
+var _UserBindRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{11}$)")
+
+// Validate checks the field values on UserUnbindRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UserUnbindRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Mobile
+
+	// no validation rules for Wechat
+
+	return nil
+}
+
+// UserUnbindRequestValidationError is the validation error returned by
+// UserUnbindRequest.Validate if the designated constraints aren't met.
+type UserUnbindRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserUnbindRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserUnbindRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserUnbindRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserUnbindRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserUnbindRequestValidationError) ErrorName() string {
+	return "UserUnbindRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserUnbindRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserUnbindRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserUnbindRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserUnbindRequestValidationError{}
+
+// Validate checks the field values on UserLoginRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UserLoginRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_UserLoginRequest_Mobile_Pattern.MatchString(m.GetMobile()) {
+		return UserLoginRequestValidationError{
+			field:  "Mobile",
+			reason: "value does not match regex pattern \"(^$|^[\\\\d]{11}$)\"",
+		}
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Wechat
+
+	if v, ok := interface{}(m.GetDevice()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserLoginRequestValidationError{
+				field:  "Device",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetChannel()) < 1 {
+		return UserLoginRequestValidationError{
+			field:  "Channel",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetVersionCode()) < 1 {
+		return UserLoginRequestValidationError{
+			field:  "VersionCode",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	return nil
+}
+
+// UserLoginRequestValidationError is the validation error returned by
+// UserLoginRequest.Validate if the designated constraints aren't met.
+type UserLoginRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserLoginRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserLoginRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserLoginRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserLoginRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserLoginRequestValidationError) ErrorName() string { return "UserLoginRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserLoginRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserLoginRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserLoginRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserLoginRequestValidationError{}
+
+var _UserLoginRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{11}$)")
+
+// Validate checks the field values on Device with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Device) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Imei
+
+	// no validation rules for Idfa
+
+	// no validation rules for AndroidId
+
+	// no validation rules for Suuid
+
+	// no validation rules for Mac
+
+	// no validation rules for Os
+
+	// no validation rules for Oaid
+
+	return nil
+}
+
+// DeviceValidationError is the validation error returned by Device.Validate if
+// the designated constraints aren't met.
+type DeviceValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeviceValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeviceValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeviceValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeviceValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeviceValidationError) ErrorName() string { return "DeviceValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DeviceValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDevice.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeviceValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeviceValidationError{}
+
+// Validate checks the field values on UserInfo with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *UserInfo) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	// no validation rules for UserName
+
+	// no validation rules for Wechat
+
+	// no validation rules for HeadImg
+
+	// no validation rules for Gender
+
+	// no validation rules for Birthday
+
+	// no validation rules for Token
+
+	return nil
+}
+
+// UserInfoValidationError is the validation error returned by
+// UserInfo.Validate if the designated constraints aren't met.
+type UserInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoValidationError) ErrorName() string { return "UserInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoValidationError{}
+
+// Validate checks the field values on UserInfoReply with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *UserInfoReply) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserInfoReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UserInfoReplyValidationError is the validation error returned by
+// UserInfoReply.Validate if the designated constraints aren't met.
+type UserInfoReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoReplyValidationError) ErrorName() string { return "UserInfoReplyValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserInfoReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfoReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoReplyValidationError{}
+
+// Validate checks the field values on GetCodeRequest with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *GetCodeRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_GetCodeRequest_Mobile_Pattern.MatchString(m.GetMobile()) {
+		return GetCodeRequestValidationError{
+			field:  "Mobile",
+			reason: "value does not match regex pattern \"\\\\d{11}\"",
+		}
+	}
+
+	return nil
+}
+
+// GetCodeRequestValidationError is the validation error returned by
+// GetCodeRequest.Validate if the designated constraints aren't met.
+type GetCodeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetCodeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetCodeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetCodeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetCodeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetCodeRequestValidationError) ErrorName() string { return "GetCodeRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetCodeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetCodeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetCodeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetCodeRequestValidationError{}
+
+var _GetCodeRequest_Mobile_Pattern = regexp.MustCompile("\\d{11}")
+
+// Validate checks the field values on UserInfoRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UserInfoRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	return nil
+}
+
+// UserInfoRequestValidationError is the validation error returned by
+// UserInfoRequest.Validate if the designated constraints aren't met.
+type UserInfoRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoRequestValidationError) ErrorName() string { return "UserInfoRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserInfoRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfoRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoRequestValidationError{}
+
+// Validate checks the field values on UserInfoUpdateRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UserInfoUpdateRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if l := utf8.RuneCountInString(m.GetUserName()); l < 2 || l > 10 {
+		return UserInfoUpdateRequestValidationError{
+			field:  "UserName",
+			reason: "value length must be between 2 and 10 runes, inclusive",
+		}
+	}
+
+	if !_UserInfoUpdateRequest_HeadImg_Pattern.MatchString(m.GetHeadImg()) {
+		return UserInfoUpdateRequestValidationError{
+			field:  "HeadImg",
+			reason: "value does not match regex pattern \"^(|https?://.*)$\"",
+		}
+	}
+
+	// no validation rules for Gender
+
+	if !_UserInfoUpdateRequest_Birthday_Pattern.MatchString(m.GetBirthday()) {
+		return UserInfoUpdateRequestValidationError{
+			field:  "Birthday",
+			reason: "value does not match regex pattern \"^(|\\\\d{4}-\\\\d{1,2}-\\\\d{1,2})$\"",
+		}
+	}
+
+	return nil
+}
+
+// UserInfoUpdateRequestValidationError is the validation error returned by
+// UserInfoUpdateRequest.Validate if the designated constraints aren't met.
+type UserInfoUpdateRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoUpdateRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoUpdateRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoUpdateRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoUpdateRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoUpdateRequestValidationError) ErrorName() string {
+	return "UserInfoUpdateRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserInfoUpdateRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfoUpdateRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoUpdateRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoUpdateRequestValidationError{}
+
+var _UserInfoUpdateRequest_HeadImg_Pattern = regexp.MustCompile("^(|https?://.*)$")
+
+var _UserInfoUpdateRequest_Birthday_Pattern = regexp.MustCompile("^(|\\d{4}-\\d{1,2}-\\d{1,2})$")
+
 // Validate checks the field values on EmptyRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.

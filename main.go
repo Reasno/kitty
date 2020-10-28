@@ -1,4 +1,4 @@
-//go:generate go run main.go generate
+//go:generate tr proto/app.proto
 
 package main
 
