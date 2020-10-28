@@ -37,6 +37,8 @@ type Endpoints struct {
 	GetCodeEndpoint    endpoint.Endpoint
 	GetInfoEndpoint    endpoint.Endpoint
 	UpdateInfoEndpoint endpoint.Endpoint
+	BindEndpoint       endpoint.Endpoint
+	UnbindEndpoint     endpoint.Endpoint
 }
 
 // Endpoints
@@ -67,6 +69,22 @@ func (e Endpoints) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Use
 
 func (e Endpoints) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
 	response, err := e.UpdateInfoEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.UserInfoReply), nil
+}
+
+func (e Endpoints) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
+	response, err := e.BindEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.UserInfoReply), nil
+}
+
+func (e Endpoints) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
+	response, err := e.UnbindEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +137,28 @@ func MakeUpdateInfoEndpoint(s pb.AppServer) endpoint.Endpoint {
 	}
 }
 
+func MakeBindEndpoint(s pb.AppServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.UserBindRequest)
+		v, err := s.Bind(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakeUnbindEndpoint(s pb.AppServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.UserUnbindRequest)
+		v, err := s.Unbind(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 // WrapAllExcept wraps each Endpoint field of struct Endpoints with a
 // go-kit/kit/endpoint.Middleware.
 // Use this for applying a set of middlewares to every endpoint in the service.
@@ -130,6 +170,8 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		"GetCode":    {},
 		"GetInfo":    {},
 		"UpdateInfo": {},
+		"Bind":       {},
+		"Unbind":     {},
 	}
 
 	for _, ex := range excluded {
@@ -152,6 +194,12 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		if inc == "UpdateInfo" {
 			e.UpdateInfoEndpoint = middleware(e.UpdateInfoEndpoint)
 		}
+		if inc == "Bind" {
+			e.BindEndpoint = middleware(e.BindEndpoint)
+		}
+		if inc == "Unbind" {
+			e.UnbindEndpoint = middleware(e.UnbindEndpoint)
+		}
 	}
 }
 
@@ -170,6 +218,8 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		"GetCode":    {},
 		"GetInfo":    {},
 		"UpdateInfo": {},
+		"Bind":       {},
+		"Unbind":     {},
 	}
 
 	for _, ex := range excluded {
@@ -191,6 +241,12 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		}
 		if inc == "UpdateInfo" {
 			e.UpdateInfoEndpoint = middleware("UpdateInfo", e.UpdateInfoEndpoint)
+		}
+		if inc == "Bind" {
+			e.BindEndpoint = middleware("Bind", e.BindEndpoint)
+		}
+		if inc == "Unbind" {
+			e.UnbindEndpoint = middleware("Unbind", e.UnbindEndpoint)
 		}
 	}
 }

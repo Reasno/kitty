@@ -6,11 +6,11 @@ import (
 )
 
 type ModuleContainer struct {
-	HttpProviders []func(router *mux.Router)
-	GrpcProviders []func(server *grpc.Server)
-	CloserProviders []func()
-	RunProviders []RunPair
-	MigrationProvider []func() error
+	HttpProviders     []func(router *mux.Router)
+	GrpcProviders     []func(server *grpc.Server)
+	CloserProviders   []func()
+	RunProviders      []RunPair
+	MigrationProvider []Migrations
 }
 
 func NewModuleContainer() ModuleContainer {
@@ -19,13 +19,18 @@ func NewModuleContainer() ModuleContainer {
 		GrpcProviders:    []func(server *grpc.Server){},
 		CloserProviders:  []func(){},
 		RunProviders:     []RunPair{},
-		MigrationProvider: []func() error{},
+		MigrationProvider: []Migrations{},
 	}
 }
 
 type RunPair struct {
 	Loop func() error
 	Exit func(error)
+}
+
+type Migrations struct {
+	Migrate func() error
+	Rollback func(flag string) error
 }
 
 type HttpProvider interface {
@@ -47,6 +52,7 @@ type RunProvider interface {
 
 type MigrationProvider interface {
 	ProvideMigration() error
+	ProvideRollback(flag string) error
 }
 
 type HttpFunc func(router *mux.Router)
@@ -66,6 +72,6 @@ func (s *ModuleContainer) Register(app interface{})  {
 		s.RunProviders = append(s.RunProviders, RunPair{p.ProvideRunLoop, p.ProvideRunExit})
 	}
 	if p, ok := app.(MigrationProvider); ok {
-		s.MigrationProvider = append(s.MigrationProvider, p.ProvideMigration)
+		s.MigrationProvider = append(s.MigrationProvider, Migrations{p.ProvideMigration, p.ProvideRollback})
 	}
 }

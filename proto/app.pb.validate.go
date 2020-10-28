@@ -36,6 +36,155 @@ var (
 // define the regex for a UUID once up-front
 var _app_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on UserBindRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UserBindRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_UserBindRequest_Mobile_Pattern.MatchString(m.GetMobile()) {
+		return UserBindRequestValidationError{
+			field:  "Mobile",
+			reason: "value does not match regex pattern \"(^$|^[\\\\d]{11}$)\"",
+		}
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Wechat
+
+	return nil
+}
+
+// UserBindRequestValidationError is the validation error returned by
+// UserBindRequest.Validate if the designated constraints aren't met.
+type UserBindRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserBindRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserBindRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserBindRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserBindRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserBindRequestValidationError) ErrorName() string { return "UserBindRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserBindRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserBindRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserBindRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserBindRequestValidationError{}
+
+var _UserBindRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{11}$)")
+
+// Validate checks the field values on UserUnbindRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UserUnbindRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Mobile
+
+	// no validation rules for Wechat
+
+	return nil
+}
+
+// UserUnbindRequestValidationError is the validation error returned by
+// UserUnbindRequest.Validate if the designated constraints aren't met.
+type UserUnbindRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserUnbindRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserUnbindRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserUnbindRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserUnbindRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserUnbindRequestValidationError) ErrorName() string {
+	return "UserUnbindRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserUnbindRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserUnbindRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserUnbindRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserUnbindRequestValidationError{}
+
 // Validate checks the field values on UserLoginRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -65,9 +214,19 @@ func (m *UserLoginRequest) Validate() error {
 		}
 	}
 
-	// no validation rules for Channel
+	if utf8.RuneCountInString(m.GetChannel()) < 1 {
+		return UserLoginRequestValidationError{
+			field:  "Channel",
+			reason: "value length must be at least 1 runes",
+		}
+	}
 
-	// no validation rules for VersionCode
+	if utf8.RuneCountInString(m.GetVersionCode()) < 1 {
+		return UserLoginRequestValidationError{
+			field:  "VersionCode",
+			reason: "value length must be at least 1 runes",
+		}
+	}
 
 	return nil
 }

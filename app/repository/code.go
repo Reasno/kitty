@@ -18,7 +18,7 @@ func NewCodeRepo(cmdable redis.Cmdable) *CodeRepo {
 }
 
 func (c *CodeRepo) AddCode(ctx context.Context, mobile string) (code string, err error) {
-	n := rand.Intn(100000)
+	n := rand.Intn(1_000_000)
 	code = pad(n)
 	_, err = c.client.Set(ctx, "CodeRepo:"+mobile, code, 15*time.Minute).Result()
 	if err != nil {

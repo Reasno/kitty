@@ -88,11 +88,39 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.AppServer, error) {
 		).Endpoint()
 	}
 
+	var bindEndpoint endpoint.Endpoint
+	{
+		bindEndpoint = grpctransport.NewClient(
+			conn,
+			"kitty.App",
+			"Bind",
+			EncodeGRPCBindRequest,
+			DecodeGRPCBindResponse,
+			pb.UserInfoReply{},
+			clientOptions...,
+		).Endpoint()
+	}
+
+	var unbindEndpoint endpoint.Endpoint
+	{
+		unbindEndpoint = grpctransport.NewClient(
+			conn,
+			"kitty.App",
+			"Unbind",
+			EncodeGRPCUnbindRequest,
+			DecodeGRPCUnbindResponse,
+			pb.UserInfoReply{},
+			clientOptions...,
+		).Endpoint()
+	}
+
 	return svc.Endpoints{
 		LoginEndpoint:      loginEndpoint,
 		GetCodeEndpoint:    getcodeEndpoint,
 		GetInfoEndpoint:    getinfoEndpoint,
 		UpdateInfoEndpoint: updateinfoEndpoint,
+		BindEndpoint:       bindEndpoint,
+		UnbindEndpoint:     unbindEndpoint,
 	}, nil
 }
 
@@ -126,6 +154,20 @@ func DecodeGRPCUpdateInfoResponse(_ context.Context, grpcReply interface{}) (int
 	return reply, nil
 }
 
+// DecodeGRPCBindResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC bind reply to a user-domain bind response. Primarily useful in a client.
+func DecodeGRPCBindResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.UserInfoReply)
+	return reply, nil
+}
+
+// DecodeGRPCUnbindResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC unbind reply to a user-domain unbind response. Primarily useful in a client.
+func DecodeGRPCUnbindResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.UserInfoReply)
+	return reply, nil
+}
+
 // GRPC Client Encode
 
 // EncodeGRPCLoginRequest is a transport/grpc.EncodeRequestFunc that converts a
@@ -153,6 +195,20 @@ func EncodeGRPCGetInfoRequest(_ context.Context, request interface{}) (interface
 // user-domain updateinfo request to a gRPC updateinfo request. Primarily useful in a client.
 func EncodeGRPCUpdateInfoRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.UserInfoUpdateRequest)
+	return req, nil
+}
+
+// EncodeGRPCBindRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain bind request to a gRPC bind request. Primarily useful in a client.
+func EncodeGRPCBindRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.UserBindRequest)
+	return req, nil
+}
+
+// EncodeGRPCUnbindRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain unbind request to a gRPC unbind request. Primarily useful in a client.
+func EncodeGRPCUnbindRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.UserUnbindRequest)
 	return req, nil
 }
 

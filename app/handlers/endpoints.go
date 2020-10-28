@@ -19,6 +19,8 @@ func NewEndpoints(service pb.AppServer) svc.Endpoints {
 		getcodeEndpoint    = svc.MakeGetCodeEndpoint(service)
 		getinfoEndpoint    = svc.MakeGetInfoEndpoint(service)
 		updateinfoEndpoint = svc.MakeUpdateInfoEndpoint(service)
+		bindEndpoint       = svc.MakeBindEndpoint(service)
+		unbindEndpoint     = svc.MakeUnbindEndpoint(service)
 	)
 
 	endpoints := svc.Endpoints{
@@ -26,6 +28,8 @@ func NewEndpoints(service pb.AppServer) svc.Endpoints {
 		GetCodeEndpoint:    getcodeEndpoint,
 		GetInfoEndpoint:    getinfoEndpoint,
 		UpdateInfoEndpoint: updateinfoEndpoint,
+		BindEndpoint:       bindEndpoint,
+		UnbindEndpoint:     unbindEndpoint,
 	}
 
 	return endpoints

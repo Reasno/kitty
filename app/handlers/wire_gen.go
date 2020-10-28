@@ -15,7 +15,6 @@ import (
 	"github.com/Reasno/kitty/proto"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
-	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
@@ -64,22 +63,6 @@ func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
 	return appModule, func() {
 		cleanup3()
 		cleanup2()
-		cleanup()
-	}, nil
-}
-
-func injectTestDb(conf contract.ConfigReader) (*gorm.DB, func(), error) {
-	dialector, err := provideDialector(conf)
-	if err != nil {
-		return nil, nil, err
-	}
-	logger := provideLogger(conf)
-	config := provideGormConfig(logger)
-	db, cleanup, err := provideGormDB(dialector, config)
-	if err != nil {
-		return nil, nil, err
-	}
-	return db, func() {
 		cleanup()
 	}, nil
 }

@@ -58,6 +58,32 @@ service App {
       body: "*"
     };
   }
+  rpc Bind (UserBindRequest) returns (UserInfoReply) {
+    option (google.api.http) = {
+      post: "/v1/bind"
+      body: "*"
+    };
+  }
+  rpc Unbind (UserUnbindRequest) returns (UserInfoReply) {
+    option (google.api.http) = {
+      post: "/v1/unbind"
+      body: "*"
+    };
+  }
+}
+
+message UserBindRequest {
+  string mobile = 1 [
+    (validate.rules).string.pattern = "(^$|^[\\d]{11}$)",
+    (options.openapiv2_field) = {pattern: "(^$|^[\\d]{11}$)"}
+  ];
+  string code = 2;
+  string wechat = 3;
+}
+
+message UserUnbindRequest {
+  bool mobile = 1;
+  bool wechat = 2;
 }
 
 message UserLoginRequest {

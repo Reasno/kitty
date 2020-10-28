@@ -90,12 +90,34 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 			options...,
 		).Endpoint()
 	}
+	var BindZeroEndpoint endpoint.Endpoint
+	{
+		BindZeroEndpoint = httptransport.NewClient(
+			"POST",
+			copyURL(u, "/v1/bind"),
+			EncodeHTTPBindZeroRequest,
+			DecodeHTTPBindResponse,
+			options...,
+		).Endpoint()
+	}
+	var UnbindZeroEndpoint endpoint.Endpoint
+	{
+		UnbindZeroEndpoint = httptransport.NewClient(
+			"POST",
+			copyURL(u, "/v1/unbind"),
+			EncodeHTTPUnbindZeroRequest,
+			DecodeHTTPUnbindResponse,
+			options...,
+		).Endpoint()
+	}
 
 	return svc.Endpoints{
 		LoginEndpoint:      LoginZeroEndpoint,
 		GetCodeEndpoint:    GetCodeZeroEndpoint,
 		GetInfoEndpoint:    GetInfoZeroEndpoint,
 		UpdateInfoEndpoint: UpdateInfoZeroEndpoint,
+		BindEndpoint:       BindZeroEndpoint,
+		UnbindEndpoint:     UnbindZeroEndpoint,
 	}, nil
 }
 
@@ -209,6 +231,60 @@ func DecodeHTTPGetInfoResponse(_ context.Context, r *http.Response) (interface{}
 // error and attempt to decode the specific error message from the response
 // body. Primarily useful in a client.
 func DecodeHTTPUpdateInfoResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.UserInfoReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
+// DecodeHTTPBindResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded UserInfoReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPBindResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.UserInfoReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
+// DecodeHTTPUnbindResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded UserInfoReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPUnbindResponse(_ context.Context, r *http.Response) (interface{}, error) {
 	defer r.Body.Close()
 	buf, err := ioutil.ReadAll(r.Body)
 	if err == io.EOF {
@@ -401,6 +477,104 @@ func EncodeHTTPUpdateInfoZeroRequest(_ context.Context, r *http.Request, request
 	toRet.Gender = req.Gender
 
 	toRet.Birthday = req.Birthday
+
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(toRet); err != nil {
+		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
+	}
+	r.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// EncodeHTTPBindZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a bind request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPBindZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.UserBindRequest)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"v1",
+		"bind",
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	r.URL.RawQuery = values.Encode()
+	// Set the body parameters
+	var buf bytes.Buffer
+	toRet := request.(*pb.UserBindRequest)
+
+	toRet.Mobile = req.Mobile
+
+	toRet.Code = req.Code
+
+	toRet.Wechat = req.Wechat
+
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(toRet); err != nil {
+		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
+	}
+	r.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// EncodeHTTPUnbindZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a unbind request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPUnbindZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.UserUnbindRequest)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"v1",
+		"unbind",
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	r.URL.RawQuery = values.Encode()
+	// Set the body parameters
+	var buf bytes.Buffer
+	toRet := request.(*pb.UserUnbindRequest)
+
+	toRet.Mobile = req.Mobile
+
+	toRet.Wechat = req.Wechat
 
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)

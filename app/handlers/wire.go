@@ -12,7 +12,6 @@ import (
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
-	"gorm.io/gorm"
 )
 
 var DbSet = wire.NewSet(
@@ -58,11 +57,4 @@ func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
 		provideHistogramMetrics,
 		provideEndpointsMiddleware,
 		provideModule))
-}
-
-func injectTestDb(conf contract.ConfigReader) (*gorm.DB, func(), error) {
-	panic(wire.Build(
-		provideLogger,
-		DbSet,
-	))
 }

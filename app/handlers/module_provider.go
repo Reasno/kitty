@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/Reasno/kitty/app/entity"
+	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/app/svc"
 	"github.com/Reasno/kitty/pkg/contract"
 	pb "github.com/Reasno/kitty/proto"
@@ -36,15 +36,16 @@ func New(appModuleConfig contract.ConfigReader) *AppModule {
 }
 
 func (a *AppModule) ProvideMigration() error {
-	err := a.db.AutoMigrate(&entity.User{})
-	if err != nil {
-		return err
+	m := repository.ProvideMigrator(a.db)
+	return m.Migrate()
+}
+
+func (a *AppModule) ProvideRollback(id string) error {
+	m := repository.ProvideMigrator(a.db)
+	if id == "-1" {
+		return m.RollbackLast()
 	}
-	err = a.db.AutoMigrate(&entity.Device{})
-	if err != nil {
-		return err
-	}
-	return nil
+	return m.RollbackTo(id)
 }
 
 func (a *AppModule) ProvideCloser() {

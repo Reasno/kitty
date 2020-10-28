@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
@@ -41,6 +42,7 @@ type UserRepository interface {
 	GetFromDevice(ctx context.Context, suuid string, device *entity.Device) (user *entity.User, err error)
 	Update(ctx context.Context, id uint, user entity.User) (newUser *entity.User, err error)
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
+	Save(ctx context.Context, user *entity.User) error
 }
 
 type FileRepository interface {
@@ -93,20 +95,9 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		return nil, errors.Wrap(err, "failed to create jwt token")
 	}
 
-	var resp = pb.UserInfoReply{
-		Code: 0,
-		Data: &pb.UserInfo{
-			Id:       uint64(u.ID),
-			UserName: u.UserName,
-			Wechat:   u.WechatOpenId,
-			HeadImg:  u.HeadImg,
-			Gender:   pb.Gender(u.Gender),
-			Birthday: u.Birthday,
-			Token:    tokenString,
-		},
-	}
-
-	return &resp, nil
+	var resp = u.ToReply()
+	resp.Data.Token = tokenString
+	return resp, nil
 }
 
 func (s appService) verify(ctx context.Context, mobile string, code string) bool {
@@ -145,42 +136,50 @@ func (s appService) error(err error) {
 	level.Error(s.log).Log("err", err)
 }
 
-func (s appService) handleWechatLogin(ctx context.Context, wechat string, device *entity.Device) (*entity.User, error) {
+func (s appService) getWechatInfo(ctx context.Context, wechat string) (*wechat.WxUserInfoResult, error) {
 	wxRes, err := s.wechat.GetWechatLoginResponse(ctx, wechat)
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
+		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}
 	if wxRes.Openid == "" {
-		err := errors.New(msg.ERROR_MISSING_OPENID)
-		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
+		err := errors.New(msg.ErrorMissingOpenid)
+		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}
 	wxInfo, err := s.wechat.GetWechatUserInfoResult(ctx, wxRes)
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
+		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
+	}
+	return wxInfo, nil
+}
+
+func (s appService) handleWechatLogin(ctx context.Context, wechat string, device *entity.Device) (*entity.User, error) {
+	wxInfo, err := s.getWechatInfo(ctx, wechat)
+	if err != nil {
+		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}
 	headImg, err := s.fr.UploadFromUrl(ctx, wxInfo.Headimgurl)
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ERROR_UPLOAD)
+		return nil, errors.Wrap(err, msg.ErrorUpload)
 	}
 	wechatUser := entity.User{
 		UserName:      wxInfo.Nickname,
 		HeadImg:       headImg,
-		WechatOpenId:  wxInfo.Openid,
-		WechatUnionId: wxInfo.Unionid,
+		WechatOpenId:  ns(wxInfo.Openid),
+		WechatUnionId: ns(wxInfo.Unionid),
 	}
 	u, err := s.ur.GetFromWechat(ctx, wxInfo.Openid, device, wechatUser)
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ERROR_WECHAT_FAILUER)
+		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}
 	return u, nil
 }
 
 func (s appService) handleMobileLogin(ctx context.Context, mobile, code string, device *entity.Device) (*entity.User, error) {
 	if len(code) == 0 {
-		return nil, status.Error(codes.InvalidArgument, msg.INVALID_PARAMS)
+		return nil, status.Error(codes.InvalidArgument, msg.InvalidParams)
 	}
 	if !s.verify(ctx, mobile, code) {
-		return nil, status.Error(codes.Unauthenticated, msg.ERROR_MOBILE_NOEXIST)
+		return nil, status.Error(codes.Unauthenticated, msg.ErrorMobileCode)
 	}
 	return s.ur.GetFromMobile(ctx, mobile, device)
 }
@@ -193,7 +192,7 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	if in.Id == 0 {
 		claim := kittyjwt.GetClaim(ctx)
 		if claim == nil {
-			return nil, status.Error(codes.Unauthenticated, msg.ERROR_NEED_LOGIN)
+			return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
 		}
 		in.Id = claim.Uid
 	}
@@ -201,26 +200,13 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
-
-	var resp = pb.UserInfoReply{
-		Code:    0,
-		Message: "",
-		Data: &pb.UserInfo{
-			Id:       uint64(u.ID),
-			UserName: u.UserName,
-			Wechat:   u.WechatOpenId,
-			HeadImg:  u.HeadImg,
-			Gender:   pb.Gender(u.Gender),
-			Birthday: u.Birthday,
-		},
-	}
-	return &resp, nil
+	return u.ToReply(), nil
 }
 
 func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
 	if claim == nil {
-		return nil, status.Error(codes.Unauthenticated, msg.ERROR_NEED_LOGIN)
+		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
 	}
 	u, err := s.ur.Update(ctx, uint(claim.Uid), entity.User{
 		UserName: in.UserName,
@@ -229,20 +215,76 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 		Birthday: in.Birthday,
 	})
 	if err != nil {
-		return nil, status.Error(codes.NotFound, err.Error())
+		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
 	}
 
-	var resp = pb.UserInfoReply{
-		Code:    0,
-		Message: "",
-		Data: &pb.UserInfo{
-			Id:       uint64(u.ID),
-			UserName: u.UserName,
-			Wechat:   u.WechatOpenId,
-			HeadImg:  u.HeadImg,
-			Gender:   pb.Gender(u.Gender),
-			Birthday: u.Birthday,
-		},
+	return u.ToReply(), nil
+}
+
+func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.GetClaim(ctx)
+	if claim == nil {
+		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
 	}
-	return &resp, nil
+
+	var (
+		toUpdate entity.User
+	)
+
+	// 绑定手机号
+	if len(in.Mobile) > 0 && len(in.Code) > 0 {
+		if !s.verify(ctx, in.Mobile, in.Code) {
+			return nil, status.Error(codes.Unauthenticated, msg.ErrorMobileCode)
+		}
+		toUpdate = entity.User{Mobile: ns(in.Mobile)}
+	}
+
+	// 绑定微信号
+	if len(in.Wechat) > 0 {
+		wxInfo, err := s.getWechatInfo(ctx, in.Wechat)
+		if err != nil {
+			return nil, errors.Wrap(err, msg.ErrorWechatFailure)
+		}
+		toUpdate = entity.User{
+			WechatOpenId:  ns(wxInfo.Openid),
+			WechatUnionId: ns(wxInfo.Unionid),
+		}
+	}
+
+	// 更新用户
+	newUser, err := s.ur.Update(ctx, uint(claim.Uid), toUpdate)
+	if err != nil {
+		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+	}
+	return newUser.ToReply(), nil
+}
+
+func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.GetClaim(ctx)
+	if claim == nil {
+		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
+	}
+	user, err := s.ur.Get(ctx, uint(claim.Uid))
+	if err != nil {
+		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+	}
+	if in.Mobile {
+		user.Mobile = sql.NullString{}
+	}
+	if in.Wechat {
+		user.WechatUnionId = sql.NullString{}
+		user.WechatOpenId = sql.NullString{}
+	}
+	err = s.ur.Save(ctx, user)
+	if err != nil {
+		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+	}
+	return user.ToReply(), nil
+}
+
+func ns(s string) sql.NullString {
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
 }

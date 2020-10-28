@@ -12,6 +12,38 @@
     "application/json"
   ],
   "paths": {
+    "/v1/bind": {
+      "post": {
+        "operationId": "App_Bind",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UserInfoReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UserBindRequest"
+            }
+          }
+        ],
+        "tags": [
+          "App"
+        ]
+      }
+    },
     "/v1/code": {
       "get": {
         "operationId": "App_GetCode",
@@ -136,6 +168,38 @@
           "App"
         ]
       }
+    },
+    "/v1/unbind": {
+      "post": {
+        "operationId": "App_Unbind",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UserInfoReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UserUnbindRequest"
+            }
+          }
+        ],
+        "tags": [
+          "App"
+        ]
+      }
     }
   },
   "definitions": {
@@ -225,6 +289,21 @@
         }
       }
     },
+    "v1UserBindRequest": {
+      "type": "object",
+      "properties": {
+        "mobile": {
+          "type": "string",
+          "pattern": "(^$|^[\\d]{11}$)"
+        },
+        "code": {
+          "type": "string"
+        },
+        "wechat": {
+          "type": "string"
+        }
+      }
+    },
     "v1UserInfo": {
       "type": "object",
       "properties": {
@@ -305,10 +384,27 @@
           "$ref": "#/definitions/v1Device"
         },
         "channel": {
-          "type": "string"
+          "type": "string",
+          "required": [
+            "true"
+          ]
         },
         "versionCode": {
-          "type": "string"
+          "type": "string",
+          "required": [
+            "true"
+          ]
+        }
+      }
+    },
+    "v1UserUnbindRequest": {
+      "type": "object",
+      "properties": {
+        "mobile": {
+          "type": "boolean"
+        },
+        "wechat": {
+          "type": "boolean"
         }
       }
     }

@@ -2,7 +2,9 @@ package entity
 
 import (
 	"crypto/md5"
+	"database/sql"
 	"fmt"
+	pb "github.com/Reasno/kitty/proto"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -11,12 +13,12 @@ import (
 type User struct {
 	gorm.Model
 	UserName      string `json:"user_name" gorm:"default:游客"`
-	WechatOpenId  string `json:"wechat_openid"`
-	WechatUnionId string `json:"wechat_unionid"`
+	WechatOpenId  sql.NullString `json:"wechat_openid" gorm:"type:varchar(255);uniqueIndex:wechat_openid_index"`
+	WechatUnionId sql.NullString `json:"wechat_unionid"`
 	HeadImg       string `json:"head_img"`
 	Gender        int    `json:"gender"`
 	Birthday      string `json:"birthday" gorm:"default:2000-01-01"`
-	Mobile        string `json:"mobile"`
+	Mobile        sql.NullString `json:"mobile" gorm:"type:varchar(255);uniqueIndex:mobile_index"`
 	CommonSUUID string `json:"common_suuid"`
 	Devices       []Device
 	Channel       string `json:"channel"`
@@ -37,6 +39,21 @@ func (user *User) AddNewDevice(device *Device) {
 	device.Hash = device.HashCode()
 	device.UserID = user.ID
 	user.Devices = append(user.Devices, *device)
+}
+
+func (user *User) ToReply() *pb.UserInfoReply {
+	return &pb.UserInfoReply{
+		Code:    0,
+		Message: "",
+		Data: &pb.UserInfo{
+			Id:       uint64(user.ID),
+			UserName: user.UserName,
+			Wechat:   user.WechatOpenId.String,
+			HeadImg:  user.HeadImg,
+			Gender:   pb.Gender(user.Gender),
+			Birthday: user.Birthday,
+		},
+	}
 }
 
 // Device describes a device.
