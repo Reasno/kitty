@@ -6,7 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 func ProvideMigrator(db *gorm.DB) *gormigrate.Gormigrate {
 	return gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
 		{
@@ -18,7 +17,7 @@ func ProvideMigrator(db *gorm.DB) *gormigrate.Gormigrate {
 				)
 			},
 			Rollback: func(db *gorm.DB) error {
-				return db.Migrator().DropTable("users", "devices")
+				return db.Migrator().DropTable(&entity.User{}, &entity.Device{})
 			},
 		},
 	})

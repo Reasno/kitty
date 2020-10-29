@@ -12,21 +12,24 @@ import (
 )
 
 var (
-	id uint64
-	suuid string
-	openid string
-	channel string
+	id          uint64
+	suuid       string
+	openid      string
+	channel     string
 	versionCode string
-	ttl time.Duration
-	issuer string
+	mobile      string
+	ttl         time.Duration
+	issuer      string
 )
+
 func init() {
 	signCmd.Flags().Uint64Var(&id, "id", 1, "the user id in the token")
 	signCmd.Flags().StringVar(&suuid, "suuid", "", "the suuid in the token")
 	signCmd.Flags().StringVar(&openid, "openid", "", "the wechat openid in the token")
 	signCmd.Flags().StringVar(&channel, "channel", "", "the channel in the token")
 	signCmd.Flags().StringVar(&versionCode, "versionCode", "", "the channel in the token")
-	signCmd.Flags().DurationVar(&ttl, "ttl", 24 * time.Hour, "the ttl in the token")
+	signCmd.Flags().StringVar(&mobile, "mobile", "", "the phone number in the token")
+	signCmd.Flags().DurationVar(&ttl, "ttl", 24*time.Hour, "the ttl in the token")
 	signCmd.Flags().StringVar(&versionCode, "issuer", "signCmd", "the issuer in the token")
 	rootCmd.AddCommand(signCmd)
 }
@@ -46,6 +49,7 @@ var signCmd = &cobra.Command{
 				channel,
 				versionCode,
 				openid,
+				mobile,
 				ttl,
 			),
 		)

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	kittyhttp "github.com/Reasno/kitty/pkg/http"
 	"github.com/go-kit/kit/log/level"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func init() {
@@ -38,11 +40,21 @@ var serveCmd = &cobra.Command{
 				_ = logger.Log("err", err)
 				os.Exit(1)
 			}
+			h := getHttpHandler(ln, moduleContainer.HttpProviders...)
+			srv := &http.Server{
+				Handler: h,
+			}
 			g.Add(func() error {
-				h := getHttpHandler(ln, moduleContainer.HttpProviders...)
-				return http.Serve(ln, h)
+				return srv.Serve(ln)
 			}, func(err error) {
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				if err := srv.Shutdown(ctx); err != nil {
+					_ = logger.Log("err", err)
+					os.Exit(1)
+				}
 				_ = ln.Close()
+
 			})
 		}
 
@@ -54,10 +66,11 @@ var serveCmd = &cobra.Command{
 				_ = logger.Log("err", err)
 				os.Exit(1)
 			}
+			s := getGRPCServer(ln, moduleContainer.GrpcProviders...)
 			g.Add(func() error {
-				s := getGRPCServer(ln, moduleContainer.GrpcProviders...)
 				return s.Serve(ln)
 			}, func(err error) {
+				s.Stop()
 				_ = ln.Close()
 			})
 		}

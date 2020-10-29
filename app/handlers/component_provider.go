@@ -26,6 +26,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"io"
 )
 
@@ -118,9 +119,12 @@ func provideDialector(conf contract.ConfigReader) (gorm.Dialector, error) {
 	return nil, fmt.Errorf("unknow database type %s", databaseType)
 }
 
-func provideGormConfig(l log.Logger) *gorm.Config {
+func provideGormConfig(l log.Logger, conf contract.ConfigReader) *gorm.Config {
 	return &gorm.Config{
 		Logger: &logging.GormLogAdapter{l},
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix: conf.GetString("name") + "_", // 表名前缀，`User` 的表名应该是 `t_users`
+		},
 	}
 }
 
@@ -194,10 +198,9 @@ func provideEndpointsMiddleware(l log.Logger, securityConfig *middleware.Securit
 
 func provideModule(db *gorm.DB, tracer opentracing.Tracer, logger log.Logger, middleware overallMiddleware, server kitty.AppServer) *AppModule {
 	return &AppModule{
-		db: db,
+		db:        db,
 		logger:    logger,
 		tracer:    tracer,
 		endpoints: middleware(NewEndpoints(server)),
 	}
 }
-

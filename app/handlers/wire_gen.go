@@ -25,7 +25,7 @@ func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
 		return nil, nil, err
 	}
 	logger := provideLogger(reader)
-	config := provideGormConfig(logger)
+	config := provideGormConfig(logger, reader)
 	db, cleanup, err := provideGormDB(dialector, config)
 	if err != nil {
 		return nil, nil, err
