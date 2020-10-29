@@ -9,25 +9,27 @@ import (
 
 type Claim struct {
 	stdjwt.StandardClaims
-	Uid   uint64
+	UserId   uint64
 	Suuid string
 	Channel string
 	VersionCode string
 	Wechat string
+	Mobile string
 }
 
-func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat string, ttl time.Duration) *Claim {
+func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat, mobile string, ttl time.Duration) *Claim {
 	return &Claim{
 		StandardClaims: stdjwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ttl).Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    issuer,
 		},
-		Uid:   uid,
+		UserId:   uid,
 		Suuid: suuid,
 		Channel: channel,
 		VersionCode: versionCode,
 		Wechat: wechat,
+		Mobile: mobile,
 	}
 }
 
