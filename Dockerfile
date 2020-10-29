@@ -38,7 +38,7 @@ COPY ./config ./config
 COPY ./doc ./doc
 COPY --from=builder /go/bin/go-docker .
 
-EXPOSE 8080,9090
+EXPOSE 8080 9090
 
 ENTRYPOINT ["./go-docker"]
 
