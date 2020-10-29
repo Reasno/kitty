@@ -66,12 +66,12 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		Mac:       in.Device.Mac,
 		AndroidId: in.Device.AndroidId,
 	}
-	if len(in.Wechat) == 0 && len(in.Mobile) == 0 {
-		u, err = s.handleDeviceLogin(ctx, device.Suuid, device)
+	if len(in.Mobile) != 0 {
+		u, err = s.handleMobileLogin(ctx, in.Mobile, in.Code, device)
 	} else if len(in.Wechat) != 0 {
 		u, err = s.handleWechatLogin(ctx, in.Wechat, device)
 	} else {
-		u, err = s.handleMobileLogin(ctx, in.Mobile, in.Code, device)
+		u, err = s.handleDeviceLogin(ctx, device.Suuid, device)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorLogin)
