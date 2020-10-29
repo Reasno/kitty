@@ -50,6 +50,7 @@ type FileRepository interface {
 }
 
 func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
+	// TODO: 如果用户已经登陆了 就不能再登陆了，需要执行bind
 	var (
 		u      *entity.User
 		device *entity.Device
@@ -73,24 +74,11 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		u, err = s.handleMobileLogin(ctx, in.Mobile, in.Code, device)
 	}
 	if err != nil {
-		return nil, errors.Wrap(err, "login failed")
+		return nil, errors.Wrap(err, msg.ErrorLogin)
 	}
 
 	// Create jwt token
-	token := jwt.NewWithClaims(
-		jwt.SigningMethodHS256,
-		kittyjwt.NewClaim(
-			uint64(u.ID),
-			s.conf.GetString("name"),
-			in.Device.Suuid,
-			in.Channel,
-			in.VersionCode,
-			in.Wechat,
-			time.Hour*24*30,
-		),
-	)
-	token.Header["kid"] = s.conf.GetString("security.kid")
-	tokenString, err := token.SignedString([]byte(s.conf.GetString("security.key")))
+	tokenString, err := s.getToken(uint64(u.ID), in.Device.Suuid, in.Channel, in.VersionCode, u.WechatOpenId.String, u.Mobile.String)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create jwt token")
 	}
@@ -98,6 +86,20 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	var resp = u.ToReply()
 	resp.Data.Token = tokenString
 	return resp, nil
+}
+
+func (s appService) getToken(userId uint64, suuid, channel, versionCode, wechat, mobile string) (string, error) {
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		kittyjwt.NewClaim(
+			userId,
+			s.conf.GetString("name"),
+			suuid, channel, versionCode, wechat, mobile,
+			time.Hour*24*30,
+		),
+	)
+	token.Header["kid"] = s.conf.GetString("security.kid")
+	return token.SignedString([]byte(s.conf.GetString("security.key")))
 }
 
 func (s appService) verify(ctx context.Context, mobile string, code string) bool {
@@ -194,7 +196,7 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 		if claim == nil {
 			return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
 		}
-		in.Id = claim.Uid
+		in.Id = claim.UserId
 	}
 	u, err := s.ur.Get(ctx, uint(in.Id))
 	if err != nil {
@@ -208,7 +210,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 	if claim == nil {
 		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
 	}
-	u, err := s.ur.Update(ctx, uint(claim.Uid), entity.User{
+	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
 		UserName: in.UserName,
 		HeadImg:  in.HeadImg,
 		Gender:   int(in.Gender),
@@ -252,11 +254,24 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 更新用户
-	newUser, err := s.ur.Update(ctx, uint(claim.Uid), toUpdate)
+	newUser, err := s.ur.Update(ctx, uint(claim.UserId), toUpdate)
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
 	}
-	return newUser.ToReply(), nil
+	reply := newUser.ToReply()
+	reply.Data.Token, err = s.getToken(
+		uint64(newUser.ID),
+		newUser.CommonSUUID,
+		newUser.Channel,
+		newUser.VersionCode,
+		newUser.WechatOpenId.String,
+		newUser.Mobile.String,
+	)
+	if err != nil {
+		err = errors.Wrap(err, msg.ErrorJwtFailure)
+	}
+
+	return newUser.ToReply(), err
 }
 
 func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
@@ -264,7 +279,7 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	if claim == nil {
 		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
 	}
-	user, err := s.ur.Get(ctx, uint(claim.Uid))
+	user, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
 	}

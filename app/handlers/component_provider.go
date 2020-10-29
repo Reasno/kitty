@@ -184,6 +184,7 @@ func provideEndpointsMiddleware(l log.Logger, securityConfig *middleware.Securit
 		in.WrapAllExcept(middleware.NewValidationMiddleware())
 		in.WrapAllExcept(middleware.NewAuthenticationMiddleware(securityConfig), "Login", "GetCode")
 		in.WrapAllExcept(middleware.NewErrorMarshallerMiddleware())
+		in.LoginEndpoint = newLoginToBindMiddleware(in.BindEndpoint)(in.LoginEndpoint)
 		in.WrapAllLabeledExcept(middleware.NewLoggingMiddleware(l))
 		in.WrapAllLabeledExcept(middleware.NewMetricsMiddleware(hist, "app"))
 		in.WrapAllLabeledExcept(middleware.NewTraceMiddleware(tracer, "app"))
