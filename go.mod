@@ -21,10 +21,10 @@ require (
 	github.com/oklog/run v1.0.0
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.1.0
-	github.com/pborman/uuid v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.3.0
 	github.com/rs/cors v1.7.0
+	github.com/rs/xid v1.2.1
 	github.com/spf13/cobra v1.1.0
 	github.com/spf13/viper v1.7.1
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
