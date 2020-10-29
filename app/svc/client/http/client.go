@@ -528,6 +528,8 @@ func EncodeHTTPBindZeroRequest(_ context.Context, r *http.Request, request inter
 
 	toRet.Wechat = req.Wechat
 
+	toRet.OpenId = req.OpenId
+
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(toRet); err != nil {

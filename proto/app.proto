@@ -79,6 +79,8 @@ message UserBindRequest {
   ];
   string code = 2;
   string wechat = 3;
+  // 如果有openid 就直接走openid
+  string open_id = 4;
 }
 
 message UserUnbindRequest {
@@ -92,7 +94,9 @@ message UserLoginRequest {
     (options.openapiv2_field) = {pattern: "(^$|^[\\d]{11}$)"}
   ];
   string code = 2;
+  // 手机发起微信登录的token，非openid
   string wechat = 3;
+
   Device device = 4;
   string channel = 5 [
     (options.openapiv2_field) = {required: "true"},

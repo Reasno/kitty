@@ -301,6 +301,10 @@
         },
         "wechat": {
           "type": "string"
+        },
+        "openId": {
+          "type": "string",
+          "title": "如果有openid 就直接走openid"
         }
       }
     },
@@ -378,7 +382,8 @@
           "type": "string"
         },
         "wechat": {
-          "type": "string"
+          "type": "string",
+          "title": "手机发起微信登录的token，非openid"
         },
         "device": {
           "$ref": "#/definitions/v1Device"

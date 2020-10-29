@@ -95,6 +95,7 @@ func (s appService) getToken(userId uint64, suuid, channel, versionCode, wechat,
 			userId,
 			s.conf.GetString("name"),
 			suuid, channel, versionCode, wechat, mobile,
+			s.conf.GetString("packageName"),
 			time.Hour*24*30,
 		),
 	)
@@ -250,6 +251,12 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		toUpdate = entity.User{
 			WechatOpenId:  ns(wxInfo.Openid),
 			WechatUnionId: ns(wxInfo.Unionid),
+		}
+	}
+
+	if len(in.OpenId) > 0 {
+		toUpdate = entity.User{
+			WechatOpenId: ns(in.OpenId),
 		}
 	}
 

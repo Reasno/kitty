@@ -55,6 +55,8 @@ func (m *UserBindRequest) Validate() error {
 
 	// no validation rules for Wechat
 
+	// no validation rules for OpenId
+
 	return nil
 }
 
