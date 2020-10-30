@@ -69,7 +69,7 @@ service App {
       body: "*"
     };
   }
-  // Unbind 针对已登录用户，额外绑定手机或微信登录方式
+  // 针对已登录用户，取消绑定手机或微信登录方式
   rpc Unbind (UserUnbindRequest) returns (UserInfoReply) {
     option (google.api.http) = {
       post: "/v1/unbind"

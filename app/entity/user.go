@@ -12,18 +12,19 @@ import (
 // User describes a user
 type User struct {
 	gorm.Model
-	UserName      string `json:"user_name" gorm:"default:游客"`
+	UserName      string         `json:"user_name" gorm:"default:游客"`
 	WechatOpenId  sql.NullString `json:"wechat_openid" gorm:"type:varchar(255);uniqueIndex:wechat_openid_index"`
 	WechatUnionId sql.NullString `json:"wechat_unionid"`
-	HeadImg       string `json:"head_img"`
-	Gender        int    `json:"gender"`
-	Birthday      string `json:"birthday" gorm:"default:2000-01-01"`
+	HeadImg       string         `json:"head_img"`
+	Gender        int            `json:"gender"`
+	Birthday      string         `json:"birthday" gorm:"default:2000-01-01"`
 	Mobile        sql.NullString `json:"mobile" gorm:"type:varchar(255);uniqueIndex:mobile_index"`
-	CommonSUUID string `json:"common_suuid"`
+	CommonSUUID   string         `json:"common_suuid"`
 	Devices       []Device
 	Channel       string `json:"channel"`
 	VersionCode   string `json:"version_code"`
 	InviteCode    string `json:"invite_code"`
+	PackageName   string `gorm:"type:varchar(255);uniqueIndex:mobile_index"`
 }
 
 func (user *User) HasDevice(device *Device) bool {
