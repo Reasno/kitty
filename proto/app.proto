@@ -130,6 +130,10 @@ message UserLoginRequest {
   ];
   string version_code = 6 [
     (options.openapiv2_field) = {required: "true"},
+    (validate.rules).string.min_len = 4
+  ];
+  string package_name = 7 [
+    (options.openapiv2_field) = {required: "true"},
     (validate.rules).string.min_len = 1
   ];
 }
@@ -201,39 +205,9 @@ message UserInfoUpdateRequest {
 }
 
 message EmptyRequest {
-
 }
 
 message GenericReply {
   int32 code = 1 [(gogoproto.jsontag) = "code"];
   string message = 2;
-}
-
-message UserRequest {
-  string nick_name = 2 [(validate.rules).string = {max_len: 10}];
-  string real_name = 3;
-  string real_id = 4; // 身份证号
-
-  enum Gender {
-    // 未知
-    UNKNOWN = 0;
-    // 男
-    MALE = 1;
-    // 女
-    FEMALE = 2;
-  }
-
-  Gender gender = 5;
-  string autograph = 6;
-  uint32 age = 7;
-  string mobile = 8 [
-    (options.openapiv2_field) = {
-      description: "手机号"
-    },
-    (validate.rules).string.len = 5
-  ] ;
-  int32 code = 9 [(options.openapiv2_field) = {description: "验证码"}]; // 验证码
-  string wechat_open_id = 10 [(options.openapiv2_field) = {description: "微信 openId"}];
-  string qq_open_id = 11 [(.options.openapiv2_field) = {description: "QQ openId"}];
-  map<string, string> third_party_ids = 12;
 }

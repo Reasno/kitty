@@ -321,6 +321,8 @@ func (m *UserLoginRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for PackageName
+
 	return nil
 }
 
@@ -983,101 +985,3 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GenericReplyValidationError{}
-
-// Validate checks the field values on UserRequest with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
-func (m *UserRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	if utf8.RuneCountInString(m.GetNickName()) > 10 {
-		return UserRequestValidationError{
-			field:  "NickName",
-			reason: "value length must be at most 10 runes",
-		}
-	}
-
-	// no validation rules for RealName
-
-	// no validation rules for RealId
-
-	// no validation rules for Gender
-
-	// no validation rules for Autograph
-
-	// no validation rules for Age
-
-	if utf8.RuneCountInString(m.GetMobile()) != 5 {
-		return UserRequestValidationError{
-			field:  "Mobile",
-			reason: "value length must be 5 runes",
-		}
-
-	}
-
-	// no validation rules for Code
-
-	// no validation rules for WechatOpenId
-
-	// no validation rules for QqOpenId
-
-	// no validation rules for ThirdPartyIds
-
-	return nil
-}
-
-// UserRequestValidationError is the validation error returned by
-// UserRequest.Validate if the designated constraints aren't met.
-type UserRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e UserRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e UserRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e UserRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e UserRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e UserRequestValidationError) ErrorName() string { return "UserRequestValidationError" }
-
-// Error satisfies the builtin error interface
-func (e UserRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sUserRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = UserRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = UserRequestValidationError{}

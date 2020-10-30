@@ -251,15 +251,6 @@
       ],
       "default": "OS_UNKNOWN"
     },
-    "appv1Gender": {
-      "type": "string",
-      "enum": [
-        "GENDER_UNKNOWN",
-        "GENDER_MALE",
-        "GENDER_FEMALE"
-      ],
-      "default": "GENDER_UNKNOWN"
-    },
     "protobufAny": {
       "type": "object",
       "properties": {
@@ -316,6 +307,15 @@
         }
       }
     },
+    "v1Gender": {
+      "type": "string",
+      "enum": [
+        "GENDER_UNKNOWN",
+        "GENDER_MALE",
+        "GENDER_FEMALE"
+      ],
+      "default": "GENDER_UNKNOWN"
+    },
     "v1GenericReply": {
       "type": "object",
       "properties": {
@@ -364,7 +364,7 @@
           "type": "string"
         },
         "gender": {
-          "$ref": "#/definitions/appv1Gender"
+          "$ref": "#/definitions/v1Gender"
         },
         "birthday": {
           "type": "string"
@@ -402,7 +402,7 @@
           "pattern": "^(|https?://.*)$"
         },
         "gender": {
-          "$ref": "#/definitions/appv1Gender"
+          "$ref": "#/definitions/v1Gender"
         },
         "birthday": {
           "type": "string",
@@ -438,6 +438,9 @@
           "required": [
             "true"
           ]
+        },
+        "packageName": {
+          "type": "string"
         }
       }
     },

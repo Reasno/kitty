@@ -37,7 +37,7 @@ func TestGetFromWechat(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 	ctx := context.Background()
-	u, err := repo.GetFromWechat(ctx, "foo", &entity.Device{Suuid: "bar"}, entity.User{UserName: "baz"})
+	u, err := repo.GetFromWechat(ctx, "", "foo", &entity.Device{Suuid: "bar"}, entity.User{UserName: "baz"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestGetFromWechat(t *testing.T) {
 	if u.UserName != "baz" {
 		t.Fatalf("want baz, got %s", u.UserName)
 	}
-	u2, err := repo.GetFromWechat(ctx, "foo", &entity.Device{Suuid: "bar2"}, entity.User{UserName: "baz2"})
+	u2, err := repo.GetFromWechat(ctx, "", "foo", &entity.Device{Suuid: "bar2"}, entity.User{UserName: "baz2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestGetFromMobile(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 	ctx := context.Background()
-	u, err := repo.GetFromMobile(ctx, "110", &entity.Device{Suuid: "bar"})
+	u, err := repo.GetFromMobile(ctx, "", "110", &entity.Device{Suuid: "bar"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +88,7 @@ func TestGetFromMobile(t *testing.T) {
 	if u.CommonSUUID != "bar" {
 		t.Fatalf("want bar, got %s", u.CommonSUUID)
 	}
-	u2, err := repo.GetFromMobile(ctx, "110", &entity.Device{Suuid: "bar2"})
+	u2, err := repo.GetFromMobile(ctx, "", "110", &entity.Device{Suuid: "bar2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func TestGetFromDevice(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 	ctx := context.Background()
-	u, err := repo.GetFromDevice(ctx, "110", &entity.Device{Suuid: "bar"})
+	u, err := repo.GetFromDevice(ctx, "", "110", &entity.Device{Suuid: "bar"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestGetFromDevice(t *testing.T) {
 	if u.Devices[0].Suuid != "bar" {
 		t.Fatalf("want bar, got %s", u.Devices[0].Suuid)
 	}
-	u2, err := repo.GetFromDevice(ctx, "110", &entity.Device{Suuid: "bar2"})
+	u2, err := repo.GetFromDevice(ctx, "", "110", &entity.Device{Suuid: "bar2"})
 	if err != nil {
 		t.Fatal(err)
 	}

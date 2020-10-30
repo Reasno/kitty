@@ -37,9 +37,9 @@ type CodeRepository interface {
 }
 
 type UserRepository interface {
-	GetFromWechat(ctx context.Context, wechat string, device *entity.Device, wechatUser entity.User) (user *entity.User, err error)
-	GetFromMobile(ctx context.Context, mobile string, device *entity.Device) (user *entity.User, err error)
-	GetFromDevice(ctx context.Context, suuid string, device *entity.Device) (user *entity.User, err error)
+	GetFromWechat(ctx context.Context, packageName, wechat string, device *entity.Device, wechatUser entity.User) (user *entity.User, err error)
+	GetFromMobile(ctx context.Context, packageName, mobile string, device *entity.Device) (user *entity.User, err error)
+	GetFromDevice(ctx context.Context, packageName, suuid string, device *entity.Device) (user *entity.User, err error)
 	Update(ctx context.Context, id uint, user entity.User) (newUser *entity.User, err error)
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
 	Save(ctx context.Context, user *entity.User) error
@@ -50,7 +50,6 @@ type FileRepository interface {
 }
 
 func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
-	// TODO: 如果用户已经登陆了 就不能再登陆了，需要执行bind
 	var (
 		u      *entity.User
 		device *entity.Device
@@ -67,18 +66,18 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		AndroidId: in.Device.AndroidId,
 	}
 	if len(in.Mobile) != 0 {
-		u, err = s.handleMobileLogin(ctx, in.Mobile, in.Code, device)
+		u, err = s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
 	} else if len(in.Wechat) != 0 {
-		u, err = s.handleWechatLogin(ctx, in.Wechat, device)
+		u, err = s.handleWechatLogin(ctx, in.PackageName, in.Wechat, device)
 	} else {
-		u, err = s.handleDeviceLogin(ctx, device.Suuid, device)
+		u, err = s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorLogin)
 	}
 
 	// Create jwt token
-	tokenString, err := s.getToken(uint64(u.ID), in.Device.Suuid, in.Channel, in.VersionCode, u.WechatOpenId.String, u.Mobile.String)
+	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), in.Device.Suuid, in.Channel, in.VersionCode, u.WechatOpenId.String, in.Mobile, in.PackageName})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create jwt token")
 	}
@@ -88,14 +87,18 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	return resp, nil
 }
 
-func (s appService) getToken(userId uint64, suuid, channel, versionCode, wechat, mobile string) (string, error) {
+type tokenParam struct {
+	userId                                                   uint64
+	suuid, channel, versionCode, wechat, mobile, packageName string
+}
+
+func (s appService) getToken(param *tokenParam) (string, error) {
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		kittyjwt.NewClaim(
-			userId,
+			param.userId,
 			s.conf.GetString("name"),
-			suuid, channel, versionCode, wechat, mobile,
-			s.conf.GetString("packageName"),
+			param.suuid, param.channel, param.versionCode, param.wechat, param.mobile, param.packageName,
 			time.Hour*24*30,
 		),
 	)
@@ -155,7 +158,7 @@ func (s appService) getWechatInfo(ctx context.Context, wechat string) (*wechat.W
 	return wxInfo, nil
 }
 
-func (s appService) handleWechatLogin(ctx context.Context, wechat string, device *entity.Device) (*entity.User, error) {
+func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat string, device *entity.Device) (*entity.User, error) {
 	wxInfo, err := s.getWechatInfo(ctx, wechat)
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
@@ -170,25 +173,25 @@ func (s appService) handleWechatLogin(ctx context.Context, wechat string, device
 		WechatOpenId:  ns(wxInfo.Openid),
 		WechatUnionId: ns(wxInfo.Unionid),
 	}
-	u, err := s.ur.GetFromWechat(ctx, wxInfo.Openid, device, wechatUser)
+	u, err := s.ur.GetFromWechat(ctx, packageName, wxInfo.Openid, device, wechatUser)
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}
 	return u, nil
 }
 
-func (s appService) handleMobileLogin(ctx context.Context, mobile, code string, device *entity.Device) (*entity.User, error) {
+func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, code string, device *entity.Device) (*entity.User, error) {
 	if len(code) == 0 {
 		return nil, status.Error(codes.InvalidArgument, msg.InvalidParams)
 	}
 	if !s.verify(ctx, mobile, code) {
 		return nil, status.Error(codes.Unauthenticated, msg.ErrorMobileCode)
 	}
-	return s.ur.GetFromMobile(ctx, mobile, device)
+	return s.ur.GetFromMobile(ctx, packageName, mobile, device)
 }
 
-func (s appService) handleDeviceLogin(ctx context.Context, suuid string, device *entity.Device) (*entity.User, error) {
-	return s.ur.GetFromDevice(ctx, suuid, device)
+func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid string, device *entity.Device) (*entity.User, error) {
+	return s.ur.GetFromDevice(ctx, packageName, suuid, device)
 }
 
 func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
@@ -266,14 +269,15 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
 	}
 	reply := newUser.ToReply()
-	reply.Data.Token, err = s.getToken(
+	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(newUser.ID),
 		newUser.CommonSUUID,
 		newUser.Channel,
 		newUser.VersionCode,
 		newUser.WechatOpenId.String,
 		newUser.Mobile.String,
-	)
+		newUser.PackageName,
+	})
 	if err != nil {
 		err = errors.Wrap(err, msg.ErrorJwtFailure)
 	}
@@ -340,14 +344,15 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	}
 
 	reply := u.ToReply()
-	reply.Data.Token, err = s.getToken(
+	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(u.ID),
 		u.CommonSUUID,
 		u.Channel,
 		u.VersionCode,
 		u.WechatOpenId.String,
 		u.Mobile.String,
-	)
+		u.PackageName,
+	})
 	if err != nil {
 		err = errors.Wrap(err, msg.ErrorJwtFailure)
 	}

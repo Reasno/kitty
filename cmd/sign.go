@@ -11,28 +11,30 @@ import (
 	"time"
 )
 
-var (
+type signParam struct {
 	id          uint64
 	suuid       string
 	openid      string
 	channel     string
 	versionCode string
 	mobile      string
-	packageName      string
+	packageName string
 	ttl         time.Duration
 	issuer      string
-)
+}
+
+var s signParam
 
 func init() {
-	signCmd.Flags().Uint64Var(&id, "id", 1, "the user id in the token")
-	signCmd.Flags().StringVar(&suuid, "suuid", "", "the suuid in the token")
-	signCmd.Flags().StringVar(&openid, "openid", "", "the wechat openid in the token")
-	signCmd.Flags().StringVar(&channel, "channel", "", "the channel in the token")
-	signCmd.Flags().StringVar(&versionCode, "versionCode", "", "the channel in the token")
-	signCmd.Flags().StringVar(&mobile, "mobile", "", "the phone number in the token")
-	signCmd.Flags().StringVar(&packageName, "packageName", "com.donews.www", "the package name of the token")
-	signCmd.Flags().DurationVar(&ttl, "ttl", 24*time.Hour, "the ttl in the token")
-	signCmd.Flags().StringVar(&issuer, "issuer", "signCmd", "the issuer in the token")
+	signCmd.Flags().Uint64Var(&s.id, "id", 1, "the user id in the token")
+	signCmd.Flags().StringVar(&s.suuid, "suuid", "", "the suuid in the token")
+	signCmd.Flags().StringVar(&s.openid, "openid", "", "the wechat openid in the token")
+	signCmd.Flags().StringVar(&s.channel, "channel", "", "the channel in the token")
+	signCmd.Flags().StringVar(&s.versionCode, "versionCode", "", "the channel in the token")
+	signCmd.Flags().StringVar(&s.mobile, "mobile", "", "the phone number in the token")
+	signCmd.Flags().StringVar(&s.packageName, "packageName", "com.donews.www", "the package name of the token")
+	signCmd.Flags().DurationVar(&s.ttl, "ttl", 24*time.Hour, "the ttl in the token")
+	signCmd.Flags().StringVar(&s.issuer, "issuer", "signCmd", "the issuer in the token")
 	rootCmd.AddCommand(signCmd)
 }
 
@@ -45,15 +47,15 @@ var signCmd = &cobra.Command{
 		token := jwt.NewWithClaims(
 			jwt.SigningMethodHS256,
 			kittyjwt.NewClaim(
-				id,
-				issuer,
-				suuid,
-				channel,
-				versionCode,
-				openid,
-				mobile,
-				packageName,
-				ttl,
+				s.id,
+				s.issuer,
+				s.suuid,
+				s.channel,
+				s.versionCode,
+				s.openid,
+				s.mobile,
+				s.packageName,
+				s.ttl,
 			),
 		)
 		token.Header["kid"] = viper.GetString("global.security.kid")

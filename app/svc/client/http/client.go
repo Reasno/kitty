@@ -393,6 +393,8 @@ func EncodeHTTPLoginZeroRequest(_ context.Context, r *http.Request, request inte
 
 	toRet.VersionCode = req.VersionCode
 
+	toRet.PackageName = req.PackageName
+
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(toRet); err != nil {

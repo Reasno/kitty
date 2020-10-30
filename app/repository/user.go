@@ -40,12 +40,14 @@ func NewUserRepo(db *gorm.DB) *UserRepo {
 	return &UserRepo{db}
 }
 
-func (r *UserRepo) GetFromWechat(ctx context.Context, wechat string, device *entity.Device, wechatUser entity.User) (*entity.User, error) {
+func (r *UserRepo) GetFromWechat(ctx context.Context, packageName, wechat string, device *entity.Device, wechatUser entity.User) (*entity.User, error) {
 	var (
 		u entity.User
 	)
 	wechatUser.CommonSUUID = device.Suuid
-	err := r.db.WithContext(ctx).Where(entity.User{WechatOpenId: sql.NullString{String: wechat, Valid: true}}).Attrs(wechatUser).FirstOrCreate(&u).Error
+	wechatUser.PackageName = packageName
+	wechatUser.WechatOpenId = sql.NullString{wechat, true}
+	err := r.db.WithContext(ctx).Where("package_name = ? and wechat_open_id = ?", packageName, wechat).Attrs(wechatUser).FirstOrCreate(&u).Error
 	if err != nil {
 		return nil, errors.Wrap(err, emsg)
 	}
@@ -54,12 +56,12 @@ func (r *UserRepo) GetFromWechat(ctx context.Context, wechat string, device *ent
 	return &u, nil
 }
 
-func (r *UserRepo) GetFromMobile(ctx context.Context, mobile string, device *entity.Device) (*entity.User, error) {
+func (r *UserRepo) GetFromMobile(ctx context.Context, packageName, mobile string, device *entity.Device) (*entity.User, error) {
 	var (
 		u entity.User
 	)
-	err := r.db.WithContext(ctx).Where(entity.User{Mobile: sql.NullString{String: mobile, Valid: true}}).Attrs(entity.User{CommonSUUID: device.Suuid}).FirstOrCreate(&u).Error
-	if err != nil {
+	err := r.db.WithContext(ctx).Where("package_name = ? and mobile = ?", packageName, mobile).Attrs(entity.User{CommonSUUID: device.Suuid, PackageName: packageName, Mobile: sql.NullString{mobile, true}}).FirstOrCreate(&u).Error
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.Wrap(err, emsg)
 	}
 	u.AddNewDevice(device)
@@ -67,13 +69,13 @@ func (r *UserRepo) GetFromMobile(ctx context.Context, mobile string, device *ent
 	return &u, nil
 }
 
-func (r *UserRepo) GetFromDevice(ctx context.Context, suuid string, device *entity.Device) (*entity.User, error) {
+func (r *UserRepo) GetFromDevice(ctx context.Context, packageName, suuid string, device *entity.Device) (*entity.User, error) {
 	var (
 		err error
-		u entity.User
+		u   entity.User
 	)
 
-	err = r.db.WithContext(ctx).Where(entity.User{CommonSUUID: suuid}).FirstOrCreate(&u).Error
+	err = r.db.WithContext(ctx).Where("package_name = ? and common_s_uuid = ?", packageName, suuid).Attrs(entity.User{PackageName: packageName, CommonSUUID: suuid}).FirstOrCreate(&u).Error
 	if err != nil {
 		return nil, errors.Wrap(err, emsg)
 	}
