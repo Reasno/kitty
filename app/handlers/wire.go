@@ -30,6 +30,7 @@ var AppServerSet = wire.NewSet(
 	provideSmsConfig,
 	DbSet,
 	OpenTracingSet,
+	provideKeyManager,
 	provideHttpClient,
 	provideUploadManager,
 	provideRedis,

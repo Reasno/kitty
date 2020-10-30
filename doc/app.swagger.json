@@ -1,8 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "A kitty app",
-    "version": "1.0"
+    "title": "商业化中台用户中心",
+    "version": "0.1.0"
   },
   "basePath": "/app",
   "consumes": [
@@ -441,10 +441,7 @@
         },
         "channel": {
           "type": "string",
-          "title": "渠道",
-          "required": [
-            "true"
-          ]
+          "title": "渠道"
         },
         "versionCode": {
           "type": "string",
@@ -470,10 +467,7 @@
         },
         "channel": {
           "type": "string",
-          "title": "渠道号",
-          "required": [
-            "true"
-          ]
+          "title": "渠道号"
         },
         "versionCode": {
           "type": "string",

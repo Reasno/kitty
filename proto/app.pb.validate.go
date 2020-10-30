@@ -134,12 +134,7 @@ func (m *UserRefreshRequest) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetChannel()) < 1 {
-		return UserRefreshRequestValidationError{
-			field:  "Channel",
-			reason: "value length must be at least 1 runes",
-		}
-	}
+	// no validation rules for Channel
 
 	if utf8.RuneCountInString(m.GetVersionCode()) < 1 {
 		return UserRefreshRequestValidationError{
@@ -307,12 +302,7 @@ func (m *UserLoginRequest) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetChannel()) < 1 {
-		return UserLoginRequestValidationError{
-			field:  "Channel",
-			reason: "value length must be at least 1 runes",
-		}
-	}
+	// no validation rules for Channel
 
 	if utf8.RuneCountInString(m.GetVersionCode()) < 4 {
 		return UserLoginRequestValidationError{
