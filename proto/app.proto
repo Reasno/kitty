@@ -105,10 +105,7 @@ message UserBindRequest {
 message UserRefreshRequest {
   Device device = 4;
   // 渠道号
-  string channel = 5 [
-    (options.openapiv2_field) = {required: "true"},
-    (validate.rules).string.min_len = 1
-  ];
+  string channel = 5;
   // 版本号
   string version_code = 6 [
     (options.openapiv2_field) = {required: "true"},
@@ -136,10 +133,7 @@ message UserLoginRequest {
 
   Device device = 4;
   // 渠道
-  string channel = 5 [
-    (options.openapiv2_field) = {required: "true"},
-    (validate.rules).string.min_len = 1
-  ];
+  string channel = 5;
   // 版本号
   string version_code = 6 [
     (options.openapiv2_field) = {required: "true"},

@@ -40,6 +40,12 @@ func provideHistogramMetrics(conf contract.ConfigReader) metrics.Histogram {
 	return his
 }
 
+func provideKeyManager(conf contract.ConfigReader) *otredis.KeyManager {
+	return &otredis.KeyManager{
+		conf.GetString("name"),
+	}
+}
+
 func provideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
 	return kittyhttp.NewClient(tracer)
 }
