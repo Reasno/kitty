@@ -16,10 +16,11 @@ import (
 type Hook struct {
 	addrs    []string
 	database int
+	tracer opentracing.Tracer
 }
 
-func NewHook(addrs []string, database int) Hook {
-	return Hook{addrs: addrs, database: database}
+func NewHook(tracer opentracing.Tracer, addrs []string, database int) Hook {
+	return Hook{addrs: addrs, database: database, tracer: tracer}
 }
 
 // BeforeProcess is a hook before process.
@@ -50,7 +51,7 @@ func (h Hook) AfterProcess(ctx context.Context, cmd redis.Cmder) error {
 
 // BeforeProcessPipeline is a hook before pipeline process.
 func (h Hook) BeforeProcessPipeline(ctx context.Context, cmds []redis.Cmder) (context.Context, error) {
-	span, newCtx := opentracing.StartSpanFromContext(ctx, "redis:pipeline:cmd")
+	span, newCtx := opentracing.StartSpanFromContextWithTracer(ctx,h.tracer, "redis:pipeline:cmd")
 	ext.DBType.Set(span, "redis")
 	ext.DBInstance.Set(span, strconv.Itoa(h.database))
 	ext.PeerAddress.Set(span, strings.Join(h.addrs, ", "))

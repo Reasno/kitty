@@ -12,8 +12,8 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
+	"github.com/rs/xid"
 	"io"
 	"net/http"
 )
@@ -93,7 +93,7 @@ func (m *Manager) Upload(ctx context.Context, reader io.Reader) (url string, err
 
 	result, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Bucket: aws.String(m.bucket),
-		Key:    aws.String(uuid.New()),
+		Key:    aws.String(xid.New().String()),
 		Body:   reader,
 	})
 

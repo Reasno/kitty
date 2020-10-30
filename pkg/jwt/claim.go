@@ -9,6 +9,7 @@ import (
 
 type Claim struct {
 	stdjwt.StandardClaims
+	PackageName string
 	UserId   uint64
 	Suuid string
 	Channel string
@@ -17,7 +18,7 @@ type Claim struct {
 	Mobile string
 }
 
-func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat, mobile string, ttl time.Duration) *Claim {
+func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat, mobile, packageName string, ttl time.Duration) *Claim {
 	return &Claim{
 		StandardClaims: stdjwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ttl).Unix(),
@@ -30,6 +31,7 @@ func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat, mobile st
 		VersionCode: versionCode,
 		Wechat: wechat,
 		Mobile: mobile,
+		PackageName: packageName,
 	}
 }
 

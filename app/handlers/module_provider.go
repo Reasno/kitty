@@ -18,16 +18,15 @@ import (
 )
 
 type AppModule struct {
-	logger log.Logger
-	db *gorm.DB
-	tracer stdopentracing.Tracer
+	logger    log.Logger
+	db        *gorm.DB
+	tracer    stdopentracing.Tracer
 	cleanup   func()
 	endpoints svc.Endpoints
 }
 
-
-func New(appModuleConfig contract.ConfigReader) *AppModule {
-	appModule, cleanup, err := injectModule(appModuleConfig)
+func New(appModuleConfig contract.ConfigReader, logger log.Logger) *AppModule {
+	appModule, cleanup, err := injectModule(appModuleConfig, logger)
 	if err != nil {
 		panic(err)
 	}

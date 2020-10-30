@@ -18,6 +18,7 @@ var (
 	channel     string
 	versionCode string
 	mobile      string
+	packageName      string
 	ttl         time.Duration
 	issuer      string
 )
@@ -29,8 +30,9 @@ func init() {
 	signCmd.Flags().StringVar(&channel, "channel", "", "the channel in the token")
 	signCmd.Flags().StringVar(&versionCode, "versionCode", "", "the channel in the token")
 	signCmd.Flags().StringVar(&mobile, "mobile", "", "the phone number in the token")
+	signCmd.Flags().StringVar(&packageName, "packageName", "com.donews.www", "the package name of the token")
 	signCmd.Flags().DurationVar(&ttl, "ttl", 24*time.Hour, "the ttl in the token")
-	signCmd.Flags().StringVar(&versionCode, "issuer", "signCmd", "the issuer in the token")
+	signCmd.Flags().StringVar(&issuer, "issuer", "signCmd", "the issuer in the token")
 	rootCmd.AddCommand(signCmd)
 }
 
@@ -50,6 +52,7 @@ var signCmd = &cobra.Command{
 				versionCode,
 				openid,
 				mobile,
+				packageName,
 				ttl,
 			),
 		)

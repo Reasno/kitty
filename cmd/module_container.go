@@ -5,6 +5,7 @@ import (
 	"github.com/Reasno/kitty/pkg/config"
 	"github.com/Reasno/kitty/pkg/container"
 	kittyhttp "github.com/Reasno/kitty/pkg/http"
+	"github.com/go-kit/kit/log"
 )
 
 var moduleContainer container.ModuleContainer
@@ -15,7 +16,10 @@ func initModules() {
 	if err != nil {
 		panic(err)
 	}
-	moduleContainer.Register(handlers.New(appModuleConfig))
+	moduleContainer.Register(handlers.New(
+		appModuleConfig,
+		log.With(logger, "module", "app")),
+	)
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Doc))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.HealthCheck))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Metrics))

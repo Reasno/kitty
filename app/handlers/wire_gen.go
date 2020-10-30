@@ -13,25 +13,25 @@ import (
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/pkg/wechat"
 	"github.com/Reasno/kitty/proto"
+	"github.com/go-kit/kit/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
 
-func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
+func injectModule(reader contract.ConfigReader, logger log.Logger) (*AppModule, func(), error) {
 	dialector, err := provideDialector(reader)
 	if err != nil {
 		return nil, nil, err
 	}
-	logger := provideLogger(reader)
 	config := provideGormConfig(logger, reader)
-	db, cleanup, err := provideGormDB(dialector, config)
+	jaegerLogger := provideJaegerLogAdapter(logger)
+	tracer, cleanup, err := provideOpentracing(jaegerLogger, reader)
 	if err != nil {
 		return nil, nil, err
 	}
-	jaegerLogger := provideJaegerLogAdapter(logger)
-	tracer, cleanup2, err := provideOpentracing(jaegerLogger, reader)
+	db, cleanup2, err := provideGormDB(dialector, config, tracer)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -40,7 +40,7 @@ func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
 	histogram := provideHistogramMetrics(reader)
 	handlersOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer)
 	userRepo := repository.NewUserRepo(db)
-	universalClient, cleanup3 := provideRedis(logger, reader)
+	universalClient, cleanup3 := provideRedis(logger, reader, tracer)
 	codeRepo := repository.NewCodeRepo(universalClient)
 	client := provideHttpClient(tracer)
 	transportConfig := provideSmsConfig(client, reader)
@@ -81,7 +81,6 @@ var OpenTracingSet = wire.NewSet(
 )
 
 var AppServerSet = wire.NewSet(
-	provideLogger,
 	provideSmsConfig,
 	DbSet,
 	OpenTracingSet,

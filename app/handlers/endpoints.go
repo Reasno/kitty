@@ -21,6 +21,7 @@ func NewEndpoints(service pb.AppServer) svc.Endpoints {
 		updateinfoEndpoint = svc.MakeUpdateInfoEndpoint(service)
 		bindEndpoint       = svc.MakeBindEndpoint(service)
 		unbindEndpoint     = svc.MakeUnbindEndpoint(service)
+		refreshEndpoint    = svc.MakeRefreshEndpoint(service)
 	)
 
 	endpoints := svc.Endpoints{
@@ -30,6 +31,7 @@ func NewEndpoints(service pb.AppServer) svc.Endpoints {
 		UpdateInfoEndpoint: updateinfoEndpoint,
 		BindEndpoint:       bindEndpoint,
 		UnbindEndpoint:     unbindEndpoint,
+		RefreshEndpoint:    refreshEndpoint,
 	}
 
 	return endpoints

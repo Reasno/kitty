@@ -30,10 +30,6 @@ import (
 	"io"
 )
 
-func provideLogger(conf contract.ConfigReader) log.Logger {
-	return log.With(logging.NewLogger(conf.GetString("env")), "module", "app")
-}
-
 func provideHistogramMetrics(conf contract.ConfigReader) metrics.Histogram {
 	var his metrics.Histogram = prometheus.NewHistogramFrom(stdprometheus.HistogramOpts{
 		Namespace: conf.GetString("name"),
@@ -92,14 +88,14 @@ func provideSmsConfig(doer contract.HttpDoer, conf contract.ConfigReader) *sms.T
 	}
 }
 
-func provideRedis(logging log.Logger, conf contract.ConfigReader) (redis.UniversalClient, func()) {
+func provideRedis(logging log.Logger, conf contract.ConfigReader, tracer opentracing.Tracer) (redis.UniversalClient, func()) {
 	client := redis.NewUniversalClient(
 		&redis.UniversalOptions{
 			Addrs: conf.GetStringSlice("redis.addrs"),
 			DB:    conf.GetInt("redis.database"),
 		})
 	client.AddHook(
-		otredis.NewHook(conf.GetStringSlice("redis.addrs"),
+		otredis.NewHook(tracer, conf.GetStringSlice("redis.addrs"),
 			conf.GetInt("redis.database")))
 	return client, func() {
 		if err := client.Close(); err != nil {
@@ -128,12 +124,12 @@ func provideGormConfig(l log.Logger, conf contract.ConfigReader) *gorm.Config {
 	}
 }
 
-func provideGormDB(dialector gorm.Dialector, config *gorm.Config) (*gorm.DB, func(), error) {
+func provideGormDB(dialector gorm.Dialector, config *gorm.Config, tracer opentracing.Tracer) (*gorm.DB, func(), error) {
 	db, err := gorm.Open(dialector, config)
 	if err != nil {
 		return nil, nil, err
 	}
-	otgorm.AddGormCallbacks(db)
+	otgorm.AddGormCallbacks(db, tracer)
 	return db, func() {
 		if sqlDb, err := db.DB(); err == nil {
 			sqlDb.Close()

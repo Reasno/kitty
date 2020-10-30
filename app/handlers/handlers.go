@@ -66,12 +66,12 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		Mac:       in.Device.Mac,
 		AndroidId: in.Device.AndroidId,
 	}
-	if len(in.Wechat) == 0 && len(in.Mobile) == 0 {
-		u, err = s.handleDeviceLogin(ctx, device.Suuid, device)
+	if len(in.Mobile) != 0 {
+		u, err = s.handleMobileLogin(ctx, in.Mobile, in.Code, device)
 	} else if len(in.Wechat) != 0 {
 		u, err = s.handleWechatLogin(ctx, in.Wechat, device)
 	} else {
-		u, err = s.handleMobileLogin(ctx, in.Mobile, in.Code, device)
+		u, err = s.handleDeviceLogin(ctx, device.Suuid, device)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorLogin)
@@ -95,6 +95,7 @@ func (s appService) getToken(userId uint64, suuid, channel, versionCode, wechat,
 			userId,
 			s.conf.GetString("name"),
 			suuid, channel, versionCode, wechat, mobile,
+			s.conf.GetString("packageName"),
 			time.Hour*24*30,
 		),
 	)
@@ -253,6 +254,12 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		}
 	}
 
+	if len(in.OpenId) > 0 {
+		toUpdate = entity.User{
+			WechatOpenId: ns(in.OpenId),
+		}
+	}
+
 	// 更新用户
 	newUser, err := s.ur.Update(ctx, uint(claim.UserId), toUpdate)
 	if err != nil {
@@ -271,7 +278,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		err = errors.Wrap(err, msg.ErrorJwtFailure)
 	}
 
-	return newUser.ToReply(), err
+	return reply, err
 }
 
 func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
@@ -302,4 +309,47 @@ func ns(s string) sql.NullString {
 		String: s,
 		Valid:  true,
 	}
+}
+
+func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.GetClaim(ctx)
+	if claim == nil {
+		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
+	}
+	device := &entity.Device{
+		Os:        uint8(in.Device.Os),
+		Imei:      in.Device.Imei,
+		Idfa:      in.Device.Idfa,
+		Suuid:     in.Device.Suuid,
+		Oaid:      in.Device.Oaid,
+		Mac:       in.Device.Mac,
+		AndroidId: in.Device.AndroidId,
+	}
+	u, err := s.ur.Get(ctx, uint(claim.UserId))
+	if err != nil {
+		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+	}
+
+	u.CommonSUUID = in.Device.Suuid
+	u.Channel = in.Channel
+	u.VersionCode = in.VersionCode
+	u.AddNewDevice(device)
+
+	if err := s.ur.Save(ctx, u); err != nil {
+		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+	}
+
+	reply := u.ToReply()
+	reply.Data.Token, err = s.getToken(
+		uint64(u.ID),
+		u.CommonSUUID,
+		u.Channel,
+		u.VersionCode,
+		u.WechatOpenId.String,
+		u.Mobile.String,
+	)
+	if err != nil {
+		err = errors.Wrap(err, msg.ErrorJwtFailure)
+	}
+	return reply, nil
 }

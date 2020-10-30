@@ -11,8 +11,8 @@ import (
 
 
 // AddGormCallbacks adds callbacks for tracing, you should call SetSpanToGorm to make them work
-func AddGormCallbacks(db *gorm.DB) {
-	callbacks := newCallbacks()
+func AddGormCallbacks(db *gorm.DB, tracer opentracing.Tracer) {
+	callbacks := newCallbacks(tracer)
 	registerCallbacks(db, "create", callbacks)
 	registerCallbacks(db, "query", callbacks)
 	registerCallbacks(db, "update", callbacks)
@@ -20,10 +20,12 @@ func AddGormCallbacks(db *gorm.DB) {
 	registerCallbacks(db, "row_query", callbacks)
 }
 
-type callbacks struct{}
+type callbacks struct{
+	tracer opentracing.Tracer
+}
 
-func newCallbacks() *callbacks {
-	return &callbacks{}
+func newCallbacks(tracer opentracing.Tracer) *callbacks {
+	return &callbacks{tracer}
 }
 
 func (c *callbacks) beforeCreate(scope *gorm.DB)   { c.before(scope) }
@@ -38,7 +40,7 @@ func (c *callbacks) beforeRowQuery(scope *gorm.DB) { c.before(scope) }
 func (c *callbacks) afterRowQuery(scope *gorm.DB)  { c.after(scope, "") }
 
 func (c *callbacks) before(db *gorm.DB) {
-	span, newCtx := opentracing.StartSpanFromContext(db.Statement.Context, "sql")
+	span, newCtx := opentracing.StartSpanFromContextWithTracer(db.Statement.Context, c.tracer, "sql")
 	ext.DBType.Set(span, "sql")
 	db.Statement.WithContext(newCtx)
 	db.Set("span", span)
