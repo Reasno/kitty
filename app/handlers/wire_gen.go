@@ -26,12 +26,12 @@ func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
 	}
 	logger := provideLogger(reader)
 	config := provideGormConfig(logger, reader)
-	db, cleanup, err := provideGormDB(dialector, config)
+	jaegerLogger := provideJaegerLogAdapter(logger)
+	tracer, cleanup, err := provideOpentracing(jaegerLogger, reader)
 	if err != nil {
 		return nil, nil, err
 	}
-	jaegerLogger := provideJaegerLogAdapter(logger)
-	tracer, cleanup2, err := provideOpentracing(jaegerLogger, reader)
+	db, cleanup2, err := provideGormDB(dialector, config, tracer)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -40,7 +40,7 @@ func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
 	histogram := provideHistogramMetrics(reader)
 	handlersOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer)
 	userRepo := repository.NewUserRepo(db)
-	universalClient, cleanup3 := provideRedis(logger, reader)
+	universalClient, cleanup3 := provideRedis(logger, reader, tracer)
 	codeRepo := repository.NewCodeRepo(universalClient)
 	client := provideHttpClient(tracer)
 	transportConfig := provideSmsConfig(client, reader)
