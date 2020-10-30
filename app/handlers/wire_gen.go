@@ -41,7 +41,8 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*AppModule, 
 	handlersOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer)
 	userRepo := repository.NewUserRepo(db)
 	universalClient, cleanup3 := provideRedis(logger, reader, tracer)
-	codeRepo := repository.NewCodeRepo(universalClient)
+	keyManager := provideKeyManager(reader)
+	codeRepo := repository.NewCodeRepo(universalClient, keyManager)
 	client := provideHttpClient(tracer)
 	transportConfig := provideSmsConfig(client, reader)
 	transport := sms.NewTransport(transportConfig)
@@ -84,6 +85,7 @@ var AppServerSet = wire.NewSet(
 	provideSmsConfig,
 	DbSet,
 	OpenTracingSet,
+	provideKeyManager,
 	provideHttpClient,
 	provideUploadManager,
 	provideRedis,

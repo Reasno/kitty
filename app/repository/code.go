@@ -18,13 +18,14 @@ type CodeRepo struct {
 }
 
 func NewCodeRepo(cmdable redis.Cmdable, km *otredis.KeyManager) *CodeRepo {
+	km.Add(key)
 	return &CodeRepo{cmdable, km}
 }
 
 func (c *CodeRepo) AddCode(ctx context.Context, mobile string) (code string, err error) {
 	n := rand.Intn(1_000_000)
 	code = pad(n)
-	_, err = c.client.Set(ctx, c.km.Key(key, mobile), code, 15*time.Minute).Result()
+	_, err = c.client.Set(ctx, c.km.Key(mobile), code, 15*time.Minute).Result()
 	if err != nil {
 		return "", errors.Wrap(err, "cannot persist code in redis")
 	}
@@ -32,7 +33,7 @@ func (c *CodeRepo) AddCode(ctx context.Context, mobile string) (code string, err
 }
 
 func (c *CodeRepo) CheckCode(ctx context.Context, mobile, code string) (bool, error) {
-	value, err := c.client.Get(ctx, c.km.Key(key, mobile)).Result()
+	value, err := c.client.Get(ctx, c.km.Key(mobile)).Result()
 	if err == redis.Nil {
 		return false, nil
 	}
@@ -43,7 +44,7 @@ func (c *CodeRepo) CheckCode(ctx context.Context, mobile, code string) (bool, er
 }
 
 func (c *CodeRepo) DeleteCode(ctx context.Context, mobile string) (err error) {
-	_, err = c.client.Del(ctx, c.km.Key(key, mobile)).Result()
+	_, err = c.client.Del(ctx, c.km.Key(mobile)).Result()
 	return err
 }
 
