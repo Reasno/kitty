@@ -76,7 +76,9 @@ service App {
       body: "*"
     };
   }
-  // JWT Token续期，需要在每次升级系统或每次冷启动前调用，避免jwt中的信息与实际信息不一致
+  // JWT Token续期，需要在每次升级系统或每次冷启动前调用，
+  // 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
+  // 后续请求务必请将老JWT替换为新JWT。
   rpc Refresh (UserRefreshRequest) returns (UserInfoReply) {
     option (google.api.http) = {
       post: "/v1/refresh"
@@ -86,23 +88,28 @@ service App {
 }
 
 message UserBindRequest {
+  // 手机号
   string mobile = 1 [
     (validate.rules).string.pattern = "(^$|^[\\d]{11}$)",
     (options.openapiv2_field) = {pattern: "(^$|^[\\d]{11}$)"}
   ];
+  // 手机验证码（配合手机号使用）
   string code = 2;
+  // 微信官方下发的临时code码，非openId
   string wechat = 3;
-  // 如果有openid 就直接走openid
+  // 如果有openId 就直接走openId，不用再填微信官方下发的临时code码
   string open_id = 4;
 }
 
-// UserRefreshRequest Token续期
+// Token续期
 message UserRefreshRequest {
   Device device = 4;
+  // 渠道号
   string channel = 5 [
     (options.openapiv2_field) = {required: "true"},
     (validate.rules).string.min_len = 1
   ];
+  // 版本号
   string version_code = 6 [
     (options.openapiv2_field) = {required: "true"},
     (validate.rules).string.min_len = 1
@@ -110,28 +117,35 @@ message UserRefreshRequest {
 }
 
 message UserUnbindRequest {
+  // true则解绑手机
   bool mobile = 1;
+  // true则解绑微信
   bool wechat = 2;
 }
 
 message UserLoginRequest {
+  // 手机号
   string mobile = 1 [
     (validate.rules).string.pattern = "(^$|^[\\d]{11}$)",
     (options.openapiv2_field) = {pattern: "(^$|^[\\d]{11}$)"}
   ];
+  // 手机验证码
   string code = 2;
   // 手机发起微信登录的token，非openid
   string wechat = 3;
 
   Device device = 4;
+  // 渠道
   string channel = 5 [
     (options.openapiv2_field) = {required: "true"},
     (validate.rules).string.min_len = 1
   ];
+  // 版本号
   string version_code = 6 [
     (options.openapiv2_field) = {required: "true"},
     (validate.rules).string.min_len = 4
   ];
+  // 包名
   string package_name = 7 [
     (options.openapiv2_field) = {required: "true"},
     (validate.rules).string.min_len = 1
@@ -148,7 +162,9 @@ message Device {
   string idfa = 2;
   string android_id = 3;
   string suuid = 4;
+  // MAC 地址
   string mac = 5;
+  // 1 苹果，2 安卓
   OS os = 6;
   string oaid = 7;
 }
@@ -157,6 +173,7 @@ message UserInfo {
   uint64 id = 1;
   string user_name = 2;
   string wechat = 3;
+  // 头像地址
   string head_img = 4;
   Gender gender = 5;
   string birthday = 6;
@@ -187,17 +204,21 @@ message UserInfoRequest {
 }
 
 message UserInfoUpdateRequest {
+  // 用户名
   string user_name = 2 [
     (options.openapiv2_field).minimum = 2,
     (options.openapiv2_field).maximum = 10,
     (validate.rules).string.min_len = 2,
     (validate.rules).string.max_len = 10
   ];
+  // 头像地址
   string head_img = 4 [
     (options.openapiv2_field) = {pattern: "^(|https?://.*)$"},
     (validate.rules).string = {pattern: "^(|https?://.*)$"}
   ];
+  // 性别
   Gender gender = 5;
+  // 生日
   string birthday = 6 [
     (options.openapiv2_field) = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"},
     (validate.rules).string = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"}

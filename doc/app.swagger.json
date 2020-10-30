@@ -176,7 +176,7 @@
     },
     "/v1/refresh": {
       "post": {
-        "summary": "JWT Token续期，需要在每次升级系统或每次冷启动前调用，避免jwt中的信息与实际信息不一致",
+        "summary": "JWT Token续期，需要在每次升级系统或每次冷启动前调用，\n避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，\n后续请求务必请将老JWT替换为新JWT。",
         "operationId": "App_Refresh",
         "responses": {
           "200": {
@@ -297,10 +297,12 @@
           "type": "string"
         },
         "mac": {
-          "type": "string"
+          "type": "string",
+          "title": "MAC 地址"
         },
         "os": {
-          "$ref": "#/definitions/DeviceOS"
+          "$ref": "#/definitions/DeviceOS",
+          "title": "1 苹果，2 安卓"
         },
         "oaid": {
           "type": "string"
@@ -333,17 +335,20 @@
       "properties": {
         "mobile": {
           "type": "string",
+          "title": "手机号",
           "pattern": "(^$|^[\\d]{11}$)"
         },
         "code": {
-          "type": "string"
+          "type": "string",
+          "title": "手机验证码（配合手机号使用）"
         },
         "wechat": {
-          "type": "string"
+          "type": "string",
+          "title": "微信官方下发的临时code码，非openId"
         },
         "openId": {
           "type": "string",
-          "title": "如果有openid 就直接走openid"
+          "title": "如果有openId 就直接走openId，不用再填微信官方下发的临时code码"
         }
       }
     },
@@ -361,7 +366,8 @@
           "type": "string"
         },
         "headImg": {
-          "type": "string"
+          "type": "string",
+          "title": "头像地址"
         },
         "gender": {
           "$ref": "#/definitions/v1Gender"
@@ -394,18 +400,22 @@
       "properties": {
         "userName": {
           "type": "string",
+          "title": "用户名",
           "maximum": 10,
           "minimum": 2
         },
         "headImg": {
           "type": "string",
+          "title": "头像地址",
           "pattern": "^(|https?://.*)$"
         },
         "gender": {
-          "$ref": "#/definitions/v1Gender"
+          "$ref": "#/definitions/v1Gender",
+          "title": "性别"
         },
         "birthday": {
           "type": "string",
+          "title": "生日",
           "pattern": "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"
         }
       }
@@ -415,10 +425,12 @@
       "properties": {
         "mobile": {
           "type": "string",
+          "title": "手机号",
           "pattern": "(^$|^[\\d]{11}$)"
         },
         "code": {
-          "type": "string"
+          "type": "string",
+          "title": "手机验证码"
         },
         "wechat": {
           "type": "string",
@@ -429,18 +441,24 @@
         },
         "channel": {
           "type": "string",
+          "title": "渠道",
           "required": [
             "true"
           ]
         },
         "versionCode": {
           "type": "string",
+          "title": "版本号",
           "required": [
             "true"
           ]
         },
         "packageName": {
-          "type": "string"
+          "type": "string",
+          "title": "包名",
+          "required": [
+            "true"
+          ]
         }
       }
     },
@@ -452,27 +470,31 @@
         },
         "channel": {
           "type": "string",
+          "title": "渠道号",
           "required": [
             "true"
           ]
         },
         "versionCode": {
           "type": "string",
+          "title": "版本号",
           "required": [
             "true"
           ]
         }
       },
-      "title": "UserRefreshRequest Token续期"
+      "title": "Token续期"
     },
     "v1UserUnbindRequest": {
       "type": "object",
       "properties": {
         "mobile": {
-          "type": "boolean"
+          "type": "boolean",
+          "title": "true则解绑手机"
         },
         "wechat": {
-          "type": "boolean"
+          "type": "boolean",
+          "title": "true则解绑微信"
         }
       }
     }

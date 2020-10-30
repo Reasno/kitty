@@ -314,14 +314,19 @@ func (m *UserLoginRequest) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetVersionCode()) < 1 {
+	if utf8.RuneCountInString(m.GetVersionCode()) < 4 {
 		return UserLoginRequestValidationError{
 			field:  "VersionCode",
-			reason: "value length must be at least 1 runes",
+			reason: "value length must be at least 4 runes",
 		}
 	}
 
-	// no validation rules for PackageName
+	if utf8.RuneCountInString(m.GetPackageName()) < 1 {
+		return UserLoginRequestValidationError{
+			field:  "PackageName",
+			reason: "value length must be at least 1 runes",
+		}
+	}
 
 	return nil
 }

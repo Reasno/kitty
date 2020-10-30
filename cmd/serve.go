@@ -89,7 +89,7 @@ var serveCmd = &cobra.Command{
 
 		// Additional run groups
 		for _, s := range moduleContainer.RunProviders {
-			g.Add(s.Loop, s.Exit)
+			s(&g)
 		}
 
 		// Add Cronjob etc. here
