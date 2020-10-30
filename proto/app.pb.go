@@ -1174,7 +1174,7 @@ type AppClient interface {
 	UpdateInfo(ctx context.Context, in *UserInfoUpdateRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
 	// 用户已登录后，绑定额外的手机号或微信号
 	Bind(ctx context.Context, in *UserBindRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
-	// Unbind 针对已登录用户，额外绑定手机或微信登录方式
+	// 针对已登录用户，取消绑定手机或微信登录方式
 	Unbind(ctx context.Context, in *UserUnbindRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
 	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，避免jwt中的信息与实际信息不一致
 	Refresh(ctx context.Context, in *UserRefreshRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
@@ -1263,7 +1263,7 @@ type AppServer interface {
 	UpdateInfo(context.Context, *UserInfoUpdateRequest) (*UserInfoReply, error)
 	// 用户已登录后，绑定额外的手机号或微信号
 	Bind(context.Context, *UserBindRequest) (*UserInfoReply, error)
-	// Unbind 针对已登录用户，额外绑定手机或微信登录方式
+	// 针对已登录用户，取消绑定手机或微信登录方式
 	Unbind(context.Context, *UserUnbindRequest) (*UserInfoReply, error)
 	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，避免jwt中的信息与实际信息不一致
 	Refresh(context.Context, *UserRefreshRequest) (*UserInfoReply, error)

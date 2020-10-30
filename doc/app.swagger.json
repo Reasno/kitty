@@ -209,7 +209,7 @@
     },
     "/v1/unbind": {
       "post": {
-        "summary": "Unbind 针对已登录用户，额外绑定手机或微信登录方式",
+        "summary": "针对已登录用户，取消绑定手机或微信登录方式",
         "operationId": "App_Unbind",
         "responses": {
           "200": {
