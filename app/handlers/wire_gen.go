@@ -13,18 +13,18 @@ import (
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/pkg/wechat"
 	"github.com/Reasno/kitty/proto"
+	"github.com/go-kit/kit/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
 
-func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
+func injectModule(reader contract.ConfigReader, logger log.Logger) (*AppModule, func(), error) {
 	dialector, err := provideDialector(reader)
 	if err != nil {
 		return nil, nil, err
 	}
-	logger := provideLogger(reader)
 	config := provideGormConfig(logger, reader)
 	jaegerLogger := provideJaegerLogAdapter(logger)
 	tracer, cleanup, err := provideOpentracing(jaegerLogger, reader)
@@ -81,7 +81,6 @@ var OpenTracingSet = wire.NewSet(
 )
 
 var AppServerSet = wire.NewSet(
-	provideLogger,
 	provideSmsConfig,
 	DbSet,
 	OpenTracingSet,

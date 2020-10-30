@@ -30,10 +30,6 @@ import (
 	"io"
 )
 
-func provideLogger(conf contract.ConfigReader) log.Logger {
-	return log.With(logging.NewLogger(conf.GetString("env")), "module", "app")
-}
-
 func provideHistogramMetrics(conf contract.ConfigReader) metrics.Histogram {
 	var his metrics.Histogram = prometheus.NewHistogramFrom(stdprometheus.HistogramOpts{
 		Namespace: conf.GetString("name"),

@@ -10,6 +10,7 @@ import (
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/pkg/wechat"
 	pb "github.com/Reasno/kitty/proto"
+	"github.com/go-kit/kit/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )
@@ -26,7 +27,6 @@ var OpenTracingSet = wire.NewSet(
 )
 
 var AppServerSet = wire.NewSet(
-	provideLogger,
 	provideSmsConfig,
 	DbSet,
 	OpenTracingSet,
@@ -50,7 +50,7 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(FileRepository), new(*repository.FileRepo)),
 )
 
-func injectModule(reader contract.ConfigReader) (*AppModule, func(), error) {
+func injectModule(reader contract.ConfigReader, logger log.Logger) (*AppModule, func(), error) {
 	panic(wire.Build(
 		AppServerSet,
 		provideSecurityConfig,
