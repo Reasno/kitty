@@ -11,8 +11,8 @@ option go_package = "kitty";
 
 option (options.openapiv2_swagger) = {
   info: {
-    title: "A kitty app";
-    version: "1.0";
+    title: "商业化中台用户中心";
+    version: "0.1.0";
   };
   base_path: "/app"
   security_definitions: {
