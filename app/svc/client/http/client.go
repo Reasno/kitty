@@ -110,6 +110,16 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 			options...,
 		).Endpoint()
 	}
+	var RefreshZeroEndpoint endpoint.Endpoint
+	{
+		RefreshZeroEndpoint = httptransport.NewClient(
+			"POST",
+			copyURL(u, "/v1/refresh"),
+			EncodeHTTPRefreshZeroRequest,
+			DecodeHTTPRefreshResponse,
+			options...,
+		).Endpoint()
+	}
 
 	return svc.Endpoints{
 		LoginEndpoint:      LoginZeroEndpoint,
@@ -118,6 +128,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 		UpdateInfoEndpoint: UpdateInfoZeroEndpoint,
 		BindEndpoint:       BindZeroEndpoint,
 		UnbindEndpoint:     UnbindZeroEndpoint,
+		RefreshEndpoint:    RefreshZeroEndpoint,
 	}, nil
 }
 
@@ -285,6 +296,33 @@ func DecodeHTTPBindResponse(_ context.Context, r *http.Response) (interface{}, e
 // error and attempt to decode the specific error message from the response
 // body. Primarily useful in a client.
 func DecodeHTTPUnbindResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.UserInfoReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
+// DecodeHTTPRefreshResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded UserInfoReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPRefreshResponse(_ context.Context, r *http.Response) (interface{}, error) {
 	defer r.Body.Close()
 	buf, err := ioutil.ReadAll(r.Body)
 	if err == io.EOF {
@@ -577,6 +615,56 @@ func EncodeHTTPUnbindZeroRequest(_ context.Context, r *http.Request, request int
 	toRet.Mobile = req.Mobile
 
 	toRet.Wechat = req.Wechat
+
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(toRet); err != nil {
+		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
+	}
+	r.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// EncodeHTTPRefreshZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a refresh request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPRefreshZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.UserRefreshRequest)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"v1",
+		"refresh",
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	r.URL.RawQuery = values.Encode()
+	// Set the body parameters
+	var buf bytes.Buffer
+	toRet := request.(*pb.UserRefreshRequest)
+
+	toRet.Device = req.Device
+
+	toRet.Channel = req.Channel
+
+	toRet.VersionCode = req.VersionCode
 
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)

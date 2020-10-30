@@ -65,6 +65,12 @@ func MakeGRPCServer(endpoints Endpoints, options ...grpctransport.ServerOption) 
 			EncodeGRPCUnbindResponse,
 			serverOptions...,
 		),
+		refresh: grpctransport.NewServer(
+			endpoints.RefreshEndpoint,
+			DecodeGRPCRefreshRequest,
+			EncodeGRPCRefreshResponse,
+			serverOptions...,
+		),
 	}
 }
 
@@ -76,6 +82,7 @@ type grpcServer struct {
 	updateinfo grpctransport.Handler
 	bind       grpctransport.Handler
 	unbind     grpctransport.Handler
+	refresh    grpctransport.Handler
 }
 
 // Methods for grpcServer to implement AppServer interface
@@ -128,6 +135,14 @@ func (s *grpcServer) Unbind(ctx context.Context, req *pb.UserUnbindRequest) (*pb
 	return rep.(*pb.UserInfoReply), nil
 }
 
+func (s *grpcServer) Refresh(ctx context.Context, req *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
+	_, rep, err := s.refresh.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.UserInfoReply), nil
+}
+
 // Server Decode
 
 // DecodeGRPCLoginRequest is a transport/grpc.DecodeRequestFunc that converts a
@@ -172,6 +187,13 @@ func DecodeGRPCUnbindRequest(_ context.Context, grpcReq interface{}) (interface{
 	return req, nil
 }
 
+// DecodeGRPCRefreshRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC refresh request to a user-domain refresh request. Primarily useful in a server.
+func DecodeGRPCRefreshRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.UserRefreshRequest)
+	return req, nil
+}
+
 // Server Encode
 
 // EncodeGRPCLoginResponse is a transport/grpc.EncodeResponseFunc that converts a
@@ -212,6 +234,13 @@ func EncodeGRPCBindResponse(_ context.Context, response interface{}) (interface{
 // EncodeGRPCUnbindResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain unbind response to a gRPC unbind reply. Primarily useful in a server.
 func EncodeGRPCUnbindResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.UserInfoReply)
+	return resp, nil
+}
+
+// EncodeGRPCRefreshResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain refresh response to a gRPC refresh reply. Primarily useful in a server.
+func EncodeGRPCRefreshResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.UserInfoReply)
 	return resp, nil
 }

@@ -39,6 +39,7 @@ type Endpoints struct {
 	UpdateInfoEndpoint endpoint.Endpoint
 	BindEndpoint       endpoint.Endpoint
 	UnbindEndpoint     endpoint.Endpoint
+	RefreshEndpoint    endpoint.Endpoint
 }
 
 // Endpoints
@@ -85,6 +86,14 @@ func (e Endpoints) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserIn
 
 func (e Endpoints) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
 	response, err := e.UnbindEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.UserInfoReply), nil
+}
+
+func (e Endpoints) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
+	response, err := e.RefreshEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -159,6 +168,17 @@ func MakeUnbindEndpoint(s pb.AppServer) endpoint.Endpoint {
 	}
 }
 
+func MakeRefreshEndpoint(s pb.AppServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.UserRefreshRequest)
+		v, err := s.Refresh(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 // WrapAllExcept wraps each Endpoint field of struct Endpoints with a
 // go-kit/kit/endpoint.Middleware.
 // Use this for applying a set of middlewares to every endpoint in the service.
@@ -172,6 +192,7 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		"UpdateInfo": {},
 		"Bind":       {},
 		"Unbind":     {},
+		"Refresh":    {},
 	}
 
 	for _, ex := range excluded {
@@ -200,6 +221,9 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		if inc == "Unbind" {
 			e.UnbindEndpoint = middleware(e.UnbindEndpoint)
 		}
+		if inc == "Refresh" {
+			e.RefreshEndpoint = middleware(e.RefreshEndpoint)
+		}
 	}
 }
 
@@ -220,6 +244,7 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		"UpdateInfo": {},
 		"Bind":       {},
 		"Unbind":     {},
+		"Refresh":    {},
 	}
 
 	for _, ex := range excluded {
@@ -247,6 +272,9 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		}
 		if inc == "Unbind" {
 			e.UnbindEndpoint = middleware("Unbind", e.UnbindEndpoint)
+		}
+		if inc == "Refresh" {
+			e.RefreshEndpoint = middleware("Refresh", e.RefreshEndpoint)
 		}
 	}
 }

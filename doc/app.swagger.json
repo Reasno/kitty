@@ -14,6 +14,7 @@
   "paths": {
     "/v1/bind": {
       "post": {
+        "summary": "用户已登录后，绑定额外的手机号或微信号",
         "operationId": "App_Bind",
         "responses": {
           "200": {
@@ -46,6 +47,7 @@
     },
     "/v1/code": {
       "get": {
+        "summary": "获得验证码",
         "operationId": "App_GetCode",
         "responses": {
           "200": {
@@ -76,6 +78,7 @@
     },
     "/v1/info": {
       "post": {
+        "summary": "更新个人信息",
         "operationId": "App_UpdateInfo",
         "responses": {
           "200": {
@@ -108,6 +111,7 @@
     },
     "/v1/info/{id}": {
       "get": {
+        "summary": "获取任意用户信息，填0获取本人信息",
         "operationId": "App_GetInfo",
         "responses": {
           "200": {
@@ -139,6 +143,7 @@
     },
     "/v1/login": {
       "post": {
+        "summary": "用户从未登录状态注册或登录时调用。如果用户已登录，需要绑定手机号或微信号，请使用bind接口。",
         "operationId": "App_Login",
         "responses": {
           "200": {
@@ -169,8 +174,42 @@
         ]
       }
     },
+    "/v1/refresh": {
+      "post": {
+        "summary": "JWT Token续期，需要在每次升级系统或每次冷启动前调用，避免jwt中的信息与实际信息不一致",
+        "operationId": "App_Refresh",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UserInfoReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UserRefreshRequest"
+            }
+          }
+        ],
+        "tags": [
+          "App"
+        ]
+      }
+    },
     "/v1/unbind": {
       "post": {
+        "summary": "Unbind 针对已登录用户，额外绑定手机或微信登录方式",
         "operationId": "App_Unbind",
         "responses": {
           "200": {
@@ -401,6 +440,27 @@
           ]
         }
       }
+    },
+    "v1UserRefreshRequest": {
+      "type": "object",
+      "properties": {
+        "device": {
+          "$ref": "#/definitions/v1Device"
+        },
+        "channel": {
+          "type": "string",
+          "required": [
+            "true"
+          ]
+        },
+        "versionCode": {
+          "type": "string",
+          "required": [
+            "true"
+          ]
+        }
+      },
+      "title": "UserRefreshRequest Token续期"
     },
     "v1UserUnbindRequest": {
       "type": "object",

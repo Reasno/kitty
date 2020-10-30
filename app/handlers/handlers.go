@@ -278,7 +278,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		err = errors.Wrap(err, msg.ErrorJwtFailure)
 	}
 
-	return newUser.ToReply(), err
+	return reply, err
 }
 
 func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
@@ -309,4 +309,47 @@ func ns(s string) sql.NullString {
 		String: s,
 		Valid:  true,
 	}
+}
+
+func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.GetClaim(ctx)
+	if claim == nil {
+		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
+	}
+	device := &entity.Device{
+		Os:        uint8(in.Device.Os),
+		Imei:      in.Device.Imei,
+		Idfa:      in.Device.Idfa,
+		Suuid:     in.Device.Suuid,
+		Oaid:      in.Device.Oaid,
+		Mac:       in.Device.Mac,
+		AndroidId: in.Device.AndroidId,
+	}
+	u, err := s.ur.Get(ctx, uint(claim.UserId))
+	if err != nil {
+		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+	}
+
+	u.CommonSUUID = in.Device.Suuid
+	u.Channel = in.Channel
+	u.VersionCode = in.VersionCode
+	u.AddNewDevice(device)
+
+	if err := s.ur.Save(ctx, u); err != nil {
+		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+	}
+
+	reply := u.ToReply()
+	reply.Data.Token, err = s.getToken(
+		uint64(u.ID),
+		u.CommonSUUID,
+		u.Channel,
+		u.VersionCode,
+		u.WechatOpenId.String,
+		u.Mobile.String,
+	)
+	if err != nil {
+		err = errors.Wrap(err, msg.ErrorJwtFailure)
+	}
+	return reply, nil
 }
