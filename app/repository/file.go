@@ -10,13 +10,13 @@ import (
 
 type FileRepo struct {
 	uploader contract.Uploader
-	client contract.HttpDoer
+	client   contract.HttpDoer
 }
 
-func NewFileRepo(uploader contract.Uploader, client contract.HttpDoer) *FileRepo  {
+func NewFileRepo(uploader contract.Uploader, client contract.HttpDoer) *FileRepo {
 	return &FileRepo{
 		uploader: uploader,
-		client: client,
+		client:   client,
 	}
 }
 
@@ -37,4 +37,3 @@ func (f *FileRepo) UploadFromUrl(ctx context.Context, url string) (newUrl string
 func (f *FileRepo) Upload(ctx context.Context, reader io.Reader) (newUrl string, err error) {
 	return f.uploader.Upload(ctx, reader)
 }
-

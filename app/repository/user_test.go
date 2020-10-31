@@ -3,9 +3,11 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"flag"
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"testing"
 )
@@ -14,10 +16,20 @@ var repo *UserRepo
 var m *gormigrate.Gormigrate
 var db *gorm.DB
 
+var useMysql bool
+
+func init() {
+	flag.BoolVar(&useMysql, "mysql", false, "use local mysql for testing")
+}
+
 func setUp(t *testing.T) {
 	var err error
-	///db, err = gorm.Open(sqlite.Open(":memory:?cache=shared"), &gorm.Config{})
-	db, err = gorm.Open(mysql.Open("root@tcp(127.0.0.1:3306)/kitty?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
+	if !useMysql {
+		db, err = gorm.Open(sqlite.Open(":memory:?cache=shared"), &gorm.Config{})
+	} else {
+		db, err = gorm.Open(mysql.Open("root@tcp(127.0.0.1:3306)/kitty?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
+	}
+
 	if err != nil {
 		t.Fatal("failed to connect database")
 	}

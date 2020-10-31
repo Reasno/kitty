@@ -3,10 +3,13 @@ package handlers
 import (
 	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/app/svc"
+	"github.com/Reasno/kitty/pkg/config"
 	"github.com/Reasno/kitty/pkg/contract"
+	"github.com/Reasno/kitty/pkg/klog"
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -26,12 +29,18 @@ type AppModule struct {
 }
 
 func New(appModuleConfig contract.ConfigReader, logger log.Logger) *AppModule {
-	appModule, cleanup, err := injectModule(appModuleConfig, logger)
+	appModule, cleanup, err := injectModule(setUp(appModuleConfig, logger))
 	if err != nil {
 		panic(err)
 	}
 	appModule.cleanup = cleanup
 	return appModule
+}
+
+func setUp(appModuleConfig contract.ConfigReader, logger log.Logger) (contract.ConfigReader, log.Logger) {
+	appLogger := log.With(logger, "module", config.ProvideAppName(appModuleConfig).String())
+	appLogger = level.NewFilter(logger, klog.LevelFilter(appModuleConfig.String("level")))
+	return appModuleConfig, appLogger
 }
 
 func (a *AppModule) ProvideMigration() error {

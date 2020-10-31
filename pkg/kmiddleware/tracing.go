@@ -1,4 +1,4 @@
-package middleware
+package kmiddleware
 
 import (
 	"github.com/go-kit/kit/endpoint"

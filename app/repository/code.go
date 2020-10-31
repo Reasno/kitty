@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
@@ -14,12 +15,11 @@ const key = "CodeRepo"
 
 type CodeRepo struct {
 	client redis.Cmdable
-	km     *otredis.KeyManager
+	km     contract.Keyer
 }
 
-func NewCodeRepo(cmdable redis.Cmdable, km *otredis.KeyManager) *CodeRepo {
-	km.Add(key)
-	return &CodeRepo{cmdable, km}
+func NewCodeRepo(cmdable redis.Cmdable, keyer contract.Keyer) *CodeRepo {
+	return &CodeRepo{cmdable, otredis.With(keyer, key)}
 }
 
 func (c *CodeRepo) AddCode(ctx context.Context, mobile string) (code string, err error) {

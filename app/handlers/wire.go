@@ -4,8 +4,10 @@ package handlers
 
 import (
 	"github.com/Reasno/kitty/app/repository"
+	"github.com/Reasno/kitty/pkg/config"
 	"github.com/Reasno/kitty/pkg/contract"
-	kittyhttp "github.com/Reasno/kitty/pkg/http"
+	kittyhttp "github.com/Reasno/kitty/pkg/khttp"
+	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/Reasno/kitty/pkg/ots3"
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/pkg/wechat"
@@ -40,11 +42,16 @@ var AppServerSet = wire.NewSet(
 	repository.NewUserRepo,
 	repository.NewCodeRepo,
 	repository.NewFileRepo,
+	config.ProvideAppName,
+	config.ProvideEnv,
 	wire.Struct(new(appService), "*"),
 	wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)),
 	wire.Bind(new(contract.SmsSender), new(*sms.Transport)),
+	wire.Bind(new(contract.Keyer), new(otredis.KeyManager)),
 	wire.Bind(new(contract.Uploader), new(*ots3.Manager)),
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
+	wire.Bind(new(contract.Env), new(config.Env)),
+	wire.Bind(new(contract.AppName), new(config.AppName)),
 	wire.Bind(new(pb.AppServer), new(appService)),
 	wire.Bind(new(UserRepository), new(*repository.UserRepo)),
 	wire.Bind(new(CodeRepository), new(*repository.CodeRepo)),

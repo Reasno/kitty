@@ -7,8 +7,10 @@ package handlers
 
 import (
 	"github.com/Reasno/kitty/app/repository"
+	"github.com/Reasno/kitty/pkg/config"
 	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/http"
+	"github.com/Reasno/kitty/pkg/khttp"
+	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/Reasno/kitty/pkg/ots3"
 	"github.com/Reasno/kitty/pkg/sms"
 	"github.com/Reasno/kitty/pkg/wechat"
@@ -25,23 +27,25 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*AppModule, 
 	if err != nil {
 		return nil, nil, err
 	}
-	config := provideGormConfig(logger, reader)
+	gormConfig := provideGormConfig(logger, reader)
 	jaegerLogger := provideJaegerLogAdapter(logger)
 	tracer, cleanup, err := provideOpentracing(jaegerLogger, reader)
 	if err != nil {
 		return nil, nil, err
 	}
-	db, cleanup2, err := provideGormDB(dialector, config, tracer)
+	db, cleanup2, err := provideGormDB(dialector, gormConfig, tracer)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
 	securityConfig := provideSecurityConfig(reader)
-	histogram := provideHistogramMetrics(reader)
-	handlersOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer)
+	appName := config.ProvideAppName(reader)
+	env := config.ProvideEnv(reader)
+	histogram := provideHistogramMetrics(appName, env)
+	handlersOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer, env, appName)
 	userRepo := repository.NewUserRepo(db)
 	universalClient, cleanup3 := provideRedis(logger, reader, tracer)
-	keyManager := provideKeyManager(reader)
+	keyManager := provideKeyManager(appName, env)
 	codeRepo := repository.NewCodeRepo(universalClient, keyManager)
 	client := provideHttpClient(tracer)
 	transportConfig := provideSmsConfig(client, reader)
@@ -89,5 +93,5 @@ var AppServerSet = wire.NewSet(
 	provideHttpClient,
 	provideUploadManager,
 	provideRedis,
-	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*http.Client)), wire.Bind(new(kitty.AppServer), new(appService)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(FileRepository), new(*repository.FileRepo)),
+	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, config.ProvideAppName, config.ProvideEnv, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)), wire.Bind(new(kitty.AppServer), new(appService)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(FileRepository), new(*repository.FileRepo)),
 )

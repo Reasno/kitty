@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
@@ -19,21 +19,21 @@ import (
 )
 
 type Manager struct {
-	bucket string
-	sess *session.Session
-	tracer opentracing.Tracer
-	doer contract.HttpDoer
+	bucket       string
+	sess         *session.Session
+	tracer       opentracing.Tracer
+	doer         contract.HttpDoer
 	locationFunc func(location string) (url string)
 }
 
 type Config struct {
-	accessKey string
+	accessKey    string
 	accessSecret string
-	region string
-	bucket string
-	sess *session.Session
-	tracer opentracing.Tracer
-	doer contract.HttpDoer
+	region       string
+	bucket       string
+	sess         *session.Session
+	tracer       opentracing.Tracer
+	doer         contract.HttpDoer
 	locationFunc func(location string) (url string)
 }
 
@@ -57,7 +57,7 @@ func WithLocationFunc(f func(location string) (url string)) Option {
 	}
 }
 
-func NewManager(accessKey, accessSecret, endpoint, region, bucket string, opts... Option) *Manager {
+func NewManager(accessKey, accessSecret, endpoint, region, bucket string, opts ...Option) *Manager {
 	c := &Config{
 		doer: http.DefaultClient,
 		locationFunc: func(location string) (url string) {

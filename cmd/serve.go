@@ -3,12 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	kittyhttp "github.com/Reasno/kitty/pkg/http"
+	kittyhttp "github.com/Reasno/kitty/pkg/khttp"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
@@ -34,10 +33,10 @@ var serveCmd = &cobra.Command{
 
 		// Start HTTP Server
 		{
-			httpAddr := viper.GetString("global.http.addr")
+			httpAddr := conf.String("global.http.addr")
 			ln, err := net.Listen("tcp", httpAddr)
 			if err != nil {
-				_ = logger.Log("err", err)
+				_ = level.Error(logger).Log("err", err)
 				os.Exit(1)
 			}
 			h := getHttpHandler(ln, moduleContainer.HttpProviders...)
@@ -50,7 +49,7 @@ var serveCmd = &cobra.Command{
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 				if err := srv.Shutdown(ctx); err != nil {
-					_ = logger.Log("err", err)
+					_ = level.Warn(logger).Log("err", err)
 					os.Exit(1)
 				}
 				_ = ln.Close()
@@ -60,17 +59,17 @@ var serveCmd = &cobra.Command{
 
 		// Start gRPC server
 		{
-			grpcAddr := viper.GetString("global.grpc.addr")
+			grpcAddr := conf.String("global.grpc.addr")
 			ln, err := net.Listen("tcp", grpcAddr)
 			if err != nil {
-				_ = logger.Log("err", err)
+				_ = level.Error(logger).Log("err", err)
 				os.Exit(1)
 			}
 			s := getGRPCServer(ln, moduleContainer.GrpcProviders...)
 			g.Add(func() error {
 				return s.Serve(ln)
 			}, func(err error) {
-				s.Stop()
+				s.GracefulStop()
 				_ = ln.Close()
 			})
 		}
@@ -103,7 +102,7 @@ var serveCmd = &cobra.Command{
 }
 
 func getHttpHandler(ln net.Listener, providers ...func(*mux.Router)) http.Handler {
-	_ = logger.Log("transport", "HTTP", "addr", ln.Addr())
+	_ = level.Info(logger).Log("transport", "HTTP", "addr", ln.Addr())
 
 	var handler http.Handler
 	var router = mux.NewRouter()
@@ -115,7 +114,7 @@ func getHttpHandler(ln net.Listener, providers ...func(*mux.Router)) http.Handle
 }
 
 func getGRPCServer(ln net.Listener, providers ...func(s *grpc.Server)) *grpc.Server {
-	_ = logger.Log("transport", "gRPC", "addr", ln.Addr())
+	_ = level.Info(logger).Log("transport", "gRPC", "addr", ln.Addr())
 
 	s := grpc.NewServer()
 	for _, p := range providers {

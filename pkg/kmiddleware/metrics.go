@@ -1,4 +1,4 @@
-package middleware
+package kmiddleware
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 	"time"
 )
 
-func NewMetricsMiddleware(his metrics.Histogram, service string) LabeledMiddleware {
+func NewMetricsMiddleware(his metrics.Histogram, module string) LabeledMiddleware {
 	return func(name string, e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			defer func(begin time.Time) {
-				his.With("module", service, "method", name).Observe(time.Since(begin).Seconds())
+				his.With("module", module, "method", name).Observe(time.Since(begin).Seconds())
 			}(time.Now())
 			return e(ctx, request)
 		}

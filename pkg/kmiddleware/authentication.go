@@ -1,8 +1,8 @@
-package middleware
+package kmiddleware
 
 import (
 	"context"
-	kittyjwt "github.com/Reasno/kitty/pkg/jwt"
+	kittyjwt "github.com/Reasno/kitty/pkg/kjwt"
 	stdjwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"

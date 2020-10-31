@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	kittyjwt "github.com/Reasno/kitty/pkg/jwt"
+	kittyjwt "github.com/Reasno/kitty/pkg/kjwt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/log/level"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"os"
 	"time"
 )
@@ -43,7 +42,7 @@ var signCmd = &cobra.Command{
 	Short: "sign a jwt token",
 	Long:  `Sign a valid jwt token for further use`,
 	Run: func(cmd *cobra.Command, args []string) {
-		key := viper.GetString("global.security.key")
+		key := conf.String("global.security.key")
 		token := jwt.NewWithClaims(
 			jwt.SigningMethodHS256,
 			kittyjwt.NewClaim(
@@ -58,7 +57,7 @@ var signCmd = &cobra.Command{
 				s.ttl,
 			),
 		)
-		token.Header["kid"] = viper.GetString("global.security.kid")
+		token.Header["kid"] = conf.String("global.security.kid")
 		tokenString, err := token.SignedString([]byte(key))
 		if err != nil {
 			level.Error(logger).Log("err", err)

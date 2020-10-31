@@ -1,4 +1,4 @@
-package middleware
+package kmiddleware
 
 import (
 	"context"
@@ -38,8 +38,4 @@ func (ve ValidationError) GRPCStatus() *status.Status {
 }
 func (ve ValidationError) Error() string {
 	return ve.err.Error()
-}
-
-func newValidationError(err error) ValidationError {
-	return ValidationError{err}
 }

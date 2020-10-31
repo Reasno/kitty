@@ -1,20 +1,21 @@
-package log
+package klog
 
 import (
 	"context"
 	"fmt"
+	"github.com/Reasno/kitty/pkg/contract"
+	jwt2 "github.com/Reasno/kitty/pkg/kjwt"
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-kit/kit/log/term"
 	"gorm.io/gorm/logger"
 	"os"
-	"strings"
 	"time"
 )
 
-func NewLogger(env string) (logger log.Logger) {
-
-	if strings.ToUpper(env) != "LOCAL" && env != "" {
+func NewLogger(env contract.Env) (logger log.Logger) {
+	if !env.IsLocal() {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
 		return log.With(logger, "caller", log.DefaultCaller)
 	}
@@ -45,6 +46,23 @@ func NewLogger(env string) (logger log.Logger) {
 	}
 	logger = term.NewLogger(os.Stdout, log.NewLogfmtLogger, colorFn)
 	return log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
+}
+
+func WithContext(logger log.Logger, context context.Context) log.Logger {
+	claim, ok := context.Value(jwt.JWTClaimsContextKey).(jwt2.Claim)
+	if !ok {
+		claim = jwt2.Claim{}
+	}
+	transport, _ := context.Value("transport").(string)
+	requestUrl, _ := context.Value("request-url").(string)
+
+	return log.With(
+		logger,
+		"transport", transport,
+		"requestUrl", requestUrl,
+		"userId", claim.UserId,
+		"suuid", claim.Suuid,
+	)
 }
 
 type GormLogAdapter struct {
@@ -94,4 +112,19 @@ func (l JaegerLogAdapter) Infof(msg string, args ...interface{}) {
 
 func (l JaegerLogAdapter) Error(msg string) {
 	level.Error(l.Logging).Log("msg", msg)
+}
+
+func LevelFilter(levelCfg string) level.Option {
+	switch levelCfg {
+	case "debug":
+		return level.AllowDebug()
+	case "info":
+		return level.AllowInfo()
+	case "warn":
+		return level.AllowWarn()
+	case "error":
+		return level.AllowError()
+	default:
+		return level.AllowAll()
+	}
 }

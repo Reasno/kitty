@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/Reasno/kitty/app/svc"
 	"github.com/Reasno/kitty/pkg/contract"
-	kittyhttp "github.com/Reasno/kitty/pkg/http"
-	logging "github.com/Reasno/kitty/pkg/log"
-	"github.com/Reasno/kitty/pkg/middleware"
+	kittyhttp "github.com/Reasno/kitty/pkg/khttp"
+	logging "github.com/Reasno/kitty/pkg/klog"
+	"github.com/Reasno/kitty/pkg/kmiddleware"
 	"github.com/Reasno/kitty/pkg/otgorm"
 	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/Reasno/kitty/pkg/ots3"
@@ -30,20 +30,18 @@ import (
 	"io"
 )
 
-func provideHistogramMetrics(conf contract.ConfigReader) metrics.Histogram {
+func provideHistogramMetrics(appName contract.AppName, env contract.Env) metrics.Histogram {
 	var his metrics.Histogram = prometheus.NewHistogramFrom(stdprometheus.HistogramOpts{
-		Namespace: conf.GetString("name"),
-		Subsystem: conf.GetString("env"),
+		Namespace: appName.String(),
+		Subsystem: env.String(),
 		Name:      "request_duration_seconds",
 		Help:      "Total time spent serving requests.",
 	}, []string{"module", "method"})
 	return his
 }
 
-func provideKeyManager(conf contract.ConfigReader) *otredis.KeyManager {
-	return &otredis.KeyManager{
-		conf.GetString("name"),
-	}
+func provideKeyManager(appName contract.AppName, env contract.Env) otredis.KeyManager {
+	return otredis.NewKeyManager(":", appName.String(), env.String())
 }
 
 func provideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
@@ -52,44 +50,44 @@ func provideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
 
 func provideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader, client contract.HttpDoer) *ots3.Manager {
 	return ots3.NewManager(
-		conf.GetString("s3.accessKey"),
-		conf.GetString("s3.accessSecret"),
-		conf.GetString("s3.region"),
-		conf.GetString("s3.endpoint"),
-		conf.GetString("s3.bucket"),
+		conf.String("s3.accessKey"),
+		conf.String("s3.accessSecret"),
+		conf.String("s3.region"),
+		conf.String("s3.endpoint"),
+		conf.String("s3.bucket"),
 		ots3.WithTracer(tracer),
 		ots3.WithHttpClient(client),
 		ots3.WithLocationFunc(func(location string) (url string) {
-			return fmt.Sprintf(conf.GetString("s3.cdnUrl"), location)
+			return fmt.Sprintf(conf.String("s3.cdnUrl"), location)
 		}),
 	)
 }
 
-func provideSecurityConfig(conf contract.ConfigReader) *middleware.SecurityConfig {
-	return &middleware.SecurityConfig{
-		Enable: conf.GetBool("security.enable"),
-		JwtKey: conf.GetString("security.key"),
-		JwtId:  conf.GetString("security.kid"),
+func provideSecurityConfig(conf contract.ConfigReader) *kmiddleware.SecurityConfig {
+	return &kmiddleware.SecurityConfig{
+		Enable: conf.Bool("security.enable"),
+		JwtKey: conf.String("security.key"),
+		JwtId:  conf.String("security.kid"),
 	}
 }
 
 func provideWechatConfig(conf contract.ConfigReader, client contract.HttpDoer) *wechat.WechatConfig {
 	return &wechat.WechatConfig{
-		WechatAccessTokenUrl: conf.GetString("wechat.wechatAccessTokenUrl"),
-		WeChatGetUserInfoUrl: conf.GetString("wechat.weChatGetUserInfoUrl"),
-		AppId:                conf.GetString("wechat.appId"),
-		AppSecret:            conf.GetString("wechat.appSecret"),
+		WechatAccessTokenUrl: conf.String("wechat.wechatAccessTokenUrl"),
+		WeChatGetUserInfoUrl: conf.String("wechat.weChatGetUserInfoUrl"),
+		AppId:                conf.String("wechat.appId"),
+		AppSecret:            conf.String("wechat.appSecret"),
 		Client:               client,
 	}
 }
 
 func provideSmsConfig(doer contract.HttpDoer, conf contract.ConfigReader) *sms.TransportConfig {
 	return &sms.TransportConfig{
-		Tag:        conf.GetString("sms.tag"),
-		SendUrl:    conf.GetString("sms.sendUrl"),
-		BalanceUrl: conf.GetString("sms.balanceUrl"),
-		UserName:   conf.GetString("sms.username"),
-		Password:   conf.GetString("sms.password"),
+		Tag:        conf.String("sms.tag"),
+		SendUrl:    conf.String("sms.sendUrl"),
+		BalanceUrl: conf.String("sms.balanceUrl"),
+		UserName:   conf.String("sms.username"),
+		Password:   conf.String("sms.password"),
 		Client:     doer,
 	}
 }
@@ -97,12 +95,12 @@ func provideSmsConfig(doer contract.HttpDoer, conf contract.ConfigReader) *sms.T
 func provideRedis(logging log.Logger, conf contract.ConfigReader, tracer opentracing.Tracer) (redis.UniversalClient, func()) {
 	client := redis.NewUniversalClient(
 		&redis.UniversalOptions{
-			Addrs: conf.GetStringSlice("redis.addrs"),
-			DB:    conf.GetInt("redis.database"),
+			Addrs: conf.Strings("redis.addrs"),
+			DB:    conf.Int("redis.database"),
 		})
 	client.AddHook(
-		otredis.NewHook(tracer, conf.GetStringSlice("redis.addrs"),
-			conf.GetInt("redis.database")))
+		otredis.NewHook(tracer, conf.Strings("redis.addrs"),
+			conf.Int("redis.database")))
 	return client, func() {
 		if err := client.Close(); err != nil {
 			level.Error(logging).Log("err", err.Error())
@@ -111,12 +109,12 @@ func provideRedis(logging log.Logger, conf contract.ConfigReader, tracer opentra
 }
 
 func provideDialector(conf contract.ConfigReader) (gorm.Dialector, error) {
-	databaseType := conf.GetString("gorm.database")
+	databaseType := conf.String("gorm.database")
 	if databaseType == "mysql" {
-		return mysql.Open(conf.GetString("gorm.dsn")), nil
+		return mysql.Open(conf.String("gorm.dsn")), nil
 	}
 	if databaseType == "sqlite" {
-		return sqlite.Open(conf.GetString("gorm.dsn")), nil
+		return sqlite.Open(conf.String("gorm.dsn")), nil
 	}
 	return nil, fmt.Errorf("unknow database type %s", databaseType)
 }
@@ -125,7 +123,7 @@ func provideGormConfig(l log.Logger, conf contract.ConfigReader) *gorm.Config {
 	return &gorm.Config{
 		Logger: &logging.GormLogAdapter{l},
 		NamingStrategy: schema.NamingStrategy{
-			TablePrefix: conf.GetString("name") + "_", // 表名前缀，`User` 的表名应该是 `t_users`
+			TablePrefix: conf.String("name") + "_", // 表名前缀，`User` 的表名应该是 `t_users`
 		},
 	}
 }
@@ -149,13 +147,13 @@ func provideJaegerLogAdapter(l log.Logger) jaeger.Logger {
 
 func provideOpentracing(log jaeger.Logger, conf contract.ConfigReader) (opentracing.Tracer, func(), error) {
 	cfg := jaegercfg.Configuration{
-		ServiceName: conf.GetString("name"),
+		ServiceName: conf.String("name"),
 		Sampler: &jaegercfg.SamplerConfig{
-			Type:  conf.GetString("jaeger.sampler.type"),
-			Param: conf.GetFloat64("jaeger.sampler.param"),
+			Type:  conf.String("jaeger.sampler.type"),
+			Param: conf.Float64("jaeger.sampler.param"),
 		},
 		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans: conf.GetBool("jaeger.log.enable"),
+			LogSpans: conf.Bool("jaeger.log.enable"),
 		},
 	}
 	// Example logger and metrics factory. Use github.com/uber/jaeger-client-go/log
@@ -185,15 +183,15 @@ func provideOpentracing(log jaeger.Logger, conf contract.ConfigReader) (opentrac
 
 type overallMiddleware func(endpoints svc.Endpoints) svc.Endpoints
 
-func provideEndpointsMiddleware(l log.Logger, securityConfig *middleware.SecurityConfig, hist metrics.Histogram, tracer opentracing.Tracer) overallMiddleware {
+func provideEndpointsMiddleware(l log.Logger, securityConfig *kmiddleware.SecurityConfig, hist metrics.Histogram, tracer opentracing.Tracer, env contract.Env, appName contract.AppName) overallMiddleware {
 	return func(in svc.Endpoints) svc.Endpoints {
-		in.WrapAllExcept(middleware.NewValidationMiddleware())
-		in.WrapAllExcept(middleware.NewAuthenticationMiddleware(securityConfig), "Login", "GetCode")
-		in.WrapAllExcept(middleware.NewErrorMarshallerMiddleware())
+		in.WrapAllExcept(kmiddleware.NewValidationMiddleware())
+		in.WrapAllExcept(kmiddleware.NewAuthenticationMiddleware(securityConfig), "Login", "GetCode")
+		in.WrapAllLabeledExcept(kmiddleware.NewLoggingMiddleware(l, env.IsLocal()))
 		in.LoginEndpoint = newLoginToBindMiddleware(in.BindEndpoint)(in.LoginEndpoint)
-		in.WrapAllLabeledExcept(middleware.NewLoggingMiddleware(l))
-		in.WrapAllLabeledExcept(middleware.NewMetricsMiddleware(hist, "app"))
-		in.WrapAllLabeledExcept(middleware.NewTraceMiddleware(tracer, "app"))
+		in.WrapAllLabeledExcept(kmiddleware.NewMetricsMiddleware(hist, appName.String()))
+		in.WrapAllLabeledExcept(kmiddleware.NewTraceMiddleware(tracer, appName.String()))
+		in.WrapAllExcept(kmiddleware.NewErrorMarshallerMiddleware())
 		return in
 	}
 }

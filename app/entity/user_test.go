@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestUserEquals(t *testing.T)  {
+func TestUserEquals(t *testing.T) {
 	device1 := Device{
 		Model:     gorm.Model{},
 		UserID:    0,
@@ -32,7 +32,7 @@ func TestUserEquals(t *testing.T)  {
 		Hash:      "",
 	}
 	device3 := Device{
-		Model:     gorm.Model{
+		Model: gorm.Model{
 			UpdatedAt: time.Now(),
 		},
 		UserID:    0,
@@ -48,7 +48,7 @@ func TestUserEquals(t *testing.T)  {
 	if device1.Equals(&device2) {
 		t.Fatal("two devices should not equal")
 	}
-	if ! device1.Equals(&device3) {
+	if !device1.Equals(&device3) {
 		t.Fatal("two devices should equal")
 	}
 }

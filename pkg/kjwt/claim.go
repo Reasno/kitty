@@ -1,4 +1,4 @@
-package jwt
+package kjwt
 
 import (
 	"context"
@@ -10,12 +10,12 @@ import (
 type Claim struct {
 	stdjwt.StandardClaims
 	PackageName string
-	UserId   uint64
-	Suuid string
-	Channel string
+	UserId      uint64
+	Suuid       string
+	Channel     string
 	VersionCode string
-	Wechat string
-	Mobile string
+	Wechat      string
+	Mobile      string
 }
 
 func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat, mobile, packageName string, ttl time.Duration) *Claim {
@@ -25,12 +25,12 @@ func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat, mobile, p
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    issuer,
 		},
-		UserId:   uid,
-		Suuid: suuid,
-		Channel: channel,
+		UserId:      uid,
+		Suuid:       suuid,
+		Channel:     channel,
 		VersionCode: versionCode,
-		Wechat: wechat,
-		Mobile: mobile,
+		Wechat:      wechat,
+		Mobile:      mobile,
 		PackageName: packageName,
 	}
 }

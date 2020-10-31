@@ -1,4 +1,4 @@
-package http
+package khttp
 
 import (
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
@@ -12,7 +12,7 @@ type Client struct {
 }
 
 func NewClient(tracer opentracing.Tracer) *Client {
-	baseClient := &http.Client{Transport:  &nethttp.Transport{}}
+	baseClient := &http.Client{Transport: &nethttp.Transport{}}
 	return &Client{tracer, baseClient}
 }
 

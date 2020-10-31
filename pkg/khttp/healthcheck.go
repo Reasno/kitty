@@ -1,4 +1,4 @@
-package http // AddDocMiddleware returns a documentation path at /doc/
+package khttp // AddDocMiddleware returns a documentation path at /doc/
 
 import (
 	"github.com/gorilla/mux"

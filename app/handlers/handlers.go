@@ -3,19 +3,17 @@ package handlers
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
 	"github.com/Reasno/kitty/pkg/contract"
-	kittyjwt "github.com/Reasno/kitty/pkg/jwt"
+	"github.com/Reasno/kitty/pkg/kerr"
+	kittyjwt "github.com/Reasno/kitty/pkg/kjwt"
 	"github.com/Reasno/kitty/pkg/wechat"
 	pb "github.com/Reasno/kitty/proto"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -73,13 +71,13 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		u, err = s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
 	}
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ErrorLogin)
+		return nil, err
 	}
 
 	// Create jwt token
 	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), in.Device.Suuid, in.Channel, in.VersionCode, u.WechatOpenId.String, in.Mobile, in.PackageName})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create jwt token")
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 
 	var resp = u.ToReply()
@@ -97,37 +95,33 @@ func (s appService) getToken(param *tokenParam) (string, error) {
 		jwt.SigningMethodHS256,
 		kittyjwt.NewClaim(
 			param.userId,
-			s.conf.GetString("name"),
+			s.conf.String("name"),
 			param.suuid, param.channel, param.versionCode, param.wechat, param.mobile, param.packageName,
 			time.Hour*24*30,
 		),
 	)
-	token.Header["kid"] = s.conf.GetString("security.kid")
-	return token.SignedString([]byte(s.conf.GetString("security.key")))
+	token.Header["kid"] = s.conf.String("security.kid")
+	return token.SignedString([]byte(s.conf.String("security.key")))
 }
 
-func (s appService) verify(ctx context.Context, mobile string, code string) bool {
+func (s appService) verify(ctx context.Context, mobile string, code string) (bool, error) {
 	result, err := s.cr.CheckCode(ctx, mobile, code)
 	if err != nil {
-		level.Error(s.log).Log("err", err)
+		return false, err
 	}
-	if result {
-		err = s.cr.DeleteCode(ctx, mobile)
-		if err != nil {
-			s.error(err)
-		}
-	}
-	return result
+	err = s.cr.DeleteCode(ctx, mobile)
+	s.warn(err)
+	return result, nil
 }
 
 func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.GenericReply, error) {
 	code, err := s.cr.AddCode(ctx, in.Mobile)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get code")
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorGetCode))
 	}
 	err = s.sender.Send(ctx, in.Mobile, code)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to send code")
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorSendCode))
 	}
 	var resp = pb.GenericReply{
 		Code: 0,
@@ -135,11 +129,20 @@ func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.Gen
 	return &resp, nil
 }
 
-func (s appService) debug(msg string, args ...interface{}) {
-	level.Debug(s.log).Log("msg", fmt.Sprintf(msg, args...))
+func (s appService) debug(err error) {
+	if err != nil {
+		level.Debug(s.log).Log("err", err)
+	}
 }
 func (s appService) error(err error) {
-	level.Error(s.log).Log("err", err)
+	if err != nil {
+		level.Error(s.log).Log("err", err)
+	}
+}
+func (s appService) warn(err error) {
+	if err != nil {
+		level.Warn(s.log).Log("err", err)
+	}
 }
 
 func (s appService) getWechatInfo(ctx context.Context, wechat string) (*wechat.WxUserInfoResult, error) {
@@ -148,8 +151,7 @@ func (s appService) getWechatInfo(ctx context.Context, wechat string) (*wechat.W
 		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}
 	if wxRes.Openid == "" {
-		err := errors.New(msg.ErrorMissingOpenid)
-		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
+		return nil, errors.New(msg.ErrorMissingOpenid)
 	}
 	wxInfo, err := s.wechat.GetWechatUserInfoResult(ctx, wxRes)
 	if err != nil {
@@ -161,59 +163,64 @@ func (s appService) getWechatInfo(ctx context.Context, wechat string) (*wechat.W
 func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat string, device *entity.Device) (*entity.User, error) {
 	wxInfo, err := s.getWechatInfo(ctx, wechat)
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
+		return nil, kerr.UnauthorizedErr(err)
 	}
+
 	headImg, err := s.fr.UploadFromUrl(ctx, wxInfo.Headimgurl)
-	if err != nil {
-		return nil, errors.Wrap(err, msg.ErrorUpload)
-	}
+	s.warn(err)
+
 	wechatUser := entity.User{
 		UserName:      wxInfo.Nickname,
 		HeadImg:       headImg,
 		WechatOpenId:  ns(wxInfo.Openid),
 		WechatUnionId: ns(wxInfo.Unionid),
 	}
+
 	u, err := s.ur.GetFromWechat(ctx, packageName, wxInfo.Openid, device, wechatUser)
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 	return u, nil
 }
 
 func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, code string, device *entity.Device) (*entity.User, error) {
 	if len(code) == 0 {
-		return nil, status.Error(codes.InvalidArgument, msg.InvalidParams)
+		return nil, kerr.InvalidArgumentErr(errors.New(msg.InvalidParams))
 	}
-	if !s.verify(ctx, mobile, code) {
-		return nil, status.Error(codes.Unauthenticated, msg.ErrorMobileCode)
+	if ok, err := s.verify(ctx, mobile, code); err != nil {
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+	} else if !ok {
+		return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
 	}
 	return s.ur.GetFromMobile(ctx, packageName, mobile, device)
 }
 
 func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid string, device *entity.Device) (*entity.User, error) {
-	return s.ur.GetFromDevice(ctx, packageName, suuid, device)
+	u, err := s.ur.GetFromDevice(ctx, packageName, suuid, device)
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	return u, nil
+}
+
+func dbErr(err error) kerr.ServerError {
+	return kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 }
 
 func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
 	if in.Id == 0 {
 		claim := kittyjwt.GetClaim(ctx)
-		if claim == nil {
-			return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
-		}
 		in.Id = claim.UserId
 	}
 	u, err := s.ur.Get(ctx, uint(in.Id))
 	if err != nil {
-		return nil, status.Error(codes.NotFound, err.Error())
+		return nil, kerr.NotFoundErr(errors.Wrap(err, msg.ErrorUserNotFound))
 	}
 	return u.ToReply(), nil
 }
 
 func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
-	if claim == nil {
-		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
-	}
 	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
 		UserName: in.UserName,
 		HeadImg:  in.HeadImg,
@@ -221,7 +228,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 		Birthday: in.Birthday,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 
 	return u.ToReply(), nil
@@ -229,9 +236,6 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 
 func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
-	if claim == nil {
-		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
-	}
 
 	var (
 		toUpdate entity.User
@@ -239,8 +243,10 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 
 	// 绑定手机号
 	if len(in.Mobile) > 0 && len(in.Code) > 0 {
-		if !s.verify(ctx, in.Mobile, in.Code) {
-			return nil, status.Error(codes.Unauthenticated, msg.ErrorMobileCode)
+		if ok, err := s.verify(ctx, in.Mobile, in.Code); err != nil {
+			return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		} else if !ok {
+			return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
 		}
 		toUpdate = entity.User{Mobile: ns(in.Mobile)}
 	}
@@ -249,7 +255,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	if len(in.Wechat) > 0 {
 		wxInfo, err := s.getWechatInfo(ctx, in.Wechat)
 		if err != nil {
-			return nil, errors.Wrap(err, msg.ErrorWechatFailure)
+			return nil, kerr.UnauthorizedErr(err)
 		}
 		toUpdate = entity.User{
 			WechatOpenId:  ns(wxInfo.Openid),
@@ -266,7 +272,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	// 更新用户
 	newUser, err := s.ur.Update(ctx, uint(claim.UserId), toUpdate)
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 	reply := newUser.ToReply()
 	reply.Data.Token, err = s.getToken(&tokenParam{
@@ -279,7 +285,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		newUser.PackageName,
 	})
 	if err != nil {
-		err = errors.Wrap(err, msg.ErrorJwtFailure)
+		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 
 	return reply, err
@@ -287,12 +293,9 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 
 func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
-	if claim == nil {
-		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
-	}
 	user, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 	if in.Mobile {
 		user.Mobile = sql.NullString{}
@@ -303,7 +306,7 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	}
 	err = s.ur.Save(ctx, user)
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 	return user.ToReply(), nil
 }
@@ -317,9 +320,6 @@ func ns(s string) sql.NullString {
 
 func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
-	if claim == nil {
-		return nil, status.Error(codes.Unauthenticated, msg.ErrorNeedLogin)
-	}
 	device := &entity.Device{
 		Os:        uint8(in.Device.Os),
 		Imei:      in.Device.Imei,
@@ -331,7 +331,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	}
 	u, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
-		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 
 	u.CommonSUUID = in.Device.Suuid
@@ -340,7 +340,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	u.AddNewDevice(device)
 
 	if err := s.ur.Save(ctx, u); err != nil {
-		return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 
 	reply := u.ToReply()
@@ -354,7 +354,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		u.PackageName,
 	})
 	if err != nil {
-		err = errors.Wrap(err, msg.ErrorJwtFailure)
+		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 	return reply, nil
 }
