@@ -12,12 +12,18 @@ import (
 	"io/ioutil"
 )
 
-const RULES = "/monetization/rules"
-
 type Rule struct {
 	If      string `yaml:"if"`
 	Then    Data   `yaml:"then"`
 	program *vm.Program
+}
+
+type ErrInvalidRules struct {
+	detail string
+}
+
+func (e ErrInvalidRules) Error() string {
+	return e.detail
 }
 
 // convert Yaml在反序列化时，会把字段反序列化成map[interface{}]interface{}
@@ -53,7 +59,7 @@ func NewRules(reader io.Reader, logger log.Logger) []Rule {
 	}
 	err = yaml.Unmarshal(b, &rules)
 	if err != nil {
-		level.Warn(logger).Log("error", errors.Wrap(err, RULES+" is not valid"))
+		level.Warn(logger).Log("error", errors.Wrap(err, "invalid rules"))
 		rules = []Rule{}
 	}
 
@@ -81,15 +87,15 @@ func validateRules(reader io.Reader) error {
 	)
 	value, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.Wrap(err, "rules cannot be read")
+		return ErrInvalidRules{err.Error()}
 	}
 	err = yaml.Unmarshal(value, &tmp)
 	if err != nil {
-		return errors.Wrap(err, "rules are not valid")
+		return ErrInvalidRules{err.Error()}
 	}
 	for i := range tmp {
 		if err := tmp[i].Compile(); err != nil {
-			return errors.Wrap(err, tmp[i].If+" is not valid")
+			return ErrInvalidRules{err.Error()}
 		}
 	}
 	return nil

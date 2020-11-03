@@ -2,6 +2,7 @@ package rule
 
 import (
 	"context"
+	"errors"
 	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/Reasno/kitty/pkg/kmiddleware"
 	"github.com/go-kit/kit/endpoint"
@@ -10,12 +11,16 @@ import (
 )
 
 type GenericResponse struct {
-	Code string `json:"code"`
+	Code uint32 `json:"code"`
 	Message string `json:"message,omitempty"`
 	Data Data `json:"data,omitempty"`
 }
 
-type ByteResponse []byte
+type StringResponse  struct {
+	Code uint32 `json:"code"`
+	Message string `json:"message,omitempty"`
+	Data string `json:"data,omitempty"`
+}
 
 type calculateRulesRequest struct {
 	ruleName string
@@ -76,7 +81,7 @@ func MakeGetRulesEndpoint(s Service) endpoint.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		return ByteResponse(v), nil
+		return StringResponse{Data: string(v)}, nil
 	}
 }
 
@@ -84,6 +89,10 @@ func MakeUpdateRulesEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*updateRulesRequest)
 		err = s.UpdateRules(ctx, req.ruleName, req.data, req.dryRun)
+		var invalid ErrInvalidRules
+		if errors.As(err, &invalid) {
+			return GenericResponse{Message: invalid.Error(), Code: 3}, nil
+		}
 		if err != nil {
 			return nil, err
 		}

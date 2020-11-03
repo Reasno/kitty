@@ -29,7 +29,7 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 	m.Methods("GET").Path("/v1/rule/{rule}").Handler(httptransport.NewServer(
 		endpoints.getRulesEndpoint,
 		DecodeGetRuleRequest,
-		EncodeYamlResponse,
+		httptransport.EncodeJSONResponse,
 		serverOptions...,
 	))
 
@@ -48,27 +48,6 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 	))
 	
 	return m
-}
-
-func EncodeYamlResponse(_ context.Context, writer http.ResponseWriter, i interface{}) error {
-	writer.Header().Set("Content-Type", "application/x-yaml; charset=utf-8")
-	if headerer, ok := i.(httptransport.Headerer); ok {
-		for k, values := range headerer.Headers() {
-			for _, v := range values {
-				writer.Header().Add(k, v)
-			}
-		}
-	}
-	code := http.StatusOK
-	if sc, ok := i.(httptransport.StatusCoder); ok {
-		code = sc.StatusCode()
-	}
-	writer.WriteHeader(code)
-	if code == http.StatusNoContent {
-		return nil
-	}
-	writer.Write(i.(ByteResponse))
-	return nil
 }
 
 func DecodeCalculateRuleRequest (_ context.Context, r *http.Request) (interface{}, error)  {

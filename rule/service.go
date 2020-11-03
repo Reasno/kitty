@@ -3,6 +3,7 @@ package rule
 import (
 	"bytes"
 	"context"
+	"github.com/Reasno/kitty/pkg/kerr"
 	"github.com/Reasno/kitty/rule/msg"
 	"github.com/antonmedv/expr"
 	"github.com/go-kit/kit/log"
@@ -67,6 +68,10 @@ func (r *service) UpdateRules(ctx context.Context, ruleName string, content []by
 	reader := bytes.NewReader(content)
 	tee = io.TeeReader(reader, &buf)
 	err = validateRules(tee)
+	var invalid ErrInvalidRules
+	if errors.As(err, &invalid) {
+		return kerr.InvalidArgumentErr(invalid)
+	}
 	if err != nil {
 		return err
 	}

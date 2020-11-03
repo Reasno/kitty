@@ -17,7 +17,7 @@ import (
 func NewLogger(env contract.Env) (logger log.Logger) {
 	if !env.IsLocal() {
 		logger = log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
-		return log.With(logger, "caller", log.DefaultCaller)
+		return log.With(logger)
 	}
 	// Color by level value
 	colorFn := func(keyvals ...interface{}) term.FgBgColor {
