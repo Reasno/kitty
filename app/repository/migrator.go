@@ -30,7 +30,7 @@ func ProvideMigrator(db *gorm.DB) *gormigrate.Gormigrate {
 			},
 			Rollback: func(db *gorm.DB) error {
 				if db.Migrator().HasColumn(&entity.User{}, "ThirdPartyId") {
-					return db.Migrator().DropColumn(&entity.User{}, "third_party_id")
+					return db.Migrator().DropColumn(&entity.User{}, "ThirdPartyId")
 				}
 				return nil
 			},

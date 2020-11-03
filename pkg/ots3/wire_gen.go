@@ -25,3 +25,9 @@ func injectModule(conf contract.ConfigReader, logger log.Logger) *Module {
 	}
 	return module
 }
+
+func InjectClientUploader(conf contract.ConfigReader) *ClientUploader {
+	client := NewClient(conf)
+	clientUploader := NewClientUploader(client)
+	return clientUploader
+}

@@ -167,6 +167,8 @@ message UserLoginRequest {
     (options.openapiv2_field) = {required: "true"},
     (validate.rules).string.min_len = 1
   ];
+  // 第三方ID
+  string third_party_id = 8;
 }
 
 message Device {
@@ -195,6 +197,8 @@ message UserInfo {
   Gender gender = 5;
   string birthday = 6;
   string token = 7;
+  // 第三方ID
+  string third_party_id = 8;
 }
 
 message UserInfoReply {
@@ -240,6 +244,8 @@ message UserInfoUpdateRequest {
     (options.openapiv2_field) = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"},
     (validate.rules).string = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"}
   ];
+  // 第三方ID
+  string third_party_id = 7;
 }
 
 message EmptyRequest {

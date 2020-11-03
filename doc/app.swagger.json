@@ -377,6 +377,10 @@
         },
         "token": {
           "type": "string"
+        },
+        "thirdPartyId": {
+          "type": "string",
+          "title": "第三方ID"
         }
       }
     },
@@ -417,6 +421,10 @@
           "type": "string",
           "title": "生日",
           "pattern": "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"
+        },
+        "thirdPartyId": {
+          "type": "string",
+          "title": "第三方ID"
         }
       }
     },
@@ -456,6 +464,10 @@
           "required": [
             "true"
           ]
+        },
+        "thirdPartyId": {
+          "type": "string",
+          "title": "第三方ID"
         }
       }
     },

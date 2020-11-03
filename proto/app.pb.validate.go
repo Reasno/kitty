@@ -318,6 +318,8 @@ func (m *UserLoginRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for ThirdPartyId
+
 	return nil
 }
 
@@ -475,6 +477,8 @@ func (m *UserInfo) Validate() error {
 	// no validation rules for Birthday
 
 	// no validation rules for Token
+
+	// no validation rules for ThirdPartyId
 
 	return nil
 }
@@ -783,6 +787,8 @@ func (m *UserInfoUpdateRequest) Validate() error {
 			reason: "value does not match regex pattern \"^(|\\\\d{4}-\\\\d{1,2}-\\\\d{1,2})$\"",
 		}
 	}
+
+	// no validation rules for ThirdPartyId
 
 	return nil
 }

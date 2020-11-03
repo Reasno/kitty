@@ -395,6 +395,8 @@ func EncodeHTTPLoginZeroRequest(_ context.Context, r *http.Request, request inte
 
 	toRet.PackageName = req.PackageName
 
+	toRet.ThirdPartyId = req.ThirdPartyId
+
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(toRet); err != nil {
@@ -517,6 +519,8 @@ func EncodeHTTPUpdateInfoZeroRequest(_ context.Context, r *http.Request, request
 	toRet.Gender = req.Gender
 
 	toRet.Birthday = req.Birthday
+
+	toRet.ThirdPartyId = req.ThirdPartyId
 
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)

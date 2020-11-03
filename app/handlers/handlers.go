@@ -75,6 +75,24 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		return nil, err
 	}
 
+	// TODO: 这里会多一次IO，可以优化
+	hasExtra := false
+	if in.ThirdPartyId != "" {
+		u.ThirdPartyId = ns(in.ThirdPartyId)
+		hasExtra = true
+	}
+	if in.Channel != "" {
+		u.Channel = in.Channel
+		hasExtra = true
+	}
+	if in.VersionCode != "" {
+		u.VersionCode = in.VersionCode
+		hasExtra = true
+	}
+	if hasExtra && err != s.ur.Save(ctx, u) {
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+	}
+
 	// Create jwt token
 	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), in.Device.Suuid, in.Channel, in.VersionCode, u.WechatOpenId.String, in.Mobile, in.PackageName})
 	if err != nil {
@@ -226,10 +244,11 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
 	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
-		UserName: in.UserName,
-		HeadImg:  in.HeadImg,
-		Gender:   int(in.Gender),
-		Birthday: in.Birthday,
+		UserName:     in.UserName,
+		HeadImg:      in.HeadImg,
+		Gender:       int(in.Gender),
+		Birthday:     in.Birthday,
+		ThirdPartyId: ns(in.ThirdPartyId),
 	})
 	if err != nil {
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))

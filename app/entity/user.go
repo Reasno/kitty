@@ -48,12 +48,13 @@ func (user *User) ToReply() *pb.UserInfoReply {
 		Code:    0,
 		Message: "",
 		Data: &pb.UserInfo{
-			Id:       uint64(user.ID),
-			UserName: user.UserName,
-			Wechat:   user.WechatOpenId.String,
-			HeadImg:  user.HeadImg,
-			Gender:   pb.Gender(user.Gender),
-			Birthday: user.Birthday,
+			Id:           uint64(user.ID),
+			UserName:     user.UserName,
+			Wechat:       user.WechatOpenId.String,
+			HeadImg:      user.HeadImg,
+			Gender:       pb.Gender(user.Gender),
+			Birthday:     user.Birthday,
+			ThirdPartyId: user.ThirdPartyId.String,
 		},
 	}
 }

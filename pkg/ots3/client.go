@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/Reasno/kitty/pkg/contract"
+	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -31,6 +33,26 @@ func decodeClientResponse(_ context.Context, response2 *http.Response) (response
 
 func encodeClientRequest(ctx context.Context, request *http.Request, i interface{}) error {
 	request.Header.Set("Content-Type", "application/octet-stream")
-	request.Body = i.(Request).data
+	if input, ok := i.(Request).data.(io.ReadCloser); ok {
+		request.Body = input
+		return nil
+	}
+	request.Body = ioutil.NopCloser(i.(Request).data)
 	return nil
+}
+
+type ClientUploader struct {
+	endpoint endpoint.Endpoint
+}
+
+func (c ClientUploader) Upload(ctx context.Context, reader io.Reader) (newUrl string, err error) {
+	resp, err := c.endpoint(ctx, Request{data: reader})
+	if err != nil {
+		return "", err
+	}
+	return resp.(Response).Data.Url, err
+}
+
+func NewClientUploader(client *httptransport.Client) *ClientUploader {
+	return &ClientUploader{endpoint: client.Endpoint()}
 }

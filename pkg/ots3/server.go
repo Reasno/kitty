@@ -15,7 +15,7 @@ import (
 
 type UploadService struct {
 	logger log.Logger
-	s3 *Manager
+	s3     *Manager
 }
 
 func (s *UploadService) Upload(ctx context.Context, data io.Reader) (url string, err error) {
@@ -29,14 +29,14 @@ func (s *UploadService) Upload(ctx context.Context, data io.Reader) (url string,
 }
 
 type Request struct {
-	data io.ReadCloser
+	data io.Reader
 }
 
 type Response struct {
 	Data struct {
 		Url string `json:"url"`
 	} `json:"data"`
-	Code int `json:"code"`
+	Code    int    `json:"code"`
 	Message string `json:"message,omitempty"`
 }
 
@@ -49,7 +49,9 @@ func MakeUploadEndpoint(uploader contract.Uploader) endpoint.Endpoint {
 		}
 		return &Response{
 			Code: 0,
-			Data: struct{Url string `json:"url"`} { Url: resp},
+			Data: struct {
+				Url string `json:"url"`
+			}{Url: resp},
 		}, nil
 	}
 }
