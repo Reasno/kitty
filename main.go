@@ -1,5 +1,4 @@
 //go:generate tr proto/app.proto
-
 package main
 
 import (

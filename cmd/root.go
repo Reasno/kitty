@@ -9,7 +9,6 @@ import (
 var (
 	// Used for flags.
 	cfgFile  string
-	cfgCheck bool
 
 	logger log.Logger
 	conf   contract.ConfigReader
@@ -37,5 +36,4 @@ func Execute() error {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/kitty.yaml)")
-	rootCmd.PersistentFlags().BoolVar(&cfgCheck, "check", false, "check config file integrity during boot up")
 }

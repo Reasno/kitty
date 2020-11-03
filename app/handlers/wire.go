@@ -58,7 +58,7 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(FileRepository), new(*repository.FileRepo)),
 )
 
-func injectModule(reader contract.ConfigReader, logger log.Logger) (*AppModule, func(), error) {
+func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, func(), error) {
 	panic(wire.Build(
 		AppServerSet,
 		provideSecurityConfig,

@@ -10,10 +10,10 @@ type KeyManager struct {
 	Delimiter string
 }
 
-func NewKeyManager(del string, parts ...string) KeyManager {
+func NewKeyManager(delimiter string, parts ...string) KeyManager {
 	return KeyManager{
 		Prefixes:  parts,
-		Delimiter: del,
+		Delimiter: delimiter,
 	}
 }
 

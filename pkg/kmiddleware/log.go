@@ -10,8 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func NewLoggingMiddleware(logger log.Logger, printTrace bool) LabeledMiddleware {
-	return func(s string, endpoint endpoint.Endpoint) endpoint.Endpoint {
+func NewLoggingMiddleware(logger log.Logger, printTrace bool) endpoint.Middleware {
+	return func(endpoint endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			l := log2.WithContext(level.Debug(logger), ctx)
 			defer l.Log("req", request, "response", response)
@@ -19,7 +19,7 @@ func NewLoggingMiddleware(logger log.Logger, printTrace bool) LabeledMiddleware 
 			if err != nil {
 				l.Log("err", err)
 				if err, ok := err.(interface{ StackTrace() errors.StackTrace }); printTrace && ok {
-					fmt.Printf("%+v", err)
+					fmt.Printf("\n%+v\n\n", err)
 				}
 			}
 			return response, err

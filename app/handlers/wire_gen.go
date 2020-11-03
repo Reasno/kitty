@@ -22,7 +22,7 @@ import (
 
 // Injectors from wire.go:
 
-func injectModule(reader contract.ConfigReader, logger log.Logger) (*AppModule, func(), error) {
+func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, func(), error) {
 	dialector, err := provideDialector(reader)
 	if err != nil {
 		return nil, nil, err
@@ -46,7 +46,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*AppModule, 
 	userRepo := repository.NewUserRepo(db)
 	universalClient, cleanup3 := provideRedis(logger, reader, tracer)
 	keyManager := provideKeyManager(appName, env)
-	codeRepo := repository.NewCodeRepo(universalClient, keyManager)
+	codeRepo := repository.NewCodeRepo(universalClient, keyManager, env)
 	client := provideHttpClient(tracer)
 	transportConfig := provideSmsConfig(client, reader)
 	transport := sms.NewTransport(transportConfig)
@@ -64,8 +64,8 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*AppModule, 
 		uploader: manager,
 		fr:       fileRepo,
 	}
-	appModule := provideModule(db, tracer, logger, handlersOverallMiddleware, handlersAppService)
-	return appModule, func() {
+	module := provideModule(db, tracer, logger, handlersOverallMiddleware, handlersAppService)
+	return module, func() {
 		cleanup3()
 		cleanup2()
 		cleanup()

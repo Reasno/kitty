@@ -97,6 +97,7 @@ func provideRedis(logging log.Logger, conf contract.ConfigReader, tracer opentra
 		&redis.UniversalOptions{
 			Addrs: conf.Strings("redis.addrs"),
 			DB:    conf.Int("redis.database"),
+			Password: conf.String("redis.password"),
 		})
 	client.AddHook(
 		otredis.NewHook(tracer, conf.Strings("redis.addrs"),
@@ -183,21 +184,8 @@ func provideOpentracing(log jaeger.Logger, conf contract.ConfigReader) (opentrac
 
 type overallMiddleware func(endpoints svc.Endpoints) svc.Endpoints
 
-func provideEndpointsMiddleware(l log.Logger, securityConfig *kmiddleware.SecurityConfig, hist metrics.Histogram, tracer opentracing.Tracer, env contract.Env, appName contract.AppName) overallMiddleware {
-	return func(in svc.Endpoints) svc.Endpoints {
-		in.WrapAllExcept(kmiddleware.NewValidationMiddleware())
-		in.WrapAllExcept(kmiddleware.NewAuthenticationMiddleware(securityConfig), "Login", "GetCode")
-		in.WrapAllLabeledExcept(kmiddleware.NewLoggingMiddleware(l, env.IsLocal()))
-		in.LoginEndpoint = newLoginToBindMiddleware(in.BindEndpoint)(in.LoginEndpoint)
-		in.WrapAllLabeledExcept(kmiddleware.NewMetricsMiddleware(hist, appName.String()))
-		in.WrapAllLabeledExcept(kmiddleware.NewTraceMiddleware(tracer, appName.String()))
-		in.WrapAllExcept(kmiddleware.NewErrorMarshallerMiddleware())
-		return in
-	}
-}
-
-func provideModule(db *gorm.DB, tracer opentracing.Tracer, logger log.Logger, middleware overallMiddleware, server kitty.AppServer) *AppModule {
-	return &AppModule{
+func provideModule(db *gorm.DB, tracer opentracing.Tracer, logger log.Logger, middleware overallMiddleware, server kitty.AppServer) *Module {
+	return &Module{
 		db:        db,
 		logger:    logger,
 		tracer:    tracer,

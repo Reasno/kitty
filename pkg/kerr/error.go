@@ -36,6 +36,10 @@ func UnauthorizedErr(e error) ServerError {
 	return err(codes.Unauthenticated, e)
 }
 
+func ResourceExhaustedErr(e error) ServerError {
+	return err(codes.ResourceExhausted, e)
+}
+
 func CustomErr(code uint32, e error) ServerError {
 	return ServerError{e, status.New(codes.Internal, redact(e)), code}
 }

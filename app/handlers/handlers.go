@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
+	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/Reasno/kitty/pkg/kerr"
 	kittyjwt "github.com/Reasno/kitty/pkg/kjwt"
@@ -116,6 +117,9 @@ func (s appService) verify(ctx context.Context, mobile string, code string) (boo
 
 func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.GenericReply, error) {
 	code, err := s.cr.AddCode(ctx, in.Mobile)
+	if err == repository.ErrTooFrequent {
+		return nil, kerr.ResourceExhaustedErr(err)
+	}
 	if err != nil {
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorGetCode))
 	}

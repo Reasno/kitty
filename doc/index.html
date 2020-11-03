@@ -35,7 +35,7 @@
     window.onload = function () {
         const ui = SwaggerUIBundle({
             dom_id: '#swagger-ui',
-            docExpansion: 'none',
+            // docExpansion: 'none',
             presets: [
                 SwaggerUIBundle.presets.apis,
                 SwaggerUIStandalonePreset
@@ -47,6 +47,9 @@
             filter: true,
             urls:[{
                 "url": "app.swagger.json",
+                "name": "v1"
+            },{
+                "url": "rule_engine.swagger.json",
                 "name": "v1"
             }],
         });

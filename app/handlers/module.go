@@ -20,7 +20,7 @@ import (
 	"net/http"
 )
 
-type AppModule struct {
+type Module struct {
 	logger    log.Logger
 	db        *gorm.DB
 	tracer    stdopentracing.Tracer
@@ -28,7 +28,7 @@ type AppModule struct {
 	endpoints svc.Endpoints
 }
 
-func New(appModuleConfig contract.ConfigReader, logger log.Logger) *AppModule {
+func New(appModuleConfig contract.ConfigReader, logger log.Logger) *Module {
 	appModule, cleanup, err := injectModule(setUp(appModuleConfig, logger))
 	if err != nil {
 		panic(err)
@@ -43,12 +43,12 @@ func setUp(appModuleConfig contract.ConfigReader, logger log.Logger) (contract.C
 	return appModuleConfig, appLogger
 }
 
-func (a *AppModule) ProvideMigration() error {
+func (a *Module) ProvideMigration() error {
 	m := repository.ProvideMigrator(a.db)
 	return m.Migrate()
 }
 
-func (a *AppModule) ProvideRollback(id string) error {
+func (a *Module) ProvideRollback(id string) error {
 	m := repository.ProvideMigrator(a.db)
 	if id == "-1" {
 		return m.RollbackLast()
@@ -56,11 +56,11 @@ func (a *AppModule) ProvideRollback(id string) error {
 	return m.RollbackTo(id)
 }
 
-func (a *AppModule) ProvideCloser() {
+func (a *Module) ProvideCloser() {
 	a.cleanup()
 }
 
-func (a *AppModule) ProvideGrpc(server *grpc.Server) {
+func (a *Module) ProvideGrpc(server *grpc.Server) {
 	pb.RegisterAppServer(server, svc.MakeGRPCServer(a.endpoints,
 		grpctransport.ServerBefore(opentracing.GRPCToContext(
 			a.tracer, "app", a.logger),
@@ -69,7 +69,7 @@ func (a *AppModule) ProvideGrpc(server *grpc.Server) {
 	))
 }
 
-func (a *AppModule) ProvideHttp(router *mux.Router) {
+func (a *Module) ProvideHttp(router *mux.Router) {
 	router.PathPrefix("/app/").Handler(http.StripPrefix("/app", svc.MakeHTTPHandler(a.endpoints,
 		httptransport.ServerBefore(opentracing.HTTPToContext(
 			a.tracer, "app", a.logger)),
