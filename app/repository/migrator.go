@@ -20,5 +20,20 @@ func ProvideMigrator(db *gorm.DB) *gormigrate.Gormigrate {
 				return db.Migrator().DropTable(&entity.User{}, &entity.Device{})
 			},
 		},
+		{
+			ID: "202011030100",
+			Migrate: func(db *gorm.DB) error {
+				if !db.Migrator().HasColumn(&entity.User{}, "ThirdPartyId") {
+					return db.Migrator().AddColumn(&entity.User{}, "ThirdPartyId")
+				}
+				return nil
+			},
+			Rollback: func(db *gorm.DB) error {
+				if db.Migrator().HasColumn(&entity.User{}, "ThirdPartyId") {
+					return db.Migrator().DropColumn(&entity.User{}, "third_party_id")
+				}
+				return nil
+			},
+		},
 	})
 }

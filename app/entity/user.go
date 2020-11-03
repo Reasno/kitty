@@ -25,6 +25,7 @@ type User struct {
 	VersionCode   string `json:"version_code"`
 	InviteCode    string `json:"invite_code"`
 	PackageName   string `gorm:"type:varchar(255);uniqueIndex:mobile_index,priority:1;uniqueIndex:wechat_openid_index,priority:1"`
+	ThirdPartyId  sql.NullString
 }
 
 func (user *User) HasDevice(device *Device) bool {
