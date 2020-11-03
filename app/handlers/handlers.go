@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
 	"github.com/Reasno/kitty/app/repository"
@@ -76,7 +77,27 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 
 	// TODO: 这里会多一次IO，可以优化
-	hasExtra := false
+	err = s.addExtraInfo(ctx, in, u)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create jwt token
+	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), in.Device.Suuid, in.Channel, in.VersionCode, u.WechatOpenId.String, in.Mobile, in.PackageName})
+	if err != nil {
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
+	}
+
+	var resp = u.ToReply()
+	resp.Data.Token = tokenString
+	return resp, nil
+}
+
+func (s appService) addExtraInfo(ctx context.Context, in *pb.UserLoginRequest, u *entity.User) error {
+	var (
+		err      error
+		hasExtra bool
+	)
 	if in.ThirdPartyId != "" && in.ThirdPartyId != u.ThirdPartyId {
 		u.ThirdPartyId = in.ThirdPartyId
 		hasExtra = true
@@ -90,18 +111,9 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		hasExtra = true
 	}
 	if hasExtra && err != s.ur.Save(ctx, u) {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		return kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
-
-	// Create jwt token
-	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), in.Device.Suuid, in.Channel, in.VersionCode, u.WechatOpenId.String, in.Mobile, in.PackageName})
-	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
-	}
-
-	var resp = u.ToReply()
-	resp.Data.Token = tokenString
-	return resp, nil
+	return nil
 }
 
 type tokenParam struct {
@@ -156,6 +168,11 @@ func (s appService) debug(err error) {
 		level.Debug(s.log).Log("err", err)
 	}
 }
+
+func (s appService) infof(msg string, args ...interface{}) {
+	level.Info(s.log).Log("msg", fmt.Sprintf(msg, args))
+}
+
 func (s appService) error(err error) {
 	if err != nil {
 		level.Error(s.log).Log("err", err)
@@ -202,6 +219,7 @@ func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat s
 	if err != nil {
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
+	s.infof(msg.WxSuccess, u.ID)
 	return u, nil
 }
 
@@ -214,7 +232,12 @@ func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, 
 	} else if !ok {
 		return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
 	}
-	return s.ur.GetFromMobile(ctx, packageName, mobile, device)
+	u, err := s.ur.GetFromMobile(ctx, packageName, mobile, device)
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	s.infof(msg.MobileSuccess, u.ID)
+	return u, nil
 }
 
 func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid string, device *entity.Device) (*entity.User, error) {
@@ -222,6 +245,7 @@ func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid st
 	if err != nil {
 		return nil, dbErr(err)
 	}
+	s.infof(msg.DeviceSuccess, u.ID)
 	return u, nil
 }
 
