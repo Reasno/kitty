@@ -77,15 +77,15 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 
 	// TODO: 这里会多一次IO，可以优化
 	hasExtra := false
-	if in.ThirdPartyId != "" {
+	if in.ThirdPartyId != "" && in.ThirdPartyId != u.ThirdPartyId.String {
 		u.ThirdPartyId = ns(in.ThirdPartyId)
 		hasExtra = true
 	}
-	if in.Channel != "" {
+	if in.Channel != "" && in.Channel != u.Channel {
 		u.Channel = in.Channel
 		hasExtra = true
 	}
-	if in.VersionCode != "" {
+	if in.VersionCode != "" && in.VersionCode != u.VersionCode {
 		u.VersionCode = in.VersionCode
 		hasExtra = true
 	}
