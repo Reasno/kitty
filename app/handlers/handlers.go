@@ -77,8 +77,8 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 
 	// TODO: 这里会多一次IO，可以优化
 	hasExtra := false
-	if in.ThirdPartyId != "" && in.ThirdPartyId != u.ThirdPartyId.String {
-		u.ThirdPartyId = ns(in.ThirdPartyId)
+	if in.ThirdPartyId != "" && in.ThirdPartyId != u.ThirdPartyId {
+		u.ThirdPartyId = in.ThirdPartyId
 		hasExtra = true
 	}
 	if in.Channel != "" && in.Channel != u.Channel {
@@ -248,7 +248,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 		HeadImg:      in.HeadImg,
 		Gender:       int(in.Gender),
 		Birthday:     in.Birthday,
-		ThirdPartyId: ns(in.ThirdPartyId),
+		ThirdPartyId: in.ThirdPartyId,
 	})
 	if err != nil {
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
