@@ -29,12 +29,12 @@ type Repository interface {
 	WatchConfigUpdate(ctx context.Context) error
 }
 
-type service struct{
+type service struct {
 	logger log.Logger
 	repo   Repository
 }
 
-func NewService(logger log.Logger, repo   Repository) *service {
+func NewService(logger log.Logger, repo Repository) *service {
 	return &service{logger: logger, repo: repo}
 }
 
@@ -45,10 +45,10 @@ func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *
 			return nil, errors.Wrap(err, msg.ErrorRules)
 		}
 		if !output.(bool) {
-			level.Debug(r.logger).Log("msg", "negative: "+ rule.If)
+			level.Debug(r.logger).Log("msg", "negative: "+rule.If)
 			continue
 		}
-		level.Debug(r.logger).Log("msg", "positive: "+ rule.If)
+		level.Debug(r.logger).Log("msg", "positive: "+rule.If)
 		return rule.Then, nil
 	}
 	return Data{}, nil
@@ -93,5 +93,3 @@ func (r *service) Preflight(ctx context.Context, ruleName string, hash string) e
 	}
 	return nil
 }
-
-

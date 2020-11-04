@@ -15,8 +15,6 @@ import (
 	"sync"
 )
 
-const PREFIX = "/monetization"
-
 type repository struct {
 	client     *clientv3.Client
 	logger     log.Logger
@@ -84,7 +82,7 @@ func (r *repository) updateRuleSetByDbKey(dbKey string, rules []Rule) {
 
 func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 	level.Info(r.logger).Log("msg", "listening to etcd changes")
-	rch := r.client.Watch(ctx, PREFIX, clientv3.WithPrefix())
+	rch := r.client.Watch(ctx, r.prefix, clientv3.WithPrefix())
 	for {
 		select {
 		case wresp := <-rch:
