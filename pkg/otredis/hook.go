@@ -25,7 +25,7 @@ func NewHook(tracer opentracing.Tracer, addrs []string, database int) Hook {
 
 // BeforeProcess is a hook before process.
 func (h Hook) BeforeProcess(ctx context.Context, cmd redis.Cmder) (context.Context, error) {
-	span, newCtx := opentracing.StartSpanFromContext(ctx, "redis:cmd")
+	span, newCtx := opentracing.StartSpanFromContextWithTracer(ctx, h.tracer, "redis:cmd")
 	ext.DBType.Set(span, "redis")
 	ext.DBInstance.Set(span, strconv.Itoa(h.database))
 	ext.PeerAddress.Set(span, strings.Join(h.addrs, ", "))
