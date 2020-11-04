@@ -18,6 +18,7 @@ func NewTraceMiddleware(tracer stdtracing.Tracer, env string) LabeledMiddleware 
 			e := opentracing.TraceServer(tracer, name)(endpoint)
 			span := stdtracing.SpanFromContext(ctx)
 			claim := kjwt.GetClaim(ctx)
+			span.SetTag("env", env)
 			span.SetTag("package.name", claim.PackageName)
 			span.SetTag("suuid", claim.Suuid)
 			span.SetTag("user.id", claim.UserId)
