@@ -13,7 +13,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-//
+// newLoginToBindMiddleware deprecated
 func newLoginToBindMiddleware(bind endpoint.Endpoint) endpoint.Middleware {
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
@@ -40,10 +40,10 @@ func newLoginToBindMiddleware(bind endpoint.Endpoint) endpoint.Middleware {
 func provideEndpointsMiddleware(l log.Logger, securityConfig *kmiddleware.SecurityConfig, hist metrics.Histogram, tracer opentracing.Tracer, env contract.Env, appName contract.AppName) overallMiddleware {
 	return func(in svc.Endpoints) svc.Endpoints {
 		in.WrapAllExcept(kmiddleware.NewValidationMiddleware())
-		in.WrapAllExcept(kmiddleware.NewAuthenticationMiddleware(securityConfig), "Login", "GetCode")
 		in.WrapAllExcept(kmiddleware.NewLoggingMiddleware(l, env.IsLocal()))
 		in.WrapAllLabeledExcept(kmiddleware.NewLabeledMetricsMiddleware(hist, appName.String()))
 		in.WrapAllLabeledExcept(kmiddleware.NewTraceMiddleware(tracer, env.String()))
+		in.WrapAllExcept(kmiddleware.NewAuthenticationMiddleware(securityConfig), "Login", "GetCode")
 		in.WrapAllExcept(kmiddleware.NewErrorMarshallerMiddleware())
 		return in
 	}
