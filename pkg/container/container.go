@@ -24,11 +24,6 @@ func NewModuleContainer() ModuleContainer {
 	}
 }
 
-type RunPair struct {
-	Loop func() error
-	Exit func(error)
-}
-
 type Migrations struct {
 	Migrate  func() error
 	Rollback func(flag string) error
@@ -70,6 +65,9 @@ func (s *ModuleContainer) Register(app interface{}) {
 	}
 	if p, ok := app.(RunProvider); ok {
 		s.RunProviders = append(s.RunProviders, p.ProvideRunGroup)
+	}
+	if p, ok := app.(CloserProvider); ok {
+		s.CloserProviders = append(s.CloserProviders, p.ProvideCloser)
 	}
 	if p, ok := app.(MigrationProvider); ok {
 		s.MigrationProvider = append(s.MigrationProvider, Migrations{p.ProvideMigration, p.ProvideRollback})

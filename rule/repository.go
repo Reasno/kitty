@@ -132,7 +132,7 @@ func (r *repository) setRawRuleSetFromDbKey(ctx context.Context, dbKey string, v
 	return err
 }
 
-// GetRev 返回目标值的版本号
+// getRev 返回目标值的版本号
 func (r *repository) getRev(ctx context.Context, key string) (int64, error) {
 	resp, err := r.client.Get(ctx, key)
 	if err != nil {
@@ -162,7 +162,7 @@ func (r *repository) validateAllRules() error {
 	return nil
 }
 
-// isNewest 传入的内容是否和ETCD中的最新版本一致
+// IsNewest 传入的内容是否和ETCD中的最新版本一致
 func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, error) {
 	v, err := r.client.Get(ctx, key)
 	if err != nil {
