@@ -43,7 +43,7 @@ func provideEndpointsMiddleware(l log.Logger, securityConfig *kmiddleware.Securi
 		in.WrapAllExcept(kmiddleware.NewAuthenticationMiddleware(securityConfig), "Login", "GetCode")
 		in.WrapAllExcept(kmiddleware.NewLoggingMiddleware(l, env.IsLocal()))
 		in.WrapAllLabeledExcept(kmiddleware.NewLabeledMetricsMiddleware(hist, appName.String()))
-		in.WrapAllLabeledExcept(kmiddleware.NewTraceMiddleware(tracer, appName.String()))
+		in.WrapAllLabeledExcept(kmiddleware.NewTraceMiddleware(tracer, env.String()))
 		in.WrapAllExcept(kmiddleware.NewErrorMarshallerMiddleware())
 		return in
 	}
