@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"go.etcd.io/etcd/clientv3"
 	"gopkg.in/yaml.v3"
+	"strings"
 	"sync"
 )
 
@@ -51,7 +52,9 @@ func NewRepository(client *clientv3.Client, logger log.Logger, activeContainers 
 	}
 
 	// 依次拉取规则
+	var count = 0
 	for k, v := range repo.containers {
+		count++
 		value, err = repo.getRawRuleSetFromDbKey(context.Background(), v.DbKey)
 		if err != nil {
 			level.Warn(logger).Log("err", errors.Wrap(err, fmt.Sprintf(msg.ErrorInvalidConfig, v.Name)))
@@ -61,7 +64,7 @@ func NewRepository(client *clientv3.Client, logger log.Logger, activeContainers 
 		repo.containers[k] = v
 	}
 
-	level.Info(logger).Log("msg", "rules have been pulled from etcd")
+	level.Info(logger).Log("msg", fmt.Sprintf("%d rules have been added", count))
 
 	// 自动搜索共同前缀
 	repo.prefix = prefix(dbKeys(repo.containers))
@@ -81,7 +84,7 @@ func (r *repository) updateRuleSetByDbKey(dbKey string, rules []Rule) {
 }
 
 func (r *repository) WatchConfigUpdate(ctx context.Context) error {
-	level.Info(r.logger).Log("msg", "listening to etcd changes")
+	level.Info(r.logger).Log("msg", "listening to etcd changes: "+strings.Join(r.client.Endpoints(), ","))
 	rch := r.client.Watch(ctx, r.prefix, clientv3.WithPrefix())
 	for {
 		select {
