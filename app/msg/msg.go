@@ -16,6 +16,6 @@ const (
 	ErrorJwtFailure      = "无法生成签名"
 	ErrorUserNotFound    = "目标用户不存在"
 	WxSuccess            = "微信用户%d成功登录"
-	MobileSuccess        = "手机用户成功登录"
-	DeviceSuccess        = "设备用户成功登录"
+	MobileSuccess        = "手机用户%d成功登录"
+	DeviceSuccess        = "设备用户%d成功登录"
 )
