@@ -47,6 +47,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	universalClient, cleanup3 := provideRedis(logger, reader, tracer)
 	keyManager := provideKeyManager(appName, env)
 	codeRepo := repository.NewCodeRepo(universalClient, keyManager, env)
+	extraRepo := repository.NewExtraRepo(universalClient, keyManager)
 	client := provideHttpClient(tracer)
 	transportConfig := provideSmsConfig(client, reader)
 	transport := sms.NewTransport(transportConfig)
@@ -59,6 +60,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 		log:      logger,
 		ur:       userRepo,
 		cr:       codeRepo,
+		er:       extraRepo,
 		sender:   transport,
 		wechat:   wechatTransport,
 		uploader: manager,
@@ -93,5 +95,5 @@ var AppServerSet = wire.NewSet(
 	provideHttpClient,
 	provideUploadManager,
 	provideRedis,
-	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, config.ProvideAppName, config.ProvideEnv, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)), wire.Bind(new(kitty.AppServer), new(appService)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(FileRepository), new(*repository.FileRepo)),
+	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, config.ProvideAppName, config.ProvideEnv, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)), wire.Bind(new(kitty.AppServer), new(appService)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(FileRepository), new(*repository.FileRepo)), wire.Bind(new(ExtraRepository), new(*repository.ExtraRepo)),
 )

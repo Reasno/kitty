@@ -30,6 +30,34 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type Extra int32
+
+const (
+	Extra_UNKNOWN_EXTRA Extra = 0
+	Extra_WECHAT_EXTRA  Extra = 1
+	Extra_TAOBAO_EXTRA  Extra = 2
+)
+
+var Extra_name = map[int32]string{
+	0: "UNKNOWN_EXTRA",
+	1: "WECHAT_EXTRA",
+	2: "TAOBAO_EXTRA",
+}
+
+var Extra_value = map[string]int32{
+	"UNKNOWN_EXTRA": 0,
+	"WECHAT_EXTRA":  1,
+	"TAOBAO_EXTRA":  2,
+}
+
+func (x Extra) String() string {
+	return proto.EnumName(Extra_name, int32(x))
+}
+
+func (Extra) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{0}
+}
+
 type Gender int32
 
 const (
@@ -55,7 +83,7 @@ func (x Gender) String() string {
 }
 
 func (Gender) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{0}
+	return fileDescriptor_e0f9056a14b86d47, []int{1}
 }
 
 type Device_OS int32
@@ -83,7 +111,7 @@ func (x Device_OS) String() string {
 }
 
 func (Device_OS) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{4, 0}
+	return fileDescriptor_e0f9056a14b86d47, []int{8, 0}
 }
 
 type UserBindRequest struct {
@@ -94,10 +122,12 @@ type UserBindRequest struct {
 	// 微信官方下发的临时code码，非openId
 	Wechat string `protobuf:"bytes,3,opt,name=wechat,proto3" json:"wechat,omitempty"`
 	// 如果有openId 就直接走openId，不用再填微信官方下发的临时code码
-	OpenId               string   `protobuf:"bytes,4,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	OpenId string `protobuf:"bytes,4,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	// 绑定淘宝
+	TaobaoExtra          *TaobaoExtra `protobuf:"bytes,5,opt,name=taobao_extra,json=taobaoExtra,proto3" json:"taobao_extra,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
 func (m *UserBindRequest) Reset()         { *m = UserBindRequest{} }
@@ -161,6 +191,418 @@ func (m *UserBindRequest) GetOpenId() string {
 	return ""
 }
 
+func (m *UserBindRequest) GetTaobaoExtra() *TaobaoExtra {
+	if m != nil {
+		return m.TaobaoExtra
+	}
+	return nil
+}
+
+type GetExtraRequest struct {
+	Kind                 Extra    `protobuf:"varint,1,opt,name=kind,proto3,enum=app.v1.Extra" json:"kind,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetExtraRequest) Reset()         { *m = GetExtraRequest{} }
+func (m *GetExtraRequest) String() string { return proto.CompactTextString(m) }
+func (*GetExtraRequest) ProtoMessage()    {}
+func (*GetExtraRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{1}
+}
+func (m *GetExtraRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetExtraRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetExtraRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetExtraRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetExtraRequest.Merge(m, src)
+}
+func (m *GetExtraRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetExtraRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetExtraRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetExtraRequest proto.InternalMessageInfo
+
+func (m *GetExtraRequest) GetKind() Extra {
+	if m != nil {
+		return m.Kind
+	}
+	return Extra_UNKNOWN_EXTRA
+}
+
+type GetExtraReply struct {
+	Code    int32  `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	// Types that are valid to be assigned to Data:
+	//	*GetExtraReply_Taobao
+	//	*GetExtraReply_Wechat
+	Data                 isGetExtraReply_Data `protobuf_oneof:"data"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
+}
+
+func (m *GetExtraReply) Reset()         { *m = GetExtraReply{} }
+func (m *GetExtraReply) String() string { return proto.CompactTextString(m) }
+func (*GetExtraReply) ProtoMessage()    {}
+func (*GetExtraReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{2}
+}
+func (m *GetExtraReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetExtraReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetExtraReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetExtraReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetExtraReply.Merge(m, src)
+}
+func (m *GetExtraReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetExtraReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetExtraReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetExtraReply proto.InternalMessageInfo
+
+type isGetExtraReply_Data interface {
+	isGetExtraReply_Data()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type GetExtraReply_Taobao struct {
+	Taobao *TaobaoExtra `protobuf:"bytes,3,opt,name=taobao,proto3,oneof" json:"taobao,omitempty"`
+}
+type GetExtraReply_Wechat struct {
+	Wechat *WechatExtra `protobuf:"bytes,4,opt,name=wechat,proto3,oneof" json:"wechat,omitempty"`
+}
+
+func (*GetExtraReply_Taobao) isGetExtraReply_Data() {}
+func (*GetExtraReply_Wechat) isGetExtraReply_Data() {}
+
+func (m *GetExtraReply) GetData() isGetExtraReply_Data {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+func (m *GetExtraReply) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *GetExtraReply) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *GetExtraReply) GetTaobao() *TaobaoExtra {
+	if x, ok := m.GetData().(*GetExtraReply_Taobao); ok {
+		return x.Taobao
+	}
+	return nil
+}
+
+func (m *GetExtraReply) GetWechat() *WechatExtra {
+	if x, ok := m.GetData().(*GetExtraReply_Wechat); ok {
+		return x.Wechat
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*GetExtraReply) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*GetExtraReply_Taobao)(nil),
+		(*GetExtraReply_Wechat)(nil),
+	}
+}
+
+type TaobaoExtra struct {
+	Userid               string   `protobuf:"bytes,1,opt,name=userid,proto3" json:"userid,omitempty"`
+	OpenSid              string   `protobuf:"bytes,2,opt,name=open_sid,json=openSid,proto3" json:"open_sid,omitempty"`
+	TopAccessToken       string   `protobuf:"bytes,3,opt,name=top_access_token,json=topAccessToken,proto3" json:"top_access_token,omitempty"`
+	AvatarUrl            string   `protobuf:"bytes,4,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	HavanaSsoToken       string   `protobuf:"bytes,5,opt,name=havana_sso_token,json=havanaSsoToken,proto3" json:"havana_sso_token,omitempty"`
+	Nick                 string   `protobuf:"bytes,6,opt,name=nick,proto3" json:"nick,omitempty"`
+	OpenId               string   `protobuf:"bytes,7,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	TopAuthCode          string   `protobuf:"bytes,8,opt,name=top_auth_code,json=topAuthCode,proto3" json:"top_auth_code,omitempty"`
+	TopExpireTime        string   `protobuf:"bytes,9,opt,name=top_expire_time,json=topExpireTime,proto3" json:"top_expire_time,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *TaobaoExtra) Reset()         { *m = TaobaoExtra{} }
+func (m *TaobaoExtra) String() string { return proto.CompactTextString(m) }
+func (*TaobaoExtra) ProtoMessage()    {}
+func (*TaobaoExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{3}
+}
+func (m *TaobaoExtra) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TaobaoExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TaobaoExtra.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TaobaoExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TaobaoExtra.Merge(m, src)
+}
+func (m *TaobaoExtra) XXX_Size() int {
+	return m.Size()
+}
+func (m *TaobaoExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_TaobaoExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TaobaoExtra proto.InternalMessageInfo
+
+func (m *TaobaoExtra) GetUserid() string {
+	if m != nil {
+		return m.Userid
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetOpenSid() string {
+	if m != nil {
+		return m.OpenSid
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetTopAccessToken() string {
+	if m != nil {
+		return m.TopAccessToken
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetAvatarUrl() string {
+	if m != nil {
+		return m.AvatarUrl
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetHavanaSsoToken() string {
+	if m != nil {
+		return m.HavanaSsoToken
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetNick() string {
+	if m != nil {
+		return m.Nick
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetOpenId() string {
+	if m != nil {
+		return m.OpenId
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetTopAuthCode() string {
+	if m != nil {
+		return m.TopAuthCode
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetTopExpireTime() string {
+	if m != nil {
+		return m.TopExpireTime
+	}
+	return ""
+}
+
+type WechatExtra struct {
+	AccessToken          string   `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	ExpiresIn            int64    `protobuf:"varint,2,opt,name=expiresIn,proto3" json:"expiresIn,omitempty"`
+	RefreshToken         string   `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	OpenId               string   `protobuf:"bytes,4,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	Scope                string   `protobuf:"bytes,5,opt,name=scope,proto3" json:"scope,omitempty"`
+	NickName             string   `protobuf:"bytes,6,opt,name=nick_name,json=nickName,proto3" json:"nick_name,omitempty"`
+	Sex                  int32    `protobuf:"varint,7,opt,name=sex,proto3" json:"sex,omitempty"`
+	Province             string   `protobuf:"bytes,8,opt,name=province,proto3" json:"province,omitempty"`
+	City                 string   `protobuf:"bytes,9,opt,name=city,proto3" json:"city,omitempty"`
+	Country              string   `protobuf:"bytes,10,opt,name=country,proto3" json:"country,omitempty"`
+	Headimgurl           string   `protobuf:"bytes,11,opt,name=headimgurl,proto3" json:"headimgurl,omitempty"`
+	Privilege            []string `protobuf:"bytes,12,rep,name=privilege,proto3" json:"privilege,omitempty"`
+	Unionid              string   `protobuf:"bytes,13,opt,name=unionid,proto3" json:"unionid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *WechatExtra) Reset()         { *m = WechatExtra{} }
+func (m *WechatExtra) String() string { return proto.CompactTextString(m) }
+func (*WechatExtra) ProtoMessage()    {}
+func (*WechatExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{4}
+}
+func (m *WechatExtra) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *WechatExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_WechatExtra.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *WechatExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_WechatExtra.Merge(m, src)
+}
+func (m *WechatExtra) XXX_Size() int {
+	return m.Size()
+}
+func (m *WechatExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_WechatExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_WechatExtra proto.InternalMessageInfo
+
+func (m *WechatExtra) GetAccessToken() string {
+	if m != nil {
+		return m.AccessToken
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetExpiresIn() int64 {
+	if m != nil {
+		return m.ExpiresIn
+	}
+	return 0
+}
+
+func (m *WechatExtra) GetRefreshToken() string {
+	if m != nil {
+		return m.RefreshToken
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetOpenId() string {
+	if m != nil {
+		return m.OpenId
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetNickName() string {
+	if m != nil {
+		return m.NickName
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetSex() int32 {
+	if m != nil {
+		return m.Sex
+	}
+	return 0
+}
+
+func (m *WechatExtra) GetProvince() string {
+	if m != nil {
+		return m.Province
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetCity() string {
+	if m != nil {
+		return m.City
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetCountry() string {
+	if m != nil {
+		return m.Country
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetHeadimgurl() string {
+	if m != nil {
+		return m.Headimgurl
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetPrivilege() []string {
+	if m != nil {
+		return m.Privilege
+	}
+	return nil
+}
+
+func (m *WechatExtra) GetUnionid() string {
+	if m != nil {
+		return m.Unionid
+	}
+	return ""
+}
+
 // Token续期
 type UserRefreshRequest struct {
 	Device *Device `protobuf:"bytes,4,opt,name=device,proto3" json:"device,omitempty"`
@@ -177,7 +619,7 @@ func (m *UserRefreshRequest) Reset()         { *m = UserRefreshRequest{} }
 func (m *UserRefreshRequest) String() string { return proto.CompactTextString(m) }
 func (*UserRefreshRequest) ProtoMessage()    {}
 func (*UserRefreshRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{1}
+	return fileDescriptor_e0f9056a14b86d47, []int{5}
 }
 func (m *UserRefreshRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -231,7 +673,9 @@ type UserUnbindRequest struct {
 	// true则解绑手机
 	Mobile bool `protobuf:"varint,1,opt,name=mobile,proto3" json:"mobile,omitempty"`
 	// true则解绑微信
-	Wechat               bool     `protobuf:"varint,2,opt,name=wechat,proto3" json:"wechat,omitempty"`
+	Wechat bool `protobuf:"varint,2,opt,name=wechat,proto3" json:"wechat,omitempty"`
+	// true则解绑淘宝
+	Taobao               bool     `protobuf:"varint,3,opt,name=taobao,proto3" json:"taobao,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -241,7 +685,7 @@ func (m *UserUnbindRequest) Reset()         { *m = UserUnbindRequest{} }
 func (m *UserUnbindRequest) String() string { return proto.CompactTextString(m) }
 func (*UserUnbindRequest) ProtoMessage()    {}
 func (*UserUnbindRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{2}
+	return fileDescriptor_e0f9056a14b86d47, []int{6}
 }
 func (m *UserUnbindRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -284,6 +728,13 @@ func (m *UserUnbindRequest) GetWechat() bool {
 	return false
 }
 
+func (m *UserUnbindRequest) GetTaobao() bool {
+	if m != nil {
+		return m.Taobao
+	}
+	return false
+}
+
 type UserLoginRequest struct {
 	// 手机号
 	Mobile string `protobuf:"bytes,1,opt,name=mobile,proto3" json:"mobile,omitempty"`
@@ -309,7 +760,7 @@ func (m *UserLoginRequest) Reset()         { *m = UserLoginRequest{} }
 func (m *UserLoginRequest) String() string { return proto.CompactTextString(m) }
 func (*UserLoginRequest) ProtoMessage()    {}
 func (*UserLoginRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{3}
+	return fileDescriptor_e0f9056a14b86d47, []int{7}
 }
 func (m *UserLoginRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -413,7 +864,7 @@ func (m *Device) Reset()         { *m = Device{} }
 func (m *Device) String() string { return proto.CompactTextString(m) }
 func (*Device) ProtoMessage()    {}
 func (*Device) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{4}
+	return fileDescriptor_e0f9056a14b86d47, []int{8}
 }
 func (m *Device) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -511,7 +962,7 @@ func (m *UserInfo) Reset()         { *m = UserInfo{} }
 func (m *UserInfo) String() string { return proto.CompactTextString(m) }
 func (*UserInfo) ProtoMessage()    {}
 func (*UserInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{5}
+	return fileDescriptor_e0f9056a14b86d47, []int{9}
 }
 func (m *UserInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -609,7 +1060,7 @@ func (m *UserInfoReply) Reset()         { *m = UserInfoReply{} }
 func (m *UserInfoReply) String() string { return proto.CompactTextString(m) }
 func (*UserInfoReply) ProtoMessage()    {}
 func (*UserInfoReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{6}
+	return fileDescriptor_e0f9056a14b86d47, []int{10}
 }
 func (m *UserInfoReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -670,7 +1121,7 @@ func (m *GetCodeRequest) Reset()         { *m = GetCodeRequest{} }
 func (m *GetCodeRequest) String() string { return proto.CompactTextString(m) }
 func (*GetCodeRequest) ProtoMessage()    {}
 func (*GetCodeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{7}
+	return fileDescriptor_e0f9056a14b86d47, []int{11}
 }
 func (m *GetCodeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -717,7 +1168,7 @@ func (m *UserInfoRequest) Reset()         { *m = UserInfoRequest{} }
 func (m *UserInfoRequest) String() string { return proto.CompactTextString(m) }
 func (*UserInfoRequest) ProtoMessage()    {}
 func (*UserInfoRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{8}
+	return fileDescriptor_e0f9056a14b86d47, []int{12}
 }
 func (m *UserInfoRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -773,7 +1224,7 @@ func (m *UserInfoUpdateRequest) Reset()         { *m = UserInfoUpdateRequest{} }
 func (m *UserInfoUpdateRequest) String() string { return proto.CompactTextString(m) }
 func (*UserInfoUpdateRequest) ProtoMessage()    {}
 func (*UserInfoUpdateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{9}
+	return fileDescriptor_e0f9056a14b86d47, []int{13}
 }
 func (m *UserInfoUpdateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -847,7 +1298,7 @@ func (m *EmptyRequest) Reset()         { *m = EmptyRequest{} }
 func (m *EmptyRequest) String() string { return proto.CompactTextString(m) }
 func (*EmptyRequest) ProtoMessage()    {}
 func (*EmptyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{10}
+	return fileDescriptor_e0f9056a14b86d47, []int{14}
 }
 func (m *EmptyRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -888,7 +1339,7 @@ func (m *GenericReply) Reset()         { *m = GenericReply{} }
 func (m *GenericReply) String() string { return proto.CompactTextString(m) }
 func (*GenericReply) ProtoMessage()    {}
 func (*GenericReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{11}
+	return fileDescriptor_e0f9056a14b86d47, []int{15}
 }
 func (m *GenericReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -932,9 +1383,14 @@ func (m *GenericReply) GetMessage() string {
 }
 
 func init() {
+	proto.RegisterEnum("app.v1.Extra", Extra_name, Extra_value)
 	proto.RegisterEnum("app.v1.Gender", Gender_name, Gender_value)
 	proto.RegisterEnum("app.v1.Device_OS", Device_OS_name, Device_OS_value)
 	proto.RegisterType((*UserBindRequest)(nil), "app.v1.UserBindRequest")
+	proto.RegisterType((*GetExtraRequest)(nil), "app.v1.GetExtraRequest")
+	proto.RegisterType((*GetExtraReply)(nil), "app.v1.GetExtraReply")
+	proto.RegisterType((*TaobaoExtra)(nil), "app.v1.TaobaoExtra")
+	proto.RegisterType((*WechatExtra)(nil), "app.v1.WechatExtra")
 	proto.RegisterType((*UserRefreshRequest)(nil), "app.v1.UserRefreshRequest")
 	proto.RegisterType((*UserUnbindRequest)(nil), "app.v1.UserUnbindRequest")
 	proto.RegisterType((*UserLoginRequest)(nil), "app.v1.UserLoginRequest")
@@ -951,88 +1407,117 @@ func init() {
 func init() { proto.RegisterFile("app.proto", fileDescriptor_e0f9056a14b86d47) }
 
 var fileDescriptor_e0f9056a14b86d47 = []byte{
-	// 1287 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xcf, 0x6f, 0x13, 0xc7,
-	0x17, 0xcf, 0x6e, 0xfc, 0xf3, 0x25, 0x71, 0x9c, 0x21, 0x80, 0x31, 0x21, 0xc0, 0xca, 0x42, 0x21,
-	0x7c, 0x63, 0x13, 0x7f, 0x39, 0x54, 0xb9, 0x94, 0x35, 0x09, 0xa9, 0x29, 0x4d, 0xaa, 0x0d, 0x11,
-	0x82, 0x86, 0x58, 0x13, 0xef, 0xc4, 0x9e, 0x62, 0xef, 0x6c, 0x77, 0xd7, 0xa9, 0x52, 0xe0, 0xd0,
-	0x56, 0xaa, 0xaa, 0x08, 0xa9, 0x92, 0x29, 0x55, 0x7f, 0x9c, 0x7a, 0xa9, 0x7a, 0x41, 0xed, 0xad,
-	0x48, 0x55, 0xc5, 0xb5, 0xc7, 0xaa, 0x1c, 0x2a, 0xf5, 0x50, 0x55, 0x34, 0x01, 0x89, 0x3f, 0x81,
-	0x53, 0x35, 0x33, 0x6b, 0x67, 0xed, 0x24, 0xa8, 0xb4, 0x52, 0x9b, 0x8b, 0xdf, 0x7b, 0x33, 0xfb,
-	0x99, 0xf7, 0x3e, 0xf3, 0x79, 0x93, 0x07, 0x71, 0x6c, 0xdb, 0x59, 0xdb, 0x61, 0x1e, 0x43, 0x11,
-	0x6e, 0xae, 0x4d, 0xa6, 0x47, 0x2a, 0x8c, 0x55, 0x6a, 0x24, 0x87, 0x6d, 0x9a, 0xc3, 0x96, 0xc5,
-	0x3c, 0xec, 0x51, 0x66, 0xb9, 0x72, 0x57, 0xfa, 0x94, 0xf8, 0x29, 0x4f, 0x54, 0x88, 0x35, 0xb1,
-	0x86, 0x6b, 0xd4, 0xc4, 0x1e, 0xc9, 0xed, 0x30, 0xfc, 0xcd, 0xd9, 0xc0, 0x66, 0x66, 0x13, 0x0b,
-	0xdb, 0x74, 0x2d, 0x9f, 0x63, 0xb6, 0x00, 0xdc, 0x05, 0x7c, 0xb8, 0xc2, 0x2a, 0x4c, 0x98, 0x39,
-	0x6e, 0xc9, 0xa8, 0xf6, 0x85, 0x02, 0x83, 0x8b, 0x2e, 0x71, 0x0a, 0xd4, 0x32, 0x0d, 0xf2, 0x56,
-	0x83, 0xb8, 0x1e, 0x3a, 0x07, 0x91, 0x3a, 0x5b, 0xa1, 0x35, 0x92, 0x52, 0x8e, 0x29, 0x63, 0xf1,
-	0xc2, 0xa9, 0xa6, 0x8e, 0x36, 0x94, 0xc1, 0xb1, 0xe5, 0xcc, 0xcd, 0xe5, 0x37, 0x96, 0xcc, 0x6b,
-	0x37, 0x26, 0x27, 0x6f, 0x65, 0x4e, 0x3e, 0x2b, 0xec, 0x73, 0x86, 0xf2, 0xdd, 0x51, 0xc3, 0xff,
-	0x14, 0x21, 0x08, 0x95, 0x99, 0x49, 0x52, 0x2a, 0x87, 0x30, 0x84, 0x8d, 0x0e, 0x40, 0xe4, 0x6d,
-	0x52, 0xae, 0x62, 0x2f, 0xd5, 0x2b, 0xa2, 0xbe, 0x87, 0x0e, 0x42, 0x94, 0x57, 0x50, 0xa2, 0x66,
-	0x2a, 0x24, 0x17, 0xb8, 0x5b, 0x34, 0xb5, 0xdb, 0x0a, 0x20, 0x9e, 0x9d, 0x41, 0x56, 0x1d, 0xe2,
-	0x56, 0x5b, 0x09, 0x9e, 0x80, 0x88, 0x49, 0xd6, 0x68, 0x99, 0x88, 0xed, 0x7d, 0xf9, 0x44, 0x56,
-	0xd2, 0x9b, 0x9d, 0x16, 0x51, 0xc3, 0x5f, 0x45, 0x29, 0x88, 0x96, 0xab, 0xd8, 0xb2, 0x48, 0x2d,
-	0x15, 0x16, 0xb8, 0x2d, 0x17, 0x9d, 0x81, 0xfe, 0x35, 0xe2, 0xb8, 0x94, 0x59, 0x25, 0x91, 0x65,
-	0x44, 0x14, 0x3a, 0xd4, 0xd4, 0xa3, 0x3f, 0x2b, 0x21, 0xcf, 0x69, 0x90, 0x67, 0x85, 0x90, 0xa3,
-	0x26, 0x15, 0xa3, 0xcf, 0xdf, 0x76, 0x8e, 0x99, 0x44, 0x3b, 0x07, 0x43, 0x3c, 0x9b, 0x45, 0x6b,
-	0x25, 0xc0, 0xd6, 0x81, 0x0e, 0xb6, 0x62, 0x6d, 0x02, 0xb6, 0x8b, 0x55, 0x65, 0x5c, 0x7a, 0xda,
-	0x2f, 0x2a, 0x24, 0x39, 0xca, 0x45, 0x56, 0xa1, 0xd6, 0x7f, 0x46, 0xf9, 0xbf, 0x46, 0x61, 0xa8,
-	0x83, 0x42, 0xfe, 0x95, 0x8d, 0xcb, 0xd7, 0x71, 0x85, 0x94, 0x2c, 0x5c, 0x27, 0xa9, 0xe8, 0x9e,
-	0xc4, 0xfb, 0xdb, 0xe6, 0x70, 0x9d, 0xa0, 0x0c, 0x24, 0xbc, 0x2a, 0x75, 0xcc, 0x92, 0x8d, 0x1d,
-	0x6f, 0x9d, 0xeb, 0x24, 0x26, 0x92, 0xe9, 0x17, 0xd1, 0xd7, 0x79, 0xb0, 0x68, 0x6a, 0xbf, 0x2a,
-	0x10, 0x91, 0xe9, 0x73, 0x2a, 0x68, 0x9d, 0x50, 0xc9, 0xa6, 0x21, 0x6c, 0x11, 0x33, 0x57, 0x71,
-	0x8b, 0x1e, 0x6e, 0xa3, 0x23, 0x00, 0xd8, 0x32, 0x1d, 0x46, 0x4d, 0x0e, 0x2a, 0x29, 0x8a, 0xfb,
-	0x91, 0xa2, 0x89, 0x86, 0x21, 0xec, 0x36, 0x1a, 0x6d, 0x59, 0x4a, 0x07, 0x25, 0xa1, 0xb7, 0x8e,
-	0xcb, 0x3e, 0x1f, 0xdc, 0x44, 0xc7, 0x41, 0x65, 0xae, 0x60, 0x20, 0x91, 0x1f, 0xea, 0x64, 0x32,
-	0x3b, 0xbf, 0x60, 0xa8, 0xcc, 0xe5, 0xa7, 0x33, 0x4c, 0x4d, 0x59, 0xb0, 0x21, 0x6c, 0x6d, 0x1c,
-	0xd4, 0xf9, 0x05, 0x94, 0x00, 0x98, 0x5f, 0x28, 0x2d, 0xce, 0xbd, 0x3a, 0x37, 0x7f, 0x79, 0x2e,
-	0xd9, 0x83, 0xa2, 0xd0, 0x5b, 0x9c, 0x5f, 0x48, 0x2a, 0xa8, 0x0f, 0xa2, 0xfa, 0xdc, 0xb4, 0x31,
-	0x5f, 0x9c, 0x4e, 0xaa, 0xda, 0x53, 0x05, 0x62, 0x5c, 0x36, 0x45, 0x6b, 0x95, 0xa1, 0x04, 0xa8,
-	0xd4, 0x14, 0xc5, 0x85, 0x0c, 0x95, 0x9a, 0xe8, 0x30, 0xc4, 0x1b, 0x2e, 0x71, 0x24, 0xa5, 0xb2,
-	0xbe, 0x18, 0x0f, 0x08, 0xf2, 0xf6, 0x92, 0xc0, 0x21, 0x88, 0x55, 0x09, 0x36, 0x4b, 0xb4, 0x5e,
-	0xf1, 0xeb, 0x8b, 0x72, 0xbf, 0x58, 0xaf, 0x70, 0x75, 0x54, 0x88, 0x65, 0x12, 0x47, 0x14, 0x99,
-	0xd8, 0x56, 0xc7, 0xac, 0x88, 0x1a, 0xfe, 0x2a, 0x4a, 0x43, 0x6c, 0x85, 0x3a, 0x5e, 0xd5, 0xc4,
-	0xeb, 0xf2, 0xfe, 0x8d, 0xb6, 0xcf, 0xb9, 0xf3, 0xd8, 0x75, 0x62, 0xf9, 0x15, 0x4b, 0xe7, 0x2f,
-	0xde, 0x64, 0x1d, 0x06, 0x5a, 0xb5, 0x1a, 0xc4, 0xae, 0xad, 0xa3, 0x11, 0x5f, 0xda, 0xbc, 0xe4,
-	0x70, 0x21, 0xf6, 0xf4, 0xb7, 0xa3, 0xc2, 0xf7, 0x45, 0x9e, 0x82, 0x68, 0x9d, 0xb8, 0x2e, 0xae,
-	0xb4, 0x8a, 0x6f, 0xb9, 0x28, 0x03, 0x21, 0x13, 0x7b, 0x58, 0x54, 0xde, 0x97, 0x4f, 0xb6, 0xca,
-	0x68, 0x83, 0x8b, 0x55, 0xed, 0x02, 0x24, 0x66, 0x89, 0xc7, 0xf5, 0xd9, 0xea, 0xc7, 0x97, 0xba,
-	0xfa, 0xf1, 0x58, 0x53, 0x4f, 0x6e, 0x28, 0x91, 0x25, 0x93, 0xb7, 0x5c, 0x5b, 0xa9, 0xe0, 0xc4,
-	0xf2, 0x7e, 0xac, 0xd5, 0x84, 0xda, 0x71, 0xf9, 0x9e, 0xca, 0xd4, 0x25, 0x58, 0xd7, 0x6d, 0x69,
-	0x0f, 0x55, 0xd8, 0xdf, 0xda, 0xb3, 0x68, 0xf3, 0x27, 0x7d, 0xfb, 0x19, 0xe8, 0xbe, 0xc7, 0xc2,
-	0x89, 0xa6, 0x1e, 0xa7, 0x3d, 0xf2, 0xef, 0x6c, 0x53, 0x8f, 0x5f, 0x91, 0x66, 0xe6, 0xac, 0x6c,
-	0x14, 0x55, 0xfc, 0xa4, 0x20, 0x70, 0xdf, 0xaf, 0x74, 0xdf, 0x6b, 0x61, 0xa2, 0xa9, 0xef, 0xdb,
-	0x50, 0x92, 0xcb, 0x63, 0x37, 0xab, 0x9e, 0x67, 0xbb, 0x2f, 0x4f, 0xe5, 0x72, 0xd9, 0xf1, 0x93,
-	0x99, 0x67, 0x85, 0x61, 0x07, 0xe5, 0x77, 0x84, 0x5f, 0x5c, 0x06, 0xd7, 0xba, 0x65, 0x50, 0xd0,
-	0x9b, 0xfa, 0x91, 0x0d, 0x25, 0xbd, 0x3c, 0x76, 0x73, 0xc9, 0xbc, 0x71, 0xe6, 0xd6, 0x04, 0x27,
-	0xe9, 0x7f, 0xf9, 0xf6, 0x2f, 0x3f, 0x7b, 0xd4, 0x19, 0xc9, 0x3f, 0x67, 0x43, 0x40, 0x49, 0x3b,
-	0x35, 0x13, 0xdd, 0x45, 0x33, 0x09, 0xe8, 0x9f, 0xa9, 0xdb, 0xde, 0xba, 0xcf, 0xa5, 0x76, 0x1e,
-	0xfa, 0x67, 0x89, 0x45, 0x1c, 0x5a, 0xfe, 0x47, 0x12, 0x1a, 0x3f, 0x0b, 0x11, 0x59, 0x2e, 0x42,
-	0x90, 0x98, 0x9d, 0x99, 0x9b, 0x9e, 0x31, 0x02, 0xcd, 0x3a, 0x08, 0x7d, 0x7e, 0xec, 0x35, 0xfd,
-	0xe2, 0x4c, 0x52, 0x41, 0x43, 0x30, 0xe0, 0x07, 0xce, 0xcf, 0x88, 0x90, 0x9a, 0xff, 0x2a, 0x0c,
-	0xbd, 0xba, 0x6d, 0xa3, 0x2b, 0x10, 0x16, 0x8f, 0x3e, 0x4a, 0x05, 0x75, 0x18, 0xfc, 0x3f, 0x90,
-	0xde, 0xbf, 0x43, 0xa1, 0x3c, 0x77, 0xed, 0x68, 0x53, 0x8f, 0x41, 0xe4, 0xc9, 0x67, 0xdf, 0x6f,
-	0xfd, 0x70, 0xf7, 0xbd, 0x87, 0x9b, 0x77, 0xd4, 0x84, 0x16, 0xcf, 0xad, 0x4d, 0xe6, 0x6a, 0xfc,
-	0xdb, 0x29, 0x65, 0x1c, 0x5d, 0x82, 0xa8, 0xaf, 0x60, 0x74, 0x60, 0xfb, 0x92, 0x82, 0x92, 0x4e,
-	0x0f, 0x07, 0x2e, 0xaf, 0xcd, 0x8a, 0x76, 0xb8, 0x1b, 0x19, 0x50, 0x8c, 0x23, 0x0b, 0x52, 0xb0,
-	0x40, 0x15, 0x2f, 0xce, 0xc1, 0x9d, 0x89, 0x3d, 0x37, 0xe3, 0x13, 0x4d, 0x3d, 0x01, 0xfd, 0x4f,
-	0x3e, 0xfe, 0xfa, 0xf1, 0x87, 0xdf, 0x6d, 0x3e, 0xf8, 0xf2, 0xf1, 0xbb, 0xdf, 0x08, 0xf4, 0x41,
-	0x34, 0xc0, 0xd1, 0xa9, 0xb5, 0xca, 0x72, 0x37, 0xa8, 0x79, 0x0b, 0x55, 0x01, 0x64, 0x0b, 0x88,
-	0x53, 0x8e, 0x74, 0x83, 0x75, 0xb4, 0xc7, 0x5e, 0x67, 0x65, 0x76, 0x3f, 0x6b, 0x40, 0x8b, 0xb5,
-	0xce, 0xe2, 0x14, 0x2d, 0x41, 0x88, 0x0f, 0x39, 0x9d, 0x95, 0x04, 0xc6, 0x9e, 0xbf, 0x87, 0xce,
-	0x27, 0x01, 0x8e, 0xbe, 0x02, 0x11, 0x39, 0x16, 0xa0, 0x43, 0x41, 0x98, 0x8e, 0x51, 0xe1, 0x45,
-	0xb9, 0xd2, 0x80, 0x9f, 0xd0, 0xb0, 0x5a, 0x67, 0x94, 0x20, 0xea, 0x0f, 0x42, 0x28, 0x1d, 0x44,
-	0xea, 0x9c, 0x8e, 0xf6, 0x3a, 0xe5, 0x78, 0xf7, 0x4d, 0x27, 0xb5, 0x3e, 0x8e, 0xef, 0xc8, 0xaf,
-	0xa7, 0x94, 0xf1, 0xc2, 0x1d, 0xa5, 0xa9, 0xf3, 0x76, 0x3b, 0xbc, 0x75, 0xf7, 0x83, 0xcd, 0xfb,
-	0x9f, 0x6f, 0xdd, 0xfe, 0x64, 0xf3, 0xfe, 0xbd, 0xad, 0x8f, 0xbe, 0xf5, 0x53, 0xbb, 0x7f, 0x6f,
-	0xeb, 0xc1, 0xfb, 0xf9, 0xf0, 0xe9, 0xec, 0x64, 0xf6, 0xb4, 0x16, 0xca, 0x61, 0xdb, 0xce, 0x27,
-	0xb1, 0x6d, 0xd7, 0x68, 0x59, 0x0c, 0x9a, 0xb9, 0x37, 0x5d, 0x66, 0x4d, 0xed, 0x88, 0x5c, 0x1d,
-	0x81, 0x34, 0xf4, 0x5e, 0xb8, 0x7c, 0x09, 0xed, 0x8b, 0xa9, 0xe9, 0x01, 0xbd, 0xe1, 0x55, 0x99,
-	0x43, 0xdf, 0x11, 0x1b, 0x8e, 0xa9, 0x2b, 0x71, 0x88, 0xca, 0xd5, 0x9e, 0x1f, 0x1f, 0x8d, 0x2a,
-	0x3f, 0x3d, 0x1a, 0x55, 0x7e, 0x7f, 0x34, 0xaa, 0x7c, 0xfa, 0xc7, 0x68, 0xcf, 0xd5, 0xf0, 0x75,
-	0xea, 0x79, 0xeb, 0x2b, 0x11, 0x31, 0xa9, 0xfe, 0xff, 0xcf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x25,
-	0x80, 0x0b, 0xb5, 0x4f, 0x0b, 0x00, 0x00,
+	// 1751 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0x4d, 0x6c, 0x1c, 0x49,
+	0xf5, 0x77, 0xb7, 0xe7, 0xf3, 0xcd, 0x87, 0xc7, 0x95, 0x6c, 0x76, 0x32, 0x71, 0xbc, 0x76, 0xff,
+	0xad, 0xc8, 0xf1, 0xfe, 0xed, 0x59, 0x0f, 0x11, 0x42, 0x39, 0x40, 0x7a, 0x92, 0x59, 0xc7, 0xcb,
+	0x62, 0xa3, 0xb1, 0xad, 0xb0, 0xbb, 0xd9, 0x8c, 0xca, 0xd3, 0x95, 0x99, 0xc2, 0x33, 0xdd, 0x4d,
+	0x77, 0xcf, 0x10, 0x93, 0xe4, 0x00, 0x48, 0x08, 0x45, 0x8b, 0x90, 0x66, 0x59, 0x04, 0xdc, 0xb8,
+	0x71, 0x20, 0x82, 0x1b, 0x91, 0x10, 0xda, 0x2b, 0x47, 0x44, 0x0e, 0x48, 0x1c, 0x10, 0x0a, 0xf1,
+	0xae, 0xb4, 0x57, 0x6e, 0x39, 0xa1, 0x57, 0x55, 0x3d, 0xd3, 0x33, 0xb6, 0x57, 0x2c, 0x2b, 0xc1,
+	0x5c, 0xa6, 0xde, 0xaf, 0x5e, 0xbf, 0xaa, 0xf7, 0x7b, 0x1f, 0x55, 0x05, 0x69, 0xea, 0xba, 0x6b,
+	0xae, 0xe7, 0x04, 0x0e, 0x49, 0xe0, 0xb0, 0xbf, 0x5e, 0x9a, 0x6b, 0x39, 0x4e, 0xab, 0xc3, 0xca,
+	0xd4, 0xe5, 0x65, 0x6a, 0xdb, 0x4e, 0x40, 0x03, 0xee, 0xd8, 0xbe, 0xd4, 0x2a, 0xbd, 0x2a, 0xfe,
+	0x9a, 0xab, 0x2d, 0x66, 0xaf, 0xf6, 0x69, 0x87, 0x5b, 0x34, 0x60, 0xe5, 0x63, 0x03, 0xa5, 0xbc,
+	0x16, 0x51, 0x76, 0x5c, 0x66, 0x53, 0x97, 0xf7, 0x2b, 0x65, 0xc7, 0x15, 0x06, 0x4f, 0x30, 0x7e,
+	0xb6, 0xe5, 0xb4, 0x1c, 0x31, 0x2c, 0xe3, 0x48, 0xa2, 0xc6, 0x53, 0x0d, 0x66, 0xf6, 0x7c, 0xe6,
+	0x55, 0xb9, 0x6d, 0xd5, 0xd9, 0xb7, 0x7a, 0xcc, 0x0f, 0xc8, 0x75, 0x48, 0x74, 0x9d, 0x7d, 0xde,
+	0x61, 0x45, 0x6d, 0x41, 0x5b, 0x4e, 0x57, 0x5f, 0x1d, 0x98, 0xe4, 0x91, 0x36, 0xb3, 0x7c, 0x67,
+	0xe9, 0xc1, 0x9d, 0x77, 0x6e, 0x5b, 0xef, 0xde, 0x5f, 0x5f, 0x7f, 0xb8, 0x74, 0xf9, 0x45, 0xf5,
+	0x8c, 0x37, 0x5b, 0x99, 0x44, 0xeb, 0xea, 0x53, 0x42, 0x20, 0xd6, 0x74, 0x2c, 0x56, 0xd4, 0xd1,
+	0x44, 0x5d, 0x8c, 0xc9, 0x39, 0x48, 0x7c, 0x9b, 0x35, 0xdb, 0x34, 0x28, 0x4e, 0x0b, 0x54, 0x49,
+	0xe4, 0x65, 0x48, 0xa2, 0x07, 0x0d, 0x6e, 0x15, 0x63, 0x72, 0x02, 0xc5, 0x4d, 0x8b, 0x7c, 0x11,
+	0xb2, 0x01, 0x75, 0xf6, 0xa9, 0xd3, 0x60, 0xf7, 0x02, 0x8f, 0x16, 0xe3, 0x0b, 0xda, 0x72, 0xa6,
+	0x72, 0x66, 0x4d, 0xb2, 0xb9, 0xb6, 0x2b, 0xe6, 0x6a, 0x38, 0x55, 0xcf, 0x04, 0x23, 0xc1, 0xb8,
+	0x02, 0x33, 0x1b, 0x2c, 0x90, 0x13, 0xca, 0xa9, 0x45, 0x88, 0x1d, 0x70, 0xdb, 0x12, 0x2e, 0xe5,
+	0x2b, 0xb9, 0xd0, 0x84, 0xd4, 0x11, 0x53, 0xc6, 0x63, 0x0d, 0x72, 0xa3, 0xcf, 0xdc, 0xce, 0x21,
+	0x99, 0x53, 0x4e, 0xe0, 0x47, 0xf1, 0x6a, 0xea, 0x93, 0xbf, 0xbd, 0x22, 0x64, 0xe5, 0x4e, 0x11,
+	0x92, 0x5d, 0xe6, 0xfb, 0xb4, 0x15, 0x7a, 0x19, 0x8a, 0x64, 0x15, 0x12, 0x72, 0x3b, 0xc2, 0xd1,
+	0x93, 0x77, 0x7c, 0x73, 0xaa, 0xae, 0x94, 0x50, 0x5d, 0xf1, 0x12, 0x1b, 0x57, 0xbf, 0x25, 0xd0,
+	0xa1, 0xba, 0x54, 0xaa, 0x26, 0x20, 0x66, 0xd1, 0x80, 0x1a, 0xbf, 0xd6, 0x21, 0x13, 0x31, 0x88,
+	0xf4, 0xf6, 0x7c, 0xe6, 0x71, 0xe9, 0x64, 0xba, 0xae, 0x24, 0x72, 0x1e, 0x52, 0x82, 0x5e, 0x9f,
+	0x5b, 0xe1, 0x46, 0x51, 0xde, 0xe1, 0x16, 0x59, 0x86, 0x42, 0xe0, 0xb8, 0x0d, 0xda, 0x6c, 0x32,
+	0xdf, 0x6f, 0x04, 0xce, 0x01, 0xb3, 0x55, 0x6c, 0xf2, 0x81, 0xe3, 0x9a, 0x02, 0xde, 0x45, 0x94,
+	0x5c, 0x04, 0xa0, 0x7d, 0x1a, 0x50, 0xaf, 0xd1, 0xf3, 0x3a, 0x2a, 0x4c, 0x69, 0x89, 0xec, 0x79,
+	0x1d, 0x34, 0xd4, 0xa6, 0x7d, 0x6a, 0xd3, 0x86, 0xef, 0x3b, 0xca, 0x50, 0x5c, 0x1a, 0x92, 0xf8,
+	0x8e, 0xef, 0x48, 0x43, 0x04, 0x62, 0x36, 0x6f, 0x1e, 0x14, 0x13, 0x32, 0x31, 0x70, 0x1c, 0x4d,
+	0x80, 0xe4, 0x58, 0x02, 0x18, 0x90, 0x13, 0xfb, 0xeb, 0x05, 0xed, 0x86, 0x88, 0x44, 0x4a, 0x4c,
+	0x67, 0x70, 0x73, 0xbd, 0xa0, 0x7d, 0x1d, 0xc3, 0x70, 0x09, 0x66, 0x50, 0x87, 0xdd, 0x73, 0xb9,
+	0xc7, 0x1a, 0x01, 0xef, 0xb2, 0x62, 0x5a, 0x68, 0xe1, 0xa7, 0x35, 0x81, 0xee, 0xf2, 0x2e, 0x33,
+	0xfe, 0xa9, 0x43, 0x26, 0x42, 0x28, 0x59, 0x84, 0xec, 0x98, 0xdf, 0x92, 0xb4, 0x0c, 0x8d, 0x38,
+	0x3d, 0x07, 0x69, 0x69, 0xd6, 0xdf, 0xb4, 0x05, 0x75, 0xd3, 0xf5, 0x11, 0x40, 0xfe, 0x0f, 0x72,
+	0x1e, 0xbb, 0xeb, 0x31, 0xbf, 0x3d, 0xc6, 0x5c, 0x56, 0x81, 0xd2, 0xc4, 0xa9, 0xb9, 0x7d, 0x16,
+	0xe2, 0x7e, 0xd3, 0x71, 0x99, 0xa2, 0x49, 0x0a, 0xe4, 0x02, 0xa4, 0x91, 0x91, 0x86, 0x4d, 0xbb,
+	0x4c, 0x51, 0x94, 0x42, 0x60, 0x8b, 0x76, 0x19, 0x29, 0xc0, 0xb4, 0xcf, 0xee, 0x09, 0x8a, 0xe2,
+	0x75, 0x1c, 0x92, 0x12, 0xa4, 0x5c, 0xcf, 0xe9, 0x73, 0xbb, 0x19, 0x52, 0x33, 0x94, 0x45, 0x05,
+	0xf2, 0xe0, 0x50, 0x91, 0x21, 0xc6, 0x98, 0xb2, 0x4d, 0xa7, 0x67, 0x07, 0xde, 0x61, 0x11, 0x64,
+	0x26, 0x28, 0x91, 0xcc, 0x03, 0xb4, 0x19, 0xb5, 0x78, 0xb7, 0x85, 0xf1, 0xcd, 0x88, 0xc9, 0x08,
+	0x82, 0x54, 0xb8, 0x1e, 0xef, 0xf3, 0x0e, 0x6b, 0xb1, 0x62, 0x76, 0x61, 0x1a, 0xc3, 0x3f, 0x04,
+	0xd0, 0x6e, 0xcf, 0xe6, 0x8e, 0xcd, 0xad, 0x62, 0x4e, 0xda, 0x55, 0xa2, 0xf1, 0x9e, 0x06, 0x04,
+	0x1b, 0x4c, 0x5d, 0x92, 0x12, 0x96, 0xe3, 0x25, 0x48, 0x58, 0xac, 0xcf, 0x9b, 0x4c, 0xa5, 0x7c,
+	0x3e, 0x4c, 0xf9, 0x1b, 0x02, 0xad, 0xab, 0x59, 0xb1, 0xe1, 0x36, 0xb5, 0x6d, 0xd6, 0x51, 0x3c,
+	0x85, 0x22, 0xb9, 0x02, 0xd9, 0x3e, 0xf3, 0x7c, 0xee, 0xd8, 0x32, 0x33, 0x04, 0x59, 0xd5, 0xd9,
+	0x81, 0x99, 0xfc, 0xb3, 0x16, 0x0b, 0xbc, 0x1e, 0x7b, 0x51, 0x8d, 0x79, 0x7a, 0x41, 0xab, 0x67,
+	0x94, 0x1a, 0x26, 0x8b, 0xf1, 0x0e, 0xcc, 0xe2, 0x6e, 0xf6, 0xec, 0xfd, 0x48, 0xc3, 0x3b, 0x37,
+	0xd6, 0xf0, 0x52, 0xc3, 0x1e, 0x36, 0xea, 0x57, 0xba, 0xc4, 0x55, 0xbf, 0x3a, 0x37, 0x56, 0xde,
+	0xa9, 0xb0, 0x8e, 0x8d, 0xbf, 0xe8, 0x50, 0x40, 0xeb, 0x6f, 0x3a, 0x2d, 0x6e, 0xff, 0xcf, 0xba,
+	0xe9, 0x7f, 0x8d, 0xda, 0xd8, 0x18, 0xb5, 0xf8, 0x95, 0x4b, 0x9b, 0x07, 0xb4, 0xc5, 0x64, 0xf6,
+	0x26, 0x4f, 0x0d, 0x88, 0x52, 0x13, 0x39, 0xbd, 0x04, 0xf9, 0xa0, 0xcd, 0x3d, 0xab, 0xe1, 0x52,
+	0x2f, 0x38, 0xc4, 0x32, 0x91, 0x79, 0x9c, 0x15, 0xe8, 0xd7, 0x11, 0xdc, 0xb4, 0x8c, 0xbf, 0x6a,
+	0x90, 0x90, 0xdb, 0x47, 0x2a, 0x78, 0x97, 0x71, 0x55, 0xae, 0x62, 0x2c, 0x30, 0xeb, 0x2e, 0x0d,
+	0xe9, 0xc1, 0xb1, 0x68, 0x58, 0xb6, 0xe5, 0x39, 0xdc, 0x42, 0xa3, 0xd3, 0xaa, 0x61, 0x49, 0x44,
+	0x95, 0x5f, 0xaf, 0x37, 0xac, 0x4a, 0x29, 0x60, 0x85, 0x75, 0x69, 0x53, 0xf1, 0x81, 0x43, 0xb2,
+	0x08, 0xba, 0xe3, 0x0b, 0x06, 0xf2, 0x95, 0xd9, 0x71, 0x26, 0xd7, 0xb6, 0x77, 0xea, 0xba, 0xe3,
+	0xe3, 0xea, 0x0e, 0x1d, 0xb6, 0x2e, 0x31, 0x36, 0x56, 0x40, 0xdf, 0xde, 0x21, 0x79, 0x80, 0xed,
+	0x9d, 0xc6, 0xde, 0xd6, 0x57, 0xb7, 0xb6, 0x6f, 0x6d, 0x15, 0xa6, 0x48, 0x12, 0xa6, 0x37, 0xb7,
+	0x77, 0x0a, 0x1a, 0xc9, 0x40, 0xd2, 0xdc, 0xba, 0x51, 0xdf, 0xde, 0xbc, 0x51, 0xd0, 0x8d, 0x4f,
+	0x34, 0x48, 0x61, 0xda, 0x6c, 0xda, 0x77, 0x1d, 0x92, 0x07, 0x5d, 0x35, 0xf0, 0x58, 0x5d, 0xe7,
+	0x16, 0x36, 0x04, 0x6c, 0xe3, 0x92, 0x52, 0xe9, 0x5f, 0x0a, 0x01, 0x41, 0xde, 0x69, 0x29, 0x70,
+	0x1e, 0x52, 0x58, 0xba, 0x0d, 0xde, 0x6d, 0x29, 0xff, 0x92, 0x28, 0x6f, 0x76, 0x5b, 0x98, 0x1d,
+	0x2d, 0x66, 0x5b, 0xcc, 0x13, 0x4e, 0xe6, 0x47, 0xd9, 0xb1, 0x21, 0xd0, 0xba, 0x9a, 0xc5, 0xce,
+	0xb2, 0xcf, 0xbd, 0xa0, 0x6d, 0xd1, 0xc3, 0xb0, 0x0f, 0x85, 0x32, 0x72, 0x27, 0x1b, 0x9e, 0xf4,
+	0x58, 0x0a, 0xff, 0x66, 0x24, 0xbb, 0x90, 0x0b, 0x7d, 0xfd, 0x7c, 0x67, 0xec, 0x92, 0x3c, 0x05,
+	0xd5, 0x09, 0x5b, 0x08, 0xdd, 0x18, 0x1a, 0x97, 0x67, 0xe4, 0x1b, 0x90, 0xdf, 0x60, 0x01, 0xe6,
+	0x67, 0x58, 0x8f, 0x5f, 0x9a, 0xa8, 0xc7, 0x85, 0x81, 0x59, 0x78, 0xa4, 0x25, 0x6e, 0x5b, 0x58,
+	0x72, 0xc3, 0x4c, 0x05, 0x2f, 0x55, 0x51, 0x58, 0x58, 0x84, 0xc6, 0xa2, 0xbc, 0x2a, 0xc9, 0xad,
+	0x4b, 0x63, 0x13, 0xd1, 0x32, 0x9e, 0xea, 0xf0, 0x52, 0xa8, 0xb3, 0xe7, 0xe2, 0x6d, 0x6d, 0xd4,
+	0x06, 0x26, 0xe3, 0x58, 0xbd, 0x34, 0x30, 0xd3, 0x7c, 0x4a, 0xfe, 0xae, 0x0d, 0xcc, 0xf4, 0x5b,
+	0x72, 0xb8, 0x74, 0x4d, 0x16, 0x8a, 0x2e, 0xfe, 0x8a, 0x10, 0x89, 0xf7, 0xcd, 0xc9, 0xb8, 0x56,
+	0x57, 0x07, 0xe6, 0x99, 0x47, 0x5a, 0xe1, 0xce, 0xf2, 0x83, 0x76, 0x10, 0xb8, 0xfe, 0x57, 0xae,
+	0x96, 0xcb, 0x6b, 0x2b, 0x97, 0x97, 0x5e, 0x54, 0xcf, 0x7a, 0xa4, 0x72, 0x0c, 0xfe, 0xec, 0x69,
+	0xf0, 0xee, 0x64, 0x1a, 0x54, 0xcd, 0x81, 0x79, 0xf1, 0x91, 0x56, 0xba, 0xb3, 0xfc, 0xe0, 0xb6,
+	0x75, 0xff, 0xca, 0xc3, 0x55, 0x24, 0xe9, 0xff, 0x2b, 0xc3, 0x7f, 0x5c, 0x7b, 0xde, 0x9b, 0xab,
+	0x7c, 0x8a, 0x42, 0x24, 0x93, 0x8e, 0xe7, 0x4c, 0xf2, 0x84, 0x9c, 0xc9, 0x43, 0xb6, 0xd6, 0x75,
+	0x83, 0x43, 0xc5, 0xa5, 0xf1, 0x3a, 0x64, 0x37, 0x98, 0xcd, 0x3c, 0xde, 0xfc, 0x5c, 0x29, 0xb4,
+	0xf2, 0x65, 0x88, 0xcb, 0xab, 0xc0, 0x2c, 0xe4, 0x54, 0x91, 0x36, 0x6a, 0xdf, 0xd8, 0xad, 0x9b,
+	0x85, 0x29, 0x52, 0x80, 0xec, 0xad, 0xda, 0xf5, 0x9b, 0xe6, 0xae, 0x42, 0x34, 0x44, 0x76, 0xcd,
+	0xed, 0xaa, 0xb9, 0xad, 0x10, 0x7d, 0xe5, 0x1a, 0x24, 0x24, 0x5d, 0x84, 0x40, 0x7e, 0xa3, 0xb6,
+	0x75, 0xa3, 0x56, 0x8f, 0x14, 0xfb, 0x0c, 0x64, 0x14, 0xf6, 0x35, 0xf3, 0xcd, 0x5a, 0x41, 0xc3,
+	0x55, 0x14, 0xf0, 0x7a, 0x4d, 0x40, 0x7a, 0xe5, 0x47, 0x09, 0x98, 0x36, 0x5d, 0x97, 0xbc, 0x05,
+	0x71, 0x71, 0x68, 0x90, 0x62, 0x34, 0x8f, 0xa3, 0xe7, 0x48, 0xe9, 0xa5, 0x63, 0x19, 0x8e, 0xbe,
+	0x1b, 0xaf, 0x0c, 0xcc, 0x14, 0x24, 0x3e, 0xfe, 0xf9, 0xef, 0x8f, 0xfe, 0xf0, 0xc1, 0xf7, 0x9e,
+	0x3e, 0x7f, 0x5f, 0xcf, 0x1b, 0xe9, 0x72, 0x7f, 0xbd, 0xdc, 0xc1, 0x6f, 0xaf, 0x6a, 0x2b, 0x64,
+	0x17, 0x92, 0xaa, 0x02, 0xc8, 0xb9, 0x51, 0x90, 0xa3, 0x25, 0x51, 0x3a, 0x1b, 0x09, 0xfe, 0x90,
+	0x55, 0xe3, 0xc2, 0xa4, 0x65, 0x20, 0x29, 0xb4, 0x2c, 0x48, 0xa5, 0xc2, 0xaa, 0xe8, 0x58, 0x2f,
+	0x1f, 0xdf, 0xd8, 0xa7, 0xee, 0xf8, 0xd2, 0xc0, 0xcc, 0x43, 0xf6, 0xe3, 0x9f, 0xfc, 0xea, 0xa3,
+	0x1f, 0xfe, 0xee, 0xf9, 0x87, 0xbf, 0xfc, 0xe8, 0xbb, 0xbf, 0x11, 0xd6, 0x67, 0x48, 0x0e, 0xad,
+	0x73, 0xfb, 0xae, 0x53, 0xbe, 0xcf, 0xad, 0x87, 0xa4, 0x0d, 0x20, 0x4b, 0x48, 0xac, 0x72, 0x71,
+	0xd2, 0xd8, 0x58, 0x79, 0x9d, 0xb6, 0xd6, 0xd2, 0xc9, 0x6b, 0xe5, 0x8c, 0x54, 0xb8, 0x16, 0x52,
+	0x74, 0x1b, 0x62, 0xf8, 0xfe, 0x19, 0xf7, 0x24, 0xf2, 0x22, 0xfa, 0xcf, 0xac, 0xe3, 0x0d, 0x03,
+	0xad, 0xef, 0x43, 0x42, 0x5e, 0x37, 0xc8, 0xf9, 0xa8, 0x99, 0xb1, 0x2b, 0xc8, 0x67, 0xe5, 0xca,
+	0x00, 0x5c, 0xa1, 0x67, 0x87, 0x6b, 0x30, 0x48, 0x85, 0x2f, 0x97, 0x91, 0x17, 0x13, 0x4f, 0xa0,
+	0xd1, 0x1a, 0x63, 0x8f, 0x1c, 0xe3, 0xf2, 0xc9, 0x6b, 0x10, 0x52, 0xc0, 0x35, 0xc4, 0xc3, 0xab,
+	0x7c, 0x1f, 0x1f, 0x48, 0x0f, 0x49, 0x03, 0x92, 0xea, 0x1e, 0x47, 0x4a, 0xd1, 0x0d, 0x8f, 0x5f,
+	0xee, 0x4e, 0x73, 0x66, 0x71, 0x32, 0xa1, 0x0a, 0x46, 0x06, 0x97, 0x50, 0xf7, 0xe5, 0xab, 0xda,
+	0x4a, 0xf5, 0x7d, 0x6d, 0x60, 0x62, 0x57, 0xb8, 0x70, 0xf4, 0xc1, 0x0f, 0x9e, 0x3f, 0xf9, 0xc5,
+	0xd1, 0x7b, 0x3f, 0x7d, 0xfe, 0xe4, 0xf1, 0xd1, 0x8f, 0x7f, 0xab, 0x76, 0xf7, 0xe4, 0xf1, 0xd1,
+	0x87, 0xdf, 0xaf, 0xc4, 0x5f, 0x5b, 0x5b, 0x5f, 0x7b, 0xcd, 0x88, 0x95, 0xa9, 0xeb, 0x56, 0x0a,
+	0xd4, 0x75, 0x3b, 0xbc, 0x29, 0x9e, 0xba, 0xe5, 0x6f, 0xfa, 0x8e, 0x7d, 0xf5, 0x18, 0xf2, 0xf6,
+	0x1c, 0x94, 0x60, 0xfa, 0x8d, 0x5b, 0xbb, 0xe4, 0x4c, 0x4a, 0x2f, 0xe5, 0xf0, 0xe1, 0xe0, 0x78,
+	0xfc, 0x3b, 0x42, 0x61, 0x41, 0xdf, 0x4f, 0x43, 0x52, 0xce, 0x4e, 0xfd, 0xf1, 0xd9, 0xbc, 0xf6,
+	0xa7, 0x67, 0xf3, 0xda, 0xdf, 0x9f, 0xcd, 0x6b, 0x3f, 0xfb, 0xc7, 0xfc, 0xd4, 0xdb, 0xf1, 0x03,
+	0x1e, 0x04, 0x87, 0xfb, 0x09, 0xf1, 0x56, 0xfe, 0xc2, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0x9a,
+	0x4c, 0xfa, 0xdb, 0xd1, 0x0f, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1059,6 +1544,8 @@ type AppClient interface {
 	Bind(ctx context.Context, in *UserBindRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
 	// 针对已登录用户，取消绑定手机或微信登录方式
 	Unbind(ctx context.Context, in *UserUnbindRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
+	// 获取用户微信/淘宝信息
+	GetExtra(ctx context.Context, in *GetExtraRequest, opts ...grpc.CallOption) (*GetExtraReply, error)
 	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，
 	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
 	// 后续请求务必请将老JWT替换为新JWT。
@@ -1127,6 +1614,15 @@ func (c *appClient) Unbind(ctx context.Context, in *UserUnbindRequest, opts ...g
 	return out, nil
 }
 
+func (c *appClient) GetExtra(ctx context.Context, in *GetExtraRequest, opts ...grpc.CallOption) (*GetExtraReply, error) {
+	out := new(GetExtraReply)
+	err := c.cc.Invoke(ctx, "/app.v1.App/GetExtra", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *appClient) Refresh(ctx context.Context, in *UserRefreshRequest, opts ...grpc.CallOption) (*UserInfoReply, error) {
 	out := new(UserInfoReply)
 	err := c.cc.Invoke(ctx, "/app.v1.App/Refresh", in, out, opts...)
@@ -1150,6 +1646,8 @@ type AppServer interface {
 	Bind(context.Context, *UserBindRequest) (*UserInfoReply, error)
 	// 针对已登录用户，取消绑定手机或微信登录方式
 	Unbind(context.Context, *UserUnbindRequest) (*UserInfoReply, error)
+	// 获取用户微信/淘宝信息
+	GetExtra(context.Context, *GetExtraRequest) (*GetExtraReply, error)
 	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，
 	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
 	// 后续请求务必请将老JWT替换为新JWT。
@@ -1177,6 +1675,9 @@ func (*UnimplementedAppServer) Bind(ctx context.Context, req *UserBindRequest) (
 }
 func (*UnimplementedAppServer) Unbind(ctx context.Context, req *UserUnbindRequest) (*UserInfoReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Unbind not implemented")
+}
+func (*UnimplementedAppServer) GetExtra(ctx context.Context, req *GetExtraRequest) (*GetExtraReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExtra not implemented")
 }
 func (*UnimplementedAppServer) Refresh(ctx context.Context, req *UserRefreshRequest) (*UserInfoReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Refresh not implemented")
@@ -1294,6 +1795,24 @@ func _App_Unbind_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _App_GetExtra_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetExtraRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AppServer).GetExtra(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/app.v1.App/GetExtra",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AppServer).GetExtra(ctx, req.(*GetExtraRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _App_Refresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UserRefreshRequest)
 	if err := dec(in); err != nil {
@@ -1341,6 +1860,10 @@ var _App_serviceDesc = grpc.ServiceDesc{
 			Handler:    _App_Unbind_Handler,
 		},
 		{
+			MethodName: "GetExtra",
+			Handler:    _App_GetExtra_Handler,
+		},
+		{
 			MethodName: "Refresh",
 			Handler:    _App_Refresh_Handler,
 		},
@@ -1373,6 +1896,18 @@ func (m *UserBindRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
+	if m.TaobaoExtra != nil {
+		{
+			size, err := m.TaobaoExtra.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintApp(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x2a
+	}
 	if len(m.OpenId) > 0 {
 		i -= len(m.OpenId)
 		copy(dAtA[i:], m.OpenId)
@@ -1398,6 +1933,334 @@ func (m *UserBindRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.Mobile)
 		copy(dAtA[i:], m.Mobile)
 		i = encodeVarintApp(dAtA, i, uint64(len(m.Mobile)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetExtraRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetExtraRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetExtraRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Kind != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.Kind))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetExtraReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetExtraReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetExtraReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Data != nil {
+		{
+			size := m.Data.Size()
+			i -= size
+			if _, err := m.Data.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	if len(m.Message) > 0 {
+		i -= len(m.Message)
+		copy(dAtA[i:], m.Message)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Message)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Code != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.Code))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetExtraReply_Taobao) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetExtraReply_Taobao) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Taobao != nil {
+		{
+			size, err := m.Taobao.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintApp(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *GetExtraReply_Wechat) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetExtraReply_Wechat) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Wechat != nil {
+		{
+			size, err := m.Wechat.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintApp(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	return len(dAtA) - i, nil
+}
+func (m *TaobaoExtra) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TaobaoExtra) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TaobaoExtra) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.TopExpireTime) > 0 {
+		i -= len(m.TopExpireTime)
+		copy(dAtA[i:], m.TopExpireTime)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.TopExpireTime)))
+		i--
+		dAtA[i] = 0x4a
+	}
+	if len(m.TopAuthCode) > 0 {
+		i -= len(m.TopAuthCode)
+		copy(dAtA[i:], m.TopAuthCode)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.TopAuthCode)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.OpenId) > 0 {
+		i -= len(m.OpenId)
+		copy(dAtA[i:], m.OpenId)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.OpenId)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if len(m.Nick) > 0 {
+		i -= len(m.Nick)
+		copy(dAtA[i:], m.Nick)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Nick)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.HavanaSsoToken) > 0 {
+		i -= len(m.HavanaSsoToken)
+		copy(dAtA[i:], m.HavanaSsoToken)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.HavanaSsoToken)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.AvatarUrl) > 0 {
+		i -= len(m.AvatarUrl)
+		copy(dAtA[i:], m.AvatarUrl)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AvatarUrl)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.TopAccessToken) > 0 {
+		i -= len(m.TopAccessToken)
+		copy(dAtA[i:], m.TopAccessToken)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.TopAccessToken)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.OpenSid) > 0 {
+		i -= len(m.OpenSid)
+		copy(dAtA[i:], m.OpenSid)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.OpenSid)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Userid) > 0 {
+		i -= len(m.Userid)
+		copy(dAtA[i:], m.Userid)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Userid)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *WechatExtra) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *WechatExtra) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *WechatExtra) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Unionid) > 0 {
+		i -= len(m.Unionid)
+		copy(dAtA[i:], m.Unionid)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Unionid)))
+		i--
+		dAtA[i] = 0x6a
+	}
+	if len(m.Privilege) > 0 {
+		for iNdEx := len(m.Privilege) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Privilege[iNdEx])
+			copy(dAtA[i:], m.Privilege[iNdEx])
+			i = encodeVarintApp(dAtA, i, uint64(len(m.Privilege[iNdEx])))
+			i--
+			dAtA[i] = 0x62
+		}
+	}
+	if len(m.Headimgurl) > 0 {
+		i -= len(m.Headimgurl)
+		copy(dAtA[i:], m.Headimgurl)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Headimgurl)))
+		i--
+		dAtA[i] = 0x5a
+	}
+	if len(m.Country) > 0 {
+		i -= len(m.Country)
+		copy(dAtA[i:], m.Country)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Country)))
+		i--
+		dAtA[i] = 0x52
+	}
+	if len(m.City) > 0 {
+		i -= len(m.City)
+		copy(dAtA[i:], m.City)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.City)))
+		i--
+		dAtA[i] = 0x4a
+	}
+	if len(m.Province) > 0 {
+		i -= len(m.Province)
+		copy(dAtA[i:], m.Province)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Province)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if m.Sex != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.Sex))
+		i--
+		dAtA[i] = 0x38
+	}
+	if len(m.NickName) > 0 {
+		i -= len(m.NickName)
+		copy(dAtA[i:], m.NickName)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.NickName)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.Scope) > 0 {
+		i -= len(m.Scope)
+		copy(dAtA[i:], m.Scope)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Scope)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.OpenId) > 0 {
+		i -= len(m.OpenId)
+		copy(dAtA[i:], m.OpenId)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.OpenId)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.RefreshToken) > 0 {
+		i -= len(m.RefreshToken)
+		copy(dAtA[i:], m.RefreshToken)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.RefreshToken)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.ExpiresIn != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.ExpiresIn))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.AccessToken) > 0 {
+		i -= len(m.AccessToken)
+		copy(dAtA[i:], m.AccessToken)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AccessToken)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1480,6 +2343,16 @@ func (m *UserUnbindRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.XXX_unrecognized != nil {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Taobao {
+		i--
+		if m.Taobao {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
 	}
 	if m.Wechat {
 		i--
@@ -2021,6 +2894,183 @@ func (m *UserBindRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovApp(uint64(l))
 	}
+	if m.TaobaoExtra != nil {
+		l = m.TaobaoExtra.Size()
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetExtraRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Kind != 0 {
+		n += 1 + sovApp(uint64(m.Kind))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetExtraReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Code != 0 {
+		n += 1 + sovApp(uint64(m.Code))
+	}
+	l = len(m.Message)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.Data != nil {
+		n += m.Data.Size()
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetExtraReply_Taobao) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Taobao != nil {
+		l = m.Taobao.Size()
+		n += 1 + l + sovApp(uint64(l))
+	}
+	return n
+}
+func (m *GetExtraReply_Wechat) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Wechat != nil {
+		l = m.Wechat.Size()
+		n += 1 + l + sovApp(uint64(l))
+	}
+	return n
+}
+func (m *TaobaoExtra) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Userid)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.OpenSid)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.TopAccessToken)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.AvatarUrl)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.HavanaSsoToken)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.Nick)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.OpenId)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.TopAuthCode)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.TopExpireTime)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *WechatExtra) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AccessToken)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.ExpiresIn != 0 {
+		n += 1 + sovApp(uint64(m.ExpiresIn))
+	}
+	l = len(m.RefreshToken)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.OpenId)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.Scope)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.NickName)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.Sex != 0 {
+		n += 1 + sovApp(uint64(m.Sex))
+	}
+	l = len(m.Province)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.City)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.Country)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.Headimgurl)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if len(m.Privilege) > 0 {
+		for _, s := range m.Privilege {
+			l = len(s)
+			n += 1 + l + sovApp(uint64(l))
+		}
+	}
+	l = len(m.Unionid)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
@@ -2061,6 +3111,9 @@ func (m *UserUnbindRequest) Size() (n int) {
 		n += 2
 	}
 	if m.Wechat {
+		n += 2
+	}
+	if m.Taobao {
 		n += 2
 	}
 	if m.XXX_unrecognized != nil {
@@ -2473,6 +3526,1076 @@ func (m *UserBindRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.OpenId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaobaoExtra", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TaobaoExtra == nil {
+				m.TaobaoExtra = &TaobaoExtra{}
+			}
+			if err := m.TaobaoExtra.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApp(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetExtraRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApp
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetExtraRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetExtraRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Kind", wireType)
+			}
+			m.Kind = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Kind |= Extra(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApp(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetExtraReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApp
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetExtraReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetExtraReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			}
+			m.Code = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Code |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Taobao", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &TaobaoExtra{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Data = &GetExtraReply_Taobao{v}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Wechat", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &WechatExtra{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Data = &GetExtraReply_Wechat{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApp(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TaobaoExtra) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApp
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaobaoExtra: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaobaoExtra: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Userid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Userid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpenSid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OpenSid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TopAccessToken", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TopAccessToken = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AvatarUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AvatarUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HavanaSsoToken", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HavanaSsoToken = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nick", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Nick = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpenId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OpenId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TopAuthCode", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TopAuthCode = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TopExpireTime", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TopExpireTime = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApp(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *WechatExtra) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApp
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WechatExtra: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WechatExtra: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessToken", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccessToken = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpiresIn", wireType)
+			}
+			m.ExpiresIn = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ExpiresIn |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RefreshToken", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RefreshToken = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpenId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OpenId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Scope", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Scope = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NickName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NickName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sex", wireType)
+			}
+			m.Sex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sex |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Province", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Province = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field City", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.City = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Country", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Country = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Headimgurl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Headimgurl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Privilege", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Privilege = append(m.Privilege, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Unionid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Unionid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApp(dAtA[iNdEx:])
@@ -2721,6 +4844,26 @@ func (m *UserUnbindRequest) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Wechat = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Taobao", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Taobao = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApp(dAtA[iNdEx:])

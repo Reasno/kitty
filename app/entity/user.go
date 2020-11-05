@@ -24,8 +24,9 @@ type User struct {
 	Channel       string `json:"channel"`
 	VersionCode   string `json:"version_code"`
 	InviteCode    string `json:"invite_code"`
-	PackageName   string `gorm:"type:varchar(255);uniqueIndex:mobile_index,priority:1;uniqueIndex:wechat_openid_index,priority:1"`
+	PackageName   string `gorm:"type:varchar(255);uniqueIndex:mobile_index,priority:1;uniqueIndex:wechat_openid_index,priority:1;uniqueIndex:taobao_openid_index,priority:1"`
 	ThirdPartyId  string
+	TaobaoOpenId sql.NullString `json:"taobao_openid" gorm:"type:varchar(255);uniqueIndex:taobao_openid_index"`
 }
 
 func (user *User) HasDevice(device *Device) bool {

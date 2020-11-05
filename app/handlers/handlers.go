@@ -24,6 +24,7 @@ type appService struct {
 	log      log.Logger
 	ur       UserRepository
 	cr       CodeRepository
+	er       ExtraRepository
 	sender   contract.SmsSender
 	wechat   *wechat.Transport
 	uploader contract.Uploader
@@ -47,6 +48,11 @@ type UserRepository interface {
 
 type FileRepository interface {
 	UploadFromUrl(ctx context.Context, oldUrl string) (newUrl string, err error)
+}
+
+type ExtraRepository interface {
+	Put(ctx context.Context, id uint, name string, extra []byte) error
+	Get(ctx context.Context, id uint, name string) ([]byte, error)
 }
 
 func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
@@ -77,7 +83,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 
 	// TODO: 这里会多一次IO，可以优化
-	err = s.addExtraInfo(ctx, in, u)
+	err = s.addUserSourceInfo(ctx, in, u)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +99,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	return resp, nil
 }
 
-func (s appService) addExtraInfo(ctx context.Context, in *pb.UserLoginRequest, u *entity.User) error {
+func (s appService) addUserSourceInfo(ctx context.Context, in *pb.UserLoginRequest, u *entity.User) error {
 	var (
 		err      error
 		hasExtra bool
@@ -102,7 +108,8 @@ func (s appService) addExtraInfo(ctx context.Context, in *pb.UserLoginRequest, u
 		u.ThirdPartyId = in.ThirdPartyId
 		hasExtra = true
 	}
-	if in.Channel != "" && in.Channel != u.Channel {
+	// 任何情况下Channel不得更新
+	if in.Channel != "" && u.Channel == "" {
 		u.Channel = in.Channel
 		hasExtra = true
 	}
@@ -195,6 +202,31 @@ func (s appService) getWechatInfo(ctx context.Context, wechat string) (*wechat.W
 	wxInfo, err := s.wechat.GetWechatUserInfoResult(ctx, wxRes)
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
+	}
+	// side effect: save extra wechat info
+	infoPb := &pb.WechatExtra{
+		AccessToken:  wxRes.AccessToken,
+		ExpiresIn:    wxRes.ExpiresIn,
+		RefreshToken: wxRes.RefreshToken,
+		OpenId:       wxRes.Openid,
+		Scope:        wxRes.Scope,
+		NickName:     wxInfo.Nickname,
+		Sex:          int32(wxInfo.Sex),
+		Province:     wxInfo.Province,
+		City:         wxInfo.City,
+		Country:      wxInfo.Country,
+		Headimgurl:   wxInfo.Headimgurl,
+		Privilege:    wxInfo.Privilege,
+		Unionid:      wxInfo.Unionid,
+	}
+	b, err := infoPb.Marshal()
+	if err != nil {
+		s.warn(err)
+	}
+	userId := kittyjwt.GetClaim(ctx).UserId
+	err = s.er.Put(ctx, uint(userId), pb.Extra_WECHAT_EXTRA.String(), b)
+	if err != nil {
+		s.warn(err)
 	}
 	return wxInfo, nil
 }
@@ -310,6 +342,22 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		}
 	}
 
+	// 绑定淘宝openId
+	if len(in.TaobaoExtra.OpenId) > 0 {
+		toUpdate = entity.User{
+			TaobaoOpenId: ns(in.TaobaoExtra.OpenId),
+		}
+		extra, err := in.TaobaoExtra.Marshal()
+		if err != nil {
+			s.warn(err)
+		}
+		err = s.er.Put(ctx, uint(claim.UserId), pb.Extra_TAOBAO_EXTRA.String(), extra)
+		if err != nil {
+			s.warn(err)
+		}
+	}
+
+	// 绑定微信openId
 	if len(in.OpenId) > 0 {
 		toUpdate = entity.User{
 			WechatOpenId: ns(in.OpenId),
@@ -350,6 +398,9 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	if in.Wechat {
 		user.WechatUnionId = sql.NullString{}
 		user.WechatOpenId = sql.NullString{}
+	}
+	if in.Taobao {
+		user.TaobaoOpenId = sql.NullString{}
 	}
 	err = s.ur.Save(ctx, user)
 	if err != nil {
@@ -404,4 +455,36 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 	return reply, nil
+}
+
+func (s appService) GetExtra(ctx context.Context, in *pb.GetExtraRequest) (*pb.GetExtraReply, error) {
+	userId := kittyjwt.GetClaim(ctx).UserId
+	b, err := s.er.Get(ctx, uint(userId), in.Kind.String())
+	if err != nil {
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+	}
+	if len(b) == 0 {
+		return nil, kerr.NotFoundErr(errors.New(msg.ErrorExtraNotFound))
+	}
+	var resp = pb.GetExtraReply{
+		Code: 0,
+	}
+	switch pb.Extra(in.Kind) {
+	case pb.Extra_WECHAT_EXTRA:
+		var wechatExtra pb.WechatExtra
+		err := wechatExtra.Unmarshal(b)
+		if err != nil {
+			return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		}
+		resp.Data = &pb.GetExtraReply_Wechat{Wechat: &wechatExtra}
+	case pb.Extra_TAOBAO_EXTRA:
+		var taobaoExtra pb.TaobaoExtra
+		err := taobaoExtra.Unmarshal(b)
+		if err != nil {
+			return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		}
+		resp.Data = &pb.GetExtraReply_Taobao{Taobao: &taobaoExtra}
+	}
+
+	return &resp, nil
 }

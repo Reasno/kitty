@@ -35,5 +35,20 @@ func ProvideMigrator(db *gorm.DB) *gormigrate.Gormigrate {
 				return nil
 			},
 		},
+		{
+			ID: "202011050100",
+			Migrate: func(db *gorm.DB) error {
+				if !db.Migrator().HasColumn(&entity.User{}, "TaobaoOpenId") {
+					return db.Migrator().AddColumn(&entity.User{}, "TaobaoOpenId")
+				}
+				return nil
+			},
+			Rollback: func(db *gorm.DB) error {
+				if db.Migrator().HasColumn(&entity.User{}, "TaobaoOpenId") {
+					return db.Migrator().DropColumn(&entity.User{}, "TaobaoOpenId")
+				}
+				return nil
+			},
+		},
 	})
 }

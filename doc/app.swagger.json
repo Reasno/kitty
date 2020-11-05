@@ -76,6 +76,42 @@
         ]
       }
     },
+    "/v1/extra/{kind}": {
+      "get": {
+        "summary": "获取用户微信/淘宝信息",
+        "operationId": "App_GetExtra",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetExtraReply"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "UNKNOWN_EXTRA",
+              "WECHAT_EXTRA",
+              "TAOBAO_EXTRA"
+            ]
+          }
+        ],
+        "tags": [
+          "用户信息"
+        ]
+      }
+    },
     "/v1/info": {
       "post": {
         "summary": "更新个人信息",
@@ -309,6 +345,15 @@
         }
       }
     },
+    "v1Extra": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN_EXTRA",
+        "WECHAT_EXTRA",
+        "TAOBAO_EXTRA"
+      ],
+      "default": "UNKNOWN_EXTRA"
+    },
     "v1Gender": {
       "type": "string",
       "enum": [
@@ -326,6 +371,56 @@
           "format": "int32"
         },
         "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetExtraReply": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "taobao": {
+          "$ref": "#/definitions/v1TaobaoExtra"
+        },
+        "wechat": {
+          "$ref": "#/definitions/v1WechatExtra"
+        }
+      }
+    },
+    "v1TaobaoExtra": {
+      "type": "object",
+      "properties": {
+        "userid": {
+          "type": "string"
+        },
+        "openSid": {
+          "type": "string"
+        },
+        "topAccessToken": {
+          "type": "string"
+        },
+        "avatarUrl": {
+          "type": "string"
+        },
+        "havanaSsoToken": {
+          "type": "string"
+        },
+        "nick": {
+          "type": "string"
+        },
+        "openId": {
+          "type": "string"
+        },
+        "topAuthCode": {
+          "type": "string"
+        },
+        "topExpireTime": {
           "type": "string"
         }
       }
@@ -349,6 +444,10 @@
         "openId": {
           "type": "string",
           "title": "如果有openId 就直接走openId，不用再填微信官方下发的临时code码"
+        },
+        "taobaoExtra": {
+          "$ref": "#/definitions/v1TaobaoExtra",
+          "title": "绑定淘宝"
         }
       }
     },
@@ -501,6 +600,59 @@
         "wechat": {
           "type": "boolean",
           "title": "true则解绑微信"
+        },
+        "taobao": {
+          "type": "boolean",
+          "title": "true则解绑淘宝"
+        }
+      }
+    },
+    "v1WechatExtra": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "expiresIn": {
+          "type": "string",
+          "format": "int64"
+        },
+        "refreshToken": {
+          "type": "string"
+        },
+        "openId": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "nickName": {
+          "type": "string"
+        },
+        "sex": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "province": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "headimgurl": {
+          "type": "string"
+        },
+        "privilege": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unionid": {
+          "type": "string"
         }
       }
     }

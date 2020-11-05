@@ -57,6 +57,16 @@ func (m *UserBindRequest) Validate() error {
 
 	// no validation rules for OpenId
 
+	if v, ok := interface{}(m.GetTaobaoExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserBindRequestValidationError{
+				field:  "TaobaoExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -115,6 +125,342 @@ var _ interface {
 } = UserBindRequestValidationError{}
 
 var _UserBindRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{11}$)")
+
+// Validate checks the field values on GetExtraRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *GetExtraRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Kind
+
+	return nil
+}
+
+// GetExtraRequestValidationError is the validation error returned by
+// GetExtraRequest.Validate if the designated constraints aren't met.
+type GetExtraRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetExtraRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetExtraRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetExtraRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetExtraRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetExtraRequestValidationError) ErrorName() string { return "GetExtraRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetExtraRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetExtraRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetExtraRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetExtraRequestValidationError{}
+
+// Validate checks the field values on GetExtraReply with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *GetExtraReply) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	switch m.Data.(type) {
+
+	case *GetExtraReply_Taobao:
+
+		if v, ok := interface{}(m.GetTaobao()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetExtraReplyValidationError{
+					field:  "Taobao",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *GetExtraReply_Wechat:
+
+		if v, ok := interface{}(m.GetWechat()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return GetExtraReplyValidationError{
+					field:  "Wechat",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetExtraReplyValidationError is the validation error returned by
+// GetExtraReply.Validate if the designated constraints aren't met.
+type GetExtraReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetExtraReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetExtraReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetExtraReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetExtraReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetExtraReplyValidationError) ErrorName() string { return "GetExtraReplyValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GetExtraReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetExtraReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetExtraReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetExtraReplyValidationError{}
+
+// Validate checks the field values on TaobaoExtra with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *TaobaoExtra) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Userid
+
+	// no validation rules for OpenSid
+
+	// no validation rules for TopAccessToken
+
+	// no validation rules for AvatarUrl
+
+	// no validation rules for HavanaSsoToken
+
+	// no validation rules for Nick
+
+	// no validation rules for OpenId
+
+	// no validation rules for TopAuthCode
+
+	// no validation rules for TopExpireTime
+
+	return nil
+}
+
+// TaobaoExtraValidationError is the validation error returned by
+// TaobaoExtra.Validate if the designated constraints aren't met.
+type TaobaoExtraValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaobaoExtraValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaobaoExtraValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaobaoExtraValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaobaoExtraValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaobaoExtraValidationError) ErrorName() string { return "TaobaoExtraValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TaobaoExtraValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaobaoExtra.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaobaoExtraValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaobaoExtraValidationError{}
+
+// Validate checks the field values on WechatExtra with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *WechatExtra) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for AccessToken
+
+	// no validation rules for ExpiresIn
+
+	// no validation rules for RefreshToken
+
+	// no validation rules for OpenId
+
+	// no validation rules for Scope
+
+	// no validation rules for NickName
+
+	// no validation rules for Sex
+
+	// no validation rules for Province
+
+	// no validation rules for City
+
+	// no validation rules for Country
+
+	// no validation rules for Headimgurl
+
+	// no validation rules for Unionid
+
+	return nil
+}
+
+// WechatExtraValidationError is the validation error returned by
+// WechatExtra.Validate if the designated constraints aren't met.
+type WechatExtraValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WechatExtraValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WechatExtraValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WechatExtraValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WechatExtraValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WechatExtraValidationError) ErrorName() string { return "WechatExtraValidationError" }
+
+// Error satisfies the builtin error interface
+func (e WechatExtraValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWechatExtra.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WechatExtraValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WechatExtraValidationError{}
 
 // Validate checks the field values on UserRefreshRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -213,6 +559,8 @@ func (m *UserUnbindRequest) Validate() error {
 	// no validation rules for Mobile
 
 	// no validation rules for Wechat
+
+	// no validation rules for Taobao
 
 	return nil
 }

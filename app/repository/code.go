@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const key = "CodeRepo"
+const CodeKey = "CodeRepo"
 const defaultTtl = 15 * time.Minute
 const defaultRate = time.Minute
 
@@ -27,7 +27,7 @@ type CodeRepo struct {
 }
 
 func NewCodeRepo(cmdable redis.Cmdable, keyer contract.Keyer, env contract.Env) *CodeRepo {
-	return &CodeRepo{cmdable, otredis.With(keyer, key), defaultTtl, defaultRate, env}
+	return &CodeRepo{cmdable, otredis.With(keyer, CodeKey), defaultTtl, defaultRate, env}
 }
 
 func (c *CodeRepo) AddCode(ctx context.Context, mobile string) (code string, err error) {

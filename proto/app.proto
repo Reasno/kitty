@@ -94,6 +94,16 @@ service App {
       body: "*"
     };
   }
+  // 获取用户微信/淘宝信息
+  rpc GetExtra (GetExtraRequest) returns (GetExtraReply) {
+    option (options.openapiv2_operation) = {
+      tags: "用户信息"
+    };
+    option (google.api.http) = {
+      get: "/v1/extra/{kind}"
+    };
+  }
+
   // JWT Token续期，需要在每次升级系统或每次冷启动前调用，
   // 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
   // 后续请求务必请将老JWT替换为新JWT。
@@ -102,7 +112,7 @@ service App {
       tags: "登录"
     };
     option (google.api.http) = {
-      post: "/v1/refresh"
+      get: "/v1/refresh"
       body: "*"
     };
   }
@@ -122,6 +132,55 @@ message UserBindRequest {
   string wechat = 3;
   // 如果有openId 就直接走openId，不用再填微信官方下发的临时code码
   string open_id = 4;
+  // 绑定淘宝
+  TaobaoExtra taobao_extra = 5;
+}
+
+message GetExtraRequest {
+  Extra kind = 1;
+}
+
+message GetExtraReply {
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  string message = 2;
+  oneof data {
+    TaobaoExtra taobao = 3;
+    WechatExtra wechat = 4;
+  }
+}
+
+message TaobaoExtra {
+  string userid = 1;
+  string open_sid = 2;
+  string top_access_token = 3;
+  string avatar_url = 4;
+  string havana_sso_token = 5;
+  string nick = 6;
+  string open_id = 7;
+  string top_auth_code = 8;
+  string top_expire_time = 9;
+}
+
+message WechatExtra {
+  string access_token = 1;
+  int64 expiresIn = 2;
+  string refresh_token = 3;
+  string open_id = 4;
+  string scope = 5;
+  string nick_name = 6;
+  int32 sex = 7;
+  string province = 8;
+  string city = 9;
+  string country = 10;
+  string headimgurl = 11;
+  repeated string privilege = 12;
+  string unionid = 13;
+}
+
+enum Extra {
+  UNKNOWN_EXTRA = 0;
+  WECHAT_EXTRA = 1;
+  TAOBAO_EXTRA = 2;
 }
 
 // Token续期
@@ -141,6 +200,8 @@ message UserUnbindRequest {
   bool mobile = 1;
   // true则解绑微信
   bool wechat = 2;
+  // true则解绑淘宝
+  bool taobao = 3;
 }
 
 message UserLoginRequest {

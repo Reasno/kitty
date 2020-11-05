@@ -65,6 +65,12 @@ func MakeGRPCServer(endpoints Endpoints, options ...grpctransport.ServerOption) 
 			EncodeGRPCUnbindResponse,
 			serverOptions...,
 		),
+		getextra: grpctransport.NewServer(
+			endpoints.GetExtraEndpoint,
+			DecodeGRPCGetExtraRequest,
+			EncodeGRPCGetExtraResponse,
+			serverOptions...,
+		),
 		refresh: grpctransport.NewServer(
 			endpoints.RefreshEndpoint,
 			DecodeGRPCRefreshRequest,
@@ -82,6 +88,7 @@ type grpcServer struct {
 	updateinfo grpctransport.Handler
 	bind       grpctransport.Handler
 	unbind     grpctransport.Handler
+	getextra   grpctransport.Handler
 	refresh    grpctransport.Handler
 }
 
@@ -133,6 +140,14 @@ func (s *grpcServer) Unbind(ctx context.Context, req *pb.UserUnbindRequest) (*pb
 		return nil, err
 	}
 	return rep.(*pb.UserInfoReply), nil
+}
+
+func (s *grpcServer) GetExtra(ctx context.Context, req *pb.GetExtraRequest) (*pb.GetExtraReply, error) {
+	_, rep, err := s.getextra.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.GetExtraReply), nil
 }
 
 func (s *grpcServer) Refresh(ctx context.Context, req *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
@@ -187,6 +202,13 @@ func DecodeGRPCUnbindRequest(_ context.Context, grpcReq interface{}) (interface{
 	return req, nil
 }
 
+// DecodeGRPCGetExtraRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC getextra request to a user-domain getextra request. Primarily useful in a server.
+func DecodeGRPCGetExtraRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetExtraRequest)
+	return req, nil
+}
+
 // DecodeGRPCRefreshRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC refresh request to a user-domain refresh request. Primarily useful in a server.
 func DecodeGRPCRefreshRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -235,6 +257,13 @@ func EncodeGRPCBindResponse(_ context.Context, response interface{}) (interface{
 // user-domain unbind response to a gRPC unbind reply. Primarily useful in a server.
 func EncodeGRPCUnbindResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.UserInfoReply)
+	return resp, nil
+}
+
+// EncodeGRPCGetExtraResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain getextra response to a gRPC getextra reply. Primarily useful in a server.
+func EncodeGRPCGetExtraResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.GetExtraReply)
 	return resp, nil
 }
 

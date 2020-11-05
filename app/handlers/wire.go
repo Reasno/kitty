@@ -42,6 +42,7 @@ var AppServerSet = wire.NewSet(
 	repository.NewUserRepo,
 	repository.NewCodeRepo,
 	repository.NewFileRepo,
+	repository.NewExtraRepo,
 	config.ProvideAppName,
 	config.ProvideEnv,
 	wire.Struct(new(appService), "*"),
@@ -56,6 +57,7 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(UserRepository), new(*repository.UserRepo)),
 	wire.Bind(new(CodeRepository), new(*repository.CodeRepo)),
 	wire.Bind(new(FileRepository), new(*repository.FileRepo)),
+	wire.Bind(new(ExtraRepository), new(*repository.ExtraRepo)),
 )
 
 func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, func(), error) {
