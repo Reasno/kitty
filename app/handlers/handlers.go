@@ -60,6 +60,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	var (
 		u      *entity.User
 		device *entity.Device
+		wechatExtra *pb.WechatExtra
 		err    error
 	)
 
@@ -75,7 +76,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	if len(in.Mobile) != 0 {
 		u, err = s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
 	} else if len(in.Wechat) != 0 {
-		u, err = s.handleWechatLogin(ctx, in.PackageName, in.Wechat, device)
+		u, wechatExtra, err = s.handleWechatLogin(ctx, in.PackageName, in.Wechat, device)
 	} else {
 		u, err = s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
 	}
@@ -97,6 +98,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 
 	var resp = u.ToReply()
 	resp.Data.Token = tokenString
+	resp.Data.WechatExtra = wechatExtra
 	return resp, nil
 }
 
@@ -196,7 +198,7 @@ func (s appService) warn(err error) {
 	}
 }
 
-func (s appService) getWechatInfo(ctx context.Context, wechat string) (*wechat.WxUserInfoResult, error) {
+func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.WechatExtra, error) {
 	wxRes, err := s.wechat.GetWechatLoginResponse(ctx, wechat)
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
@@ -233,31 +235,31 @@ func (s appService) getWechatInfo(ctx context.Context, wechat string) (*wechat.W
 	if err != nil {
 		s.warn(err)
 	}
-	return wxInfo, nil
+	return infoPb, nil
 }
 
-func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat string, device *entity.Device) (*entity.User, error) {
+func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat string, device *entity.Device) (*entity.User, *pb.WechatExtra, error) {
 	wxInfo, err := s.getWechatInfo(ctx, wechat)
 	if err != nil {
-		return nil, kerr.UnauthorizedErr(err)
+		return nil, nil, kerr.UnauthorizedErr(err)
 	}
 
 	headImg, err := s.fr.UploadFromUrl(ctx, wxInfo.Headimgurl)
 	s.warn(err)
 
 	wechatUser := entity.User{
-		UserName:      wxInfo.Nickname,
+		UserName:      wxInfo.NickName,
 		HeadImg:       headImg,
-		WechatOpenId:  ns(wxInfo.Openid),
+		WechatOpenId:  ns(wxInfo.OpenId),
 		WechatUnionId: ns(wxInfo.Unionid),
 	}
 
-	u, err := s.ur.GetFromWechat(ctx, packageName, wxInfo.Openid, device, wechatUser)
+	u, err := s.ur.GetFromWechat(ctx, packageName, wxInfo.OpenId, device, wechatUser)
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		return nil, nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 	s.infof(msg.WxSuccess, u.ID)
-	return u, nil
+	return u, wxInfo, nil
 }
 
 func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, code string, device *entity.Device) (*entity.User, error) {
@@ -323,6 +325,9 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 
 	var (
 		toUpdate entity.User
+		wechatExtra *pb.WechatExtra
+		taobaoExtra *pb.TaobaoExtra
+		err error
 	)
 
 	// 绑定手机号
@@ -337,18 +342,19 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 
 	// 绑定微信号
 	if len(in.Wechat) > 0 {
-		wxInfo, err := s.getWechatInfo(ctx, in.Wechat)
+		wechatExtra, err = s.getWechatInfo(ctx, in.Wechat)
 		if err != nil {
 			return nil, kerr.UnauthorizedErr(err)
 		}
 		toUpdate = entity.User{
-			WechatOpenId:  ns(wxInfo.Openid),
-			WechatUnionId: ns(wxInfo.Unionid),
+			WechatOpenId:  ns(wechatExtra.OpenId),
+			WechatUnionId: ns(wechatExtra.Unionid),
 		}
 	}
 
 	// 绑定淘宝openId
 	if len(in.TaobaoExtra.OpenId) > 0 {
+		taobaoExtra = in.TaobaoExtra
 		toUpdate = entity.User{
 			TaobaoOpenId: ns(in.TaobaoExtra.OpenId),
 		}
@@ -388,6 +394,8 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 
+	reply.Data.WechatExtra = wechatExtra
+	reply.Data.TaobaoExtra = taobaoExtra
 	return reply, err
 }
 
@@ -474,7 +482,7 @@ func (s appService) GetExtra(ctx context.Context, in *pb.GetExtraRequest) (*pb.G
 	var resp = pb.GetExtraReply{
 		Code: 0,
 	}
-	switch pb.Extra(in.Kind) {
+	switch in.Kind {
 	case pb.Extra_WECHAT_EXTRA:
 		var wechatExtra pb.WechatExtra
 		err := wechatExtra.Unmarshal(b)

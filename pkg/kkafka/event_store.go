@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Reasno/kitty/pkg/kjwt"
@@ -14,9 +15,14 @@ import (
 type EventStore struct {
 	Factory *KafkaProducerFactory
 	Topic string
+	once sync.Once
+	writer *kafka.Writer
 }
 
 func (e *EventStore) Emit(ctx context.Context, event string) error {
+	e.once.Do(func() {
+		e.writer = e.Factory.Writer(e.Topic)
+	})
 	claim := kjwt.GetClaim(ctx)
 	dto := &Message{
 		Timestamp:   time.Now().UTC().Format(time.RFC3339),
@@ -33,7 +39,7 @@ func (e *EventStore) Emit(ctx context.Context, event string) error {
 		return errors.Wrap(err, "unable to marshal dto")
 	}
 
-	return e.Factory.Writer(e.Topic).WriteMessages(ctx, kafka.Message{
+	return e.writer.WriteMessages(ctx, kafka.Message{
 		Value: b,
 	})
 }
