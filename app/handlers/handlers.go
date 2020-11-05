@@ -58,10 +58,10 @@ type ExtraRepository interface {
 
 func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
 	var (
-		u      *entity.User
-		device *entity.Device
+		u           *entity.User
+		device      *entity.Device
 		wechatExtra *pb.WechatExtra
-		err    error
+		err         error
 	)
 
 	device = &entity.Device{
@@ -324,10 +324,10 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	claim := kittyjwt.GetClaim(ctx)
 
 	var (
-		toUpdate entity.User
+		toUpdate    entity.User
 		wechatExtra *pb.WechatExtra
 		taobaoExtra *pb.TaobaoExtra
-		err error
+		err         error
 	)
 
 	// 绑定手机号
@@ -353,7 +353,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 绑定淘宝openId
-	if len(in.TaobaoExtra.OpenId) > 0 {
+	if in.TaobaoExtra != nil && len(in.TaobaoExtra.OpenId) > 0 {
 		taobaoExtra = in.TaobaoExtra
 		toUpdate = entity.User{
 			TaobaoOpenId: ns(in.TaobaoExtra.OpenId),
