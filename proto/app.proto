@@ -263,6 +263,7 @@ message UserInfo {
   string token = 7;
   // 第三方ID
   string third_party_id = 8;
+  bool is_new = 9 [(gogoproto.jsontag) = "is_new"];
 }
 
 message UserInfoReply {

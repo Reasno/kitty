@@ -102,8 +102,9 @@
             "required": true,
             "type": "string",
             "enum": [
-              "1",
-              "2"
+              "UNKNOWN_EXTRA",
+              "WECHAT_EXTRA",
+              "TAOBAO_EXTRA"
             ]
           }
         ],
@@ -480,6 +481,9 @@
         "thirdPartyId": {
           "type": "string",
           "title": "第三方ID"
+        },
+        "isNew": {
+          "type": "boolean"
         }
       }
     },

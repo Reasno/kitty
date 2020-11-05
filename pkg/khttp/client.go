@@ -1,6 +1,7 @@
 package khttp
 
 import (
+	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 
 type Client struct {
 	tracer opentracing.Tracer
-	*http.Client
+	underlying contract.HttpDoer
 }
 
 func NewClient(tracer opentracing.Tracer) *Client {
@@ -16,8 +17,12 @@ func NewClient(tracer opentracing.Tracer) *Client {
 	return &Client{tracer, baseClient}
 }
 
+func NewClientWithDoer(tracer opentracing.Tracer, doer contract.HttpDoer) *Client {
+	return &Client{tracer, doer}
+}
+
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	req, tracer := nethttp.TraceRequest(c.tracer, req)
 	defer tracer.Finish()
-	return c.Client.Do(req)
+	return c.underlying.Do(req)
 }

@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"fmt"
+
 	pb "github.com/Reasno/kitty/proto"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -26,7 +27,8 @@ type User struct {
 	InviteCode    string `json:"invite_code"`
 	PackageName   string `gorm:"type:varchar(255);uniqueIndex:mobile_index,priority:1;uniqueIndex:wechat_openid_index,priority:1;uniqueIndex:taobao_openid_index,priority:1"`
 	ThirdPartyId  string
-	TaobaoOpenId sql.NullString `json:"taobao_openid" gorm:"type:varchar(255);uniqueIndex:taobao_openid_index"`
+	TaobaoOpenId  sql.NullString `json:"taobao_openid" gorm:"type:varchar(255);uniqueIndex:taobao_openid_index"`
+	IsNew         bool           `gorm:"-"`
 }
 
 func (user *User) HasDevice(device *Device) bool {
@@ -56,8 +58,14 @@ func (user *User) ToReply() *pb.UserInfoReply {
 			Gender:       pb.Gender(user.Gender),
 			Birthday:     user.Birthday,
 			ThirdPartyId: user.ThirdPartyId,
+			IsNew:        user.IsNew,
 		},
 	}
+}
+
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
+	u.IsNew = true
+	return
 }
 
 // Device describes a device.

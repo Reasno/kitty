@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/Reasno/kitty/app/svc"
 	"github.com/Reasno/kitty/pkg/contract"
 	kittyhttp "github.com/Reasno/kitty/pkg/khttp"
@@ -27,7 +29,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
-	"io"
 )
 
 func provideHistogramMetrics(appName contract.AppName, env contract.Env) metrics.Histogram {

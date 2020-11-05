@@ -32,6 +32,7 @@ require (
 	github.com/prometheus/client_golang v1.3.0
 	github.com/rs/cors v1.7.0
 	github.com/rs/xid v1.2.1
+	github.com/segmentio/kafka-go v0.4.8
 	github.com/spf13/cobra v1.1.0
 	github.com/stretchr/testify v1.6.1
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
