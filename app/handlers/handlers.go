@@ -487,35 +487,3 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	}
 	return reply, nil
 }
-
-func (s appService) GetExtra(ctx context.Context, in *pb.GetExtraRequest) (*pb.GetExtraReply, error) {
-	userId := kittyjwt.GetClaim(ctx).UserId
-	b, err := s.er.Get(ctx, uint(userId), in.Kind.String())
-	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
-	}
-	if len(b) == 0 {
-		return nil, kerr.NotFoundErr(errors.New(msg.ErrorExtraNotFound))
-	}
-	var resp = pb.GetExtraReply{
-		Code: 0,
-	}
-	switch in.Kind {
-	case pb.Extra_WECHAT_EXTRA:
-		var wechatExtra pb.WechatExtra
-		err := wechatExtra.Unmarshal(b)
-		if err != nil {
-			return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
-		}
-		resp.Data = &pb.GetExtraReply_Wechat{Wechat: &wechatExtra}
-	case pb.Extra_TAOBAO_EXTRA:
-		var taobaoExtra pb.TaobaoExtra
-		err := taobaoExtra.Unmarshal(b)
-		if err != nil {
-			return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
-		}
-		resp.Data = &pb.GetExtraReply_Taobao{Taobao: &taobaoExtra}
-	}
-
-	return &resp, nil
-}

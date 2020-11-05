@@ -76,43 +76,6 @@
         ]
       }
     },
-    "/v1/extra/{kind}": {
-      "get": {
-        "summary": "获取用户微信/淘宝信息",
-        "operationId": "App_GetExtra",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetExtraReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "kind",
-            "description": "1是微信，2是淘宝",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "enum": [
-              "UNKNOWN_EXTRA",
-              "WECHAT_EXTRA",
-              "TAOBAO_EXTRA"
-            ]
-          }
-        ],
-        "tags": [
-          "用户信息"
-        ]
-      }
-    },
     "/v1/info": {
       "post": {
         "summary": "更新个人信息",
@@ -174,12 +137,14 @@
           },
           {
             "name": "wechat",
+            "description": "同时获得微信相关信息.",
             "in": "query",
             "required": false,
             "type": "boolean"
           },
           {
             "name": "taobao",
+            "description": "同时获得淘宝相关信息.",
             "in": "query",
             "required": false,
             "type": "boolean"
@@ -358,15 +323,6 @@
         }
       }
     },
-    "v1Extra": {
-      "type": "string",
-      "enum": [
-        "UNKNOWN_EXTRA",
-        "WECHAT_EXTRA",
-        "TAOBAO_EXTRA"
-      ],
-      "default": "UNKNOWN_EXTRA"
-    },
     "v1Gender": {
       "type": "string",
       "enum": [
@@ -385,24 +341,6 @@
         },
         "message": {
           "type": "string"
-        }
-      }
-    },
-    "v1GetExtraReply": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "message": {
-          "type": "string"
-        },
-        "taobao": {
-          "$ref": "#/definitions/v1TaobaoExtra"
-        },
-        "wechat": {
-          "$ref": "#/definitions/v1WechatExtra"
         }
       }
     },

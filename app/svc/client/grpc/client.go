@@ -114,19 +114,6 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.AppServer, error) {
 		).Endpoint()
 	}
 
-	var getextraEndpoint endpoint.Endpoint
-	{
-		getextraEndpoint = grpctransport.NewClient(
-			conn,
-			"kitty.App",
-			"GetExtra",
-			EncodeGRPCGetExtraRequest,
-			DecodeGRPCGetExtraResponse,
-			pb.GetExtraReply{},
-			clientOptions...,
-		).Endpoint()
-	}
-
 	var refreshEndpoint endpoint.Endpoint
 	{
 		refreshEndpoint = grpctransport.NewClient(
@@ -147,7 +134,6 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.AppServer, error) {
 		UpdateInfoEndpoint: updateinfoEndpoint,
 		BindEndpoint:       bindEndpoint,
 		UnbindEndpoint:     unbindEndpoint,
-		GetExtraEndpoint:   getextraEndpoint,
 		RefreshEndpoint:    refreshEndpoint,
 	}, nil
 }
@@ -193,13 +179,6 @@ func DecodeGRPCBindResponse(_ context.Context, grpcReply interface{}) (interface
 // gRPC unbind reply to a user-domain unbind response. Primarily useful in a client.
 func DecodeGRPCUnbindResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*pb.UserInfoReply)
-	return reply, nil
-}
-
-// DecodeGRPCGetExtraResponse is a transport/grpc.DecodeResponseFunc that converts a
-// gRPC getextra reply to a user-domain getextra response. Primarily useful in a client.
-func DecodeGRPCGetExtraResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*pb.GetExtraReply)
 	return reply, nil
 }
 
@@ -251,13 +230,6 @@ func EncodeGRPCBindRequest(_ context.Context, request interface{}) (interface{},
 // user-domain unbind request to a gRPC unbind request. Primarily useful in a client.
 func EncodeGRPCUnbindRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.UserUnbindRequest)
-	return req, nil
-}
-
-// EncodeGRPCGetExtraRequest is a transport/grpc.EncodeRequestFunc that converts a
-// user-domain getextra request to a gRPC getextra request. Primarily useful in a client.
-func EncodeGRPCGetExtraRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*pb.GetExtraRequest)
 	return req, nil
 }
 

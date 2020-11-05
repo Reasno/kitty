@@ -110,16 +110,6 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 			options...,
 		).Endpoint()
 	}
-	var GetExtraZeroEndpoint endpoint.Endpoint
-	{
-		GetExtraZeroEndpoint = httptransport.NewClient(
-			"GET",
-			copyURL(u, "/v1/extra/"),
-			EncodeHTTPGetExtraZeroRequest,
-			DecodeHTTPGetExtraResponse,
-			options...,
-		).Endpoint()
-	}
 	var RefreshZeroEndpoint endpoint.Endpoint
 	{
 		RefreshZeroEndpoint = httptransport.NewClient(
@@ -138,7 +128,6 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 		UpdateInfoEndpoint: UpdateInfoZeroEndpoint,
 		BindEndpoint:       BindZeroEndpoint,
 		UnbindEndpoint:     UnbindZeroEndpoint,
-		GetExtraEndpoint:   GetExtraZeroEndpoint,
 		RefreshEndpoint:    RefreshZeroEndpoint,
 	}, nil
 }
@@ -321,33 +310,6 @@ func DecodeHTTPUnbindResponse(_ context.Context, r *http.Response) (interface{},
 	}
 
 	var resp pb.UserInfoReply
-	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
-		return nil, errorDecoder(buf)
-	}
-
-	return &resp, nil
-}
-
-// DecodeHTTPGetExtraResponse is a transport/http.DecodeResponseFunc that decodes
-// a JSON-encoded GetExtraReply response from the HTTP response body.
-// If the response has a non-200 status code, we will interpret that as an
-// error and attempt to decode the specific error message from the response
-// body. Primarily useful in a client.
-func DecodeHTTPGetExtraResponse(_ context.Context, r *http.Response) (interface{}, error) {
-	defer r.Body.Close()
-	buf, err := ioutil.ReadAll(r.Body)
-	if err == io.EOF {
-		return nil, errors.New("response http body empty")
-	}
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot read http body")
-	}
-
-	if r.StatusCode != http.StatusOK {
-		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
-	}
-
-	var resp pb.GetExtraReply
 	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
 		return nil, errorDecoder(buf)
 	}
@@ -674,41 +636,6 @@ func EncodeHTTPUnbindZeroRequest(_ context.Context, r *http.Request, request int
 		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
 	}
 	r.Body = ioutil.NopCloser(&buf)
-	return nil
-}
-
-// EncodeHTTPGetExtraZeroRequest is a transport/http.EncodeRequestFunc
-// that encodes a getextra request into the various portions of
-// the http request (path, query, and body).
-func EncodeHTTPGetExtraZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
-	strval := ""
-	_ = strval
-	req := request.(*pb.GetExtraRequest)
-	_ = req
-
-	r.Header.Set("transport", "HTTPJSON")
-	r.Header.Set("request-url", r.URL.Path)
-
-	// Set the path parameters
-	path := strings.Join([]string{
-		"",
-		"v1",
-		"extra",
-		fmt.Sprintf("%d", req.Kind),
-	}, "/")
-	u, err := url.Parse(path)
-	if err != nil {
-		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
-	}
-	r.URL.RawPath = u.RawPath
-	r.URL.Path = u.Path
-
-	// Set the query parameters
-	values := r.URL.Query()
-	var tmp []byte
-	_ = tmp
-
-	r.URL.RawQuery = values.Encode()
 	return nil
 }
 

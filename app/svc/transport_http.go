@@ -97,13 +97,6 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		serverOptions...,
 	))
 
-	m.Methods("GET").Path("/v1/extra/{kind}").Handler(httptransport.NewServer(
-		endpoints.GetExtraEndpoint,
-		DecodeHTTPGetExtraZeroRequest,
-		EncodeHTTPGenericResponse,
-		serverOptions...,
-	))
-
 	m.Methods("POST").Path("/v1/refresh").Handler(httptransport.NewServer(
 		endpoints.RefreshEndpoint,
 		DecodeHTTPRefreshZeroRequest,
@@ -406,49 +399,6 @@ func DecodeHTTPUnbindZeroRequest(_ context.Context, r *http.Request) (interface{
 
 	queryParams := r.URL.Query()
 	_ = queryParams
-
-	return &req, err
-}
-
-// DecodeHTTPGetExtraZeroRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded getextra request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPGetExtraZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	defer r.Body.Close()
-	var req pb.GetExtraRequest
-	buf, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot read body of http request")
-	}
-	if len(buf) > 0 {
-		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
-		unmarshaller := jsonpb.Unmarshaler{
-			AllowUnknownFields: true,
-		}
-		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
-			const size = 8196
-			if len(buf) > size {
-				buf = buf[:size]
-			}
-			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
-				http.StatusBadRequest,
-				nil,
-			}
-		}
-	}
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := r.URL.Query()
-	_ = queryParams
-
-	KindGetExtraStr := pathParams["kind"]
-	KindGetExtra, err := strconv.ParseInt(KindGetExtraStr, 10, 32)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting KindGetExtra from path, pathParams: %v", pathParams))
-	}
-	req.Kind = pb.Extra(KindGetExtra)
 
 	return &req, err
 }
