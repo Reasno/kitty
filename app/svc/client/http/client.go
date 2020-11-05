@@ -511,6 +511,10 @@ func EncodeHTTPGetInfoZeroRequest(_ context.Context, r *http.Request, request in
 	var tmp []byte
 	_ = tmp
 
+	values.Add("wechat", fmt.Sprint(req.Wechat))
+
+	values.Add("taobao", fmt.Sprint(req.Taobao))
+
 	r.URL.RawQuery = values.Encode()
 	return nil
 }

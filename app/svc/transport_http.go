@@ -281,6 +281,24 @@ func DecodeHTTPGetInfoZeroRequest(_ context.Context, r *http.Request) (interface
 	}
 	req.Id = IdGetInfo
 
+	if WechatGetInfoStrArr, ok := queryParams["wechat"]; ok {
+		WechatGetInfoStr := WechatGetInfoStrArr[0]
+		WechatGetInfo, err := strconv.ParseBool(WechatGetInfoStr)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting WechatGetInfo from query, queryParams: %v", queryParams))
+		}
+		req.Wechat = WechatGetInfo
+	}
+
+	if TaobaoGetInfoStrArr, ok := queryParams["taobao"]; ok {
+		TaobaoGetInfoStr := TaobaoGetInfoStrArr[0]
+		TaobaoGetInfo, err := strconv.ParseBool(TaobaoGetInfoStr)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting TaobaoGetInfo from query, queryParams: %v", queryParams))
+		}
+		req.Taobao = TaobaoGetInfo
+	}
+
 	return &req, err
 }
 

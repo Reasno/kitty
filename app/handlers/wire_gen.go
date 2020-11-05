@@ -70,7 +70,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	}
 	handlersMonitoredAppService := monitoredAppService{
 		userBus:    handlersUserBus,
-		EventBus:   handlersEventBus,
+		eventBus:   handlersEventBus,
 		appService: handlersAppService,
 	}
 	module := provideModule(db, tracer, logger, handlersOverallMiddleware, handlersMonitoredAppService)

@@ -301,7 +301,25 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	if err != nil {
 		return nil, kerr.NotFoundErr(errors.Wrap(err, msg.ErrorUserNotFound))
 	}
-	return u.ToReply(), nil
+	var resp = u.ToReply()
+
+	if in.Taobao {
+		b, err := s.er.Get(ctx, uint(in.Id), pb.Extra_TAOBAO_EXTRA.String())
+		if err != nil {
+			return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+		}
+		resp.Data.TaobaoExtra.Unmarshal(b)
+	}
+
+	if in.Wechat {
+		b, err := s.er.Get(ctx, uint(in.Id), pb.Extra_WECHAT_EXTRA.String())
+		if err != nil {
+			return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
+		}
+		resp.Data.TaobaoExtra.Unmarshal(b)
+	}
+
+	return resp, nil
 }
 
 func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {

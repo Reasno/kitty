@@ -14,7 +14,7 @@ import (
 
 type monitoredAppService struct {
 	userBus  UserBus
-	EventBus EventBus
+	eventBus EventBus
 	appService
 }
 
@@ -24,7 +24,6 @@ type UserBus interface {
 type EventBus interface {
 	Emit(ctx context.Context, event string) error
 }
-
 
 func (m monitoredAppService) Login(ctx context.Context, request *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
 	resp, err := m.appService.Login(ctx, request)
@@ -45,10 +44,10 @@ func (m monitoredAppService) Login(ctx context.Context, request *pb.UserLoginReq
 			Mobile:         request.Mobile,
 		})
 
-		ctx, cancel := context.WithTimeout(ctx, 5 * time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		if resp.Data.IsNew {
-			err = m.EventBus.Emit(ctx, "new_user")
+			err = m.eventBus.Emit(ctx, "new_user")
 			m.appService.warn(err)
 		}
 		err := m.userBus.Emit(ctx, resp.Data)
@@ -65,7 +64,7 @@ func (m monitoredAppService) Bind(ctx context.Context, request *pb.UserBindReque
 	span := opentracing.SpanFromContext(ctx)
 	go func() {
 		ctx := opentracing.ContextWithSpan(context.Background(), span)
-		ctx, cancel := context.WithTimeout(ctx, 5 * time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		err := m.userBus.Emit(ctx, resp.Data)
 		m.appService.warn(err)

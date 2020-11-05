@@ -1070,6 +1070,10 @@ func (m *UserInfoRequest) Validate() error {
 
 	// no validation rules for Id
 
+	// no validation rules for Wechat
+
+	// no validation rules for Taobao
+
 	return nil
 }
 

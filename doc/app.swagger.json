@@ -171,6 +171,18 @@
             "required": true,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "wechat",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "taobao",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [

@@ -94,15 +94,6 @@ service App {
       body: "*"
     };
   }
-  // 获取用户微信/淘宝信息
-  rpc GetExtra (GetExtraRequest) returns (GetExtraReply) {
-    option (options.openapiv2_operation) = {
-      tags: "用户信息"
-    };
-    option (google.api.http) = {
-      get: "/v1/extra/{kind}"
-    };
-  }
 
   // JWT Token续期，需要在每次升级系统或每次冷启动前调用，
   // 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
@@ -118,8 +109,6 @@ service App {
   }
 }
 
-
-
 message UserBindRequest {
   // 手机号
   string mobile = 1 [
@@ -134,22 +123,6 @@ message UserBindRequest {
   string open_id = 4;
   // 绑定淘宝
   TaobaoExtra taobao_extra = 5;
-}
-
-message GetExtraRequest {
-  Extra kind = 1 [
-    (options.openapiv2_field) = {required: "true", array: ["1", "2"], type: INTEGER},
-    (options.openapiv2_field).description = "1是微信，2是淘宝"
-  ];
-}
-
-message GetExtraReply {
-  int32 code = 1 [(gogoproto.jsontag) = "code"];
-  string message = 2;
-  oneof data {
-    TaobaoExtra taobao = 3;
-    WechatExtra wechat = 4;
-  }
 }
 
 message TaobaoExtra {
@@ -289,6 +262,10 @@ message GetCodeRequest {
 
 message UserInfoRequest {
   uint64 id = 1;
+  // 同时获得微信相关信息
+  bool wechat = 2;
+  // 同时获得淘宝相关信息
+  bool taobao = 3;
 }
 
 message UserInfoUpdateRequest {
