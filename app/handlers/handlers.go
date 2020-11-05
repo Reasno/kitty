@@ -20,6 +20,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+var taobaoExtraKey struct{}
+var wechatExtraKey struct{}
+
 type appService struct {
 	conf     contract.ConfigReader
 	log      log.Logger
@@ -77,6 +80,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		u, err = s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
 	} else if len(in.Wechat) != 0 {
 		u, wechatExtra, err = s.handleWechatLogin(ctx, in.PackageName, in.Wechat, device)
+		ctx = context.WithValue(ctx, wechatExtraKey, wechatExtra)
 	} else {
 		u, err = s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
 	}
@@ -84,7 +88,6 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		return nil, err
 	}
 
-	// TODO: 这里会多一次IO，可以优化
 	err = s.addUserSourceInfo(ctx, in, u)
 	if err != nil {
 		return nil, err
@@ -96,9 +99,12 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 
+	// 拼装返回结果
 	var resp = u.ToReply()
+
 	resp.Data.Token = tokenString
-	resp.Data.WechatExtra = wechatExtra
+
+	s.decorate(ctx, resp.Data)
 	return resp, nil
 }
 
@@ -304,19 +310,11 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	var resp = u.ToReply()
 
 	if in.Taobao {
-		b, err := s.er.Get(ctx, uint(in.Id), pb.Extra_TAOBAO_EXTRA.String())
-		if err != nil {
-			return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
-		}
-		resp.Data.TaobaoExtra.Unmarshal(b)
+		resp.Data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(in.Id))
 	}
 
 	if in.Wechat {
-		b, err := s.er.Get(ctx, uint(in.Id), pb.Extra_WECHAT_EXTRA.String())
-		if err != nil {
-			return nil, errors.Wrap(err, msg.ErrorDatabaseFailure)
-		}
-		resp.Data.TaobaoExtra.Unmarshal(b)
+		resp.Data.WechatExtra = s.getWechatExtra(ctx, uint(in.Id))
 	}
 
 	return resp, nil
@@ -335,7 +333,9 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 
-	return u.ToReply(), nil
+	var resp = u.ToReply()
+	s.decorate(ctx, resp.Data)
+	return resp, nil
 }
 
 func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
@@ -361,6 +361,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	// 绑定微信号
 	if len(in.Wechat) > 0 {
 		wechatExtra, err = s.getWechatInfo(ctx, in.Wechat)
+		ctx = context.WithValue(ctx, wechatExtraKey, wechatExtra)
 		if err != nil {
 			return nil, kerr.UnauthorizedErr(err)
 		}
@@ -373,6 +374,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	// 绑定淘宝openId
 	if in.TaobaoExtra != nil && len(in.TaobaoExtra.OpenId) > 0 {
 		taobaoExtra = in.TaobaoExtra
+		ctx = context.WithValue(ctx, taobaoExtraKey, taobaoExtra)
 		toUpdate = entity.User{
 			TaobaoOpenId: ns(in.TaobaoExtra.OpenId),
 		}
@@ -412,8 +414,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 
-	reply.Data.WechatExtra = wechatExtra
-	reply.Data.TaobaoExtra = taobaoExtra
+	s.decorate(ctx, reply.Data)
 	return reply, err
 }
 
@@ -437,7 +438,9 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	if err != nil {
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
-	return user.ToReply(), nil
+	var resp = user.ToReply()
+	s.decorate(ctx, resp.Data)
+	return resp, nil
 }
 
 func ns(s string) sql.NullString {
@@ -482,8 +485,44 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		u.Mobile.String,
 		u.PackageName,
 	})
+	s.decorate(ctx, reply.Data)
 	if err != nil {
 		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 	return reply, nil
+}
+
+func (s appService) getWechatExtra(ctx context.Context, id uint) *pb.WechatExtra {
+	var extra pb.WechatExtra
+
+	if extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra); ok {
+		return extra
+	}
+
+	b, err := s.er.Get(ctx, uint(id), pb.Extra_WECHAT_EXTRA.String())
+	if err != nil {
+		s.warn(err)
+	}
+	extra.Unmarshal(b)
+	return &extra
+}
+
+func (s appService) getTaobaoExtra(ctx context.Context, id uint) *pb.TaobaoExtra {
+	var extra pb.TaobaoExtra
+
+	if extra, ok := ctx.Value(taobaoExtraKey).(*pb.TaobaoExtra); ok {
+		return extra
+	}
+
+	b, err := s.er.Get(ctx, uint(id), pb.Extra_TAOBAO_EXTRA.String())
+	if err != nil {
+		s.warn(err)
+	}
+	extra.Unmarshal(b)
+	return &extra
+}
+
+func (s appService) decorate(ctx context.Context, data *pb.UserInfo) {
+	data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(data.Id))
+	data.WechatExtra = s.getWechatExtra(ctx, uint(data.Id))
 }
