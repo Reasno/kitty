@@ -830,6 +830,26 @@ func (m *UserInfo) Validate() error {
 
 	// no validation rules for IsNew
 
+	if v, ok := interface{}(m.GetWechatExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserInfoValidationError{
+				field:  "WechatExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetTaobaoExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserInfoValidationError{
+				field:  "TaobaoExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 

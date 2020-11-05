@@ -8,4 +8,5 @@ type Message struct {
 	Event       string `json:"event"`
 	UserId      string `json:"user_id"`
 	PackageName string `json:"account"`
+	AppKey      string `json:"appkey"`
 }

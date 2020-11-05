@@ -3,35 +3,38 @@ package kkafka
 import (
 	"sync"
 
+	"github.com/Reasno/kitty/pkg/klog"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/opentracing/opentracing-go"
 	"github.com/segmentio/kafka-go"
 )
 
 type KafkaProducerFactory struct {
-	tracer opentracing.Tracer
-	mutex sync.Mutex
+	tracer  opentracing.Tracer
+	mutex   sync.Mutex
 	cache   map[string]*kafka.Writer
 	brokers []string
 	closers []func() error
+	logger  log.Logger
 }
 
-func NewKafkaProducerFactory(brokers []string) *KafkaProducerFactory {
+func NewKafkaProducerFactory(brokers []string, logger log.Logger) *KafkaProducerFactory {
 	return &KafkaProducerFactory{
-		nil,
-		sync.Mutex{},
-		map[string]*kafka.Writer{},
-		brokers,
-		[]func() error{},
+		cache:   map[string]*kafka.Writer{},
+		brokers: brokers,
+		closers: []func() error{},
+		logger:  logger,
 	}
 }
 
-func NewKafkaProducerFactoryWithTracer(brokers []string, tracer opentracing.Tracer) *KafkaProducerFactory {
+func NewKafkaProducerFactoryWithTracer(brokers []string, logger log.Logger, tracer opentracing.Tracer) *KafkaProducerFactory {
 	return &KafkaProducerFactory{
-		tracer,
-		sync.Mutex{},
-		map[string]*kafka.Writer{},
-		brokers,
-		[]func() error{},
+		tracer:  tracer,
+		cache:   map[string]*kafka.Writer{},
+		brokers: brokers,
+		closers: []func() error{},
+		logger:  logger,
 	}
 }
 
@@ -42,9 +45,11 @@ func (k *KafkaProducerFactory) Writer(topic string) *kafka.Writer {
 		return w
 	}
 	writer := &kafka.Writer{
-		Addr:         kafka.TCP(k.brokers...),
-		Topic:        topic,
-		Balancer:     &kafka.LeastBytes{},
+		Addr:     kafka.TCP(k.brokers...),
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
+		Logger:   klog.KafkaLogAdapter{level.Debug(k.logger)},
+		ErrorLogger: klog.KafkaLogAdapter{level.Warn(k.logger)},
 	}
 	if k.tracer != nil {
 		writer.Transport = NewTransport(kafka.DefaultTransport, k.tracer)

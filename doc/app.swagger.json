@@ -484,6 +484,12 @@
         },
         "isNew": {
           "type": "boolean"
+        },
+        "wechatExtra": {
+          "$ref": "#/definitions/v1WechatExtra"
+        },
+        "taobaoExtra": {
+          "$ref": "#/definitions/v1TaobaoExtra"
         }
       }
     },

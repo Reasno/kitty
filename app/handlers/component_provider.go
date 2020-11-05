@@ -7,6 +7,7 @@ import (
 	"github.com/Reasno/kitty/app/svc"
 	"github.com/Reasno/kitty/pkg/contract"
 	kittyhttp "github.com/Reasno/kitty/pkg/khttp"
+	"github.com/Reasno/kitty/pkg/kkafka"
 	logging "github.com/Reasno/kitty/pkg/klog"
 	"github.com/Reasno/kitty/pkg/kmiddleware"
 	"github.com/Reasno/kitty/pkg/otgorm"
@@ -47,6 +48,32 @@ func provideKeyManager(appName contract.AppName, env contract.Env) otredis.KeyMa
 
 func provideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
 	return kittyhttp.NewClient(tracer)
+}
+
+type userBus struct {
+	kkafka.DataStore
+}
+
+func provideUserBus(factory *kkafka.KafkaProducerFactory, conf contract.ConfigReader) *userBus {
+	return &userBus{kkafka.DataStore{
+		Factory: factory,
+		Topic:   conf.String("kafka.userBus"),
+	}}
+}
+
+type eventBus struct {
+	kkafka.EventStore
+}
+
+func provideEventBus(factory *kkafka.KafkaProducerFactory, conf contract.ConfigReader) *eventBus {
+	return &eventBus{kkafka.EventStore{
+		Factory: factory,
+		Topic:   conf.String("kafka.eventBus"),
+	}}
+}
+
+func provideKafkaProducerFactory(conf contract.ConfigReader, logger log.Logger, tracer opentracing.Tracer) *kkafka.KafkaProducerFactory {
+	return kkafka.NewKafkaProducerFactoryWithTracer(conf.Strings("kafka.brokers"),logger, tracer)
 }
 
 func provideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader, client contract.HttpDoer) *ots3.Manager {

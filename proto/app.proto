@@ -264,6 +264,8 @@ message UserInfo {
   // 第三方ID
   string third_party_id = 8;
   bool is_new = 9 [(gogoproto.jsontag) = "is_new"];
+  WechatExtra wechat_extra = 10;
+  TaobaoExtra taobao_extra = 11;
 }
 
 message UserInfoReply {

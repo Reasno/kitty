@@ -53,7 +53,6 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
 	wire.Bind(new(contract.Env), new(config.Env)),
 	wire.Bind(new(contract.AppName), new(config.AppName)),
-	wire.Bind(new(pb.AppServer), new(appService)),
 	wire.Bind(new(UserRepository), new(*repository.UserRepo)),
 	wire.Bind(new(CodeRepository), new(*repository.CodeRepo)),
 	wire.Bind(new(FileRepository), new(*repository.FileRepo)),
@@ -63,8 +62,16 @@ var AppServerSet = wire.NewSet(
 func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, func(), error) {
 	panic(wire.Build(
 		AppServerSet,
+		provideKafkaProducerFactory,
+		provideUserBus,
+		provideEventBus,
 		provideSecurityConfig,
 		provideHistogramMetrics,
 		provideEndpointsMiddleware,
-		provideModule))
+		provideModule,
+		wire.Struct(new(monitoredAppService), "*"),
+		wire.Bind(new(EventBus), new(*eventBus)),
+		wire.Bind(new(UserBus), new(*userBus)),
+		wire.Bind(new(pb.AppServer), new(monitoredAppService)),
+	))
 }

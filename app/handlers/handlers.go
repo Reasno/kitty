@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
 	"github.com/Reasno/kitty/app/repository"
@@ -16,7 +18,6 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type appService struct {
