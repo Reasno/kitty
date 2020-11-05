@@ -97,13 +97,13 @@
         "parameters": [
           {
             "name": "kind",
+            "description": "1是微信，2是淘宝",
             "in": "path",
             "required": true,
             "type": "string",
             "enum": [
-              "UNKNOWN_EXTRA",
-              "WECHAT_EXTRA",
-              "TAOBAO_EXTRA"
+              "1",
+              "2"
             ]
           }
         ],

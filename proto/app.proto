@@ -112,7 +112,7 @@ service App {
       tags: "登录"
     };
     option (google.api.http) = {
-      get: "/v1/refresh"
+      post: "/v1/refresh"
       body: "*"
     };
   }
@@ -137,7 +137,10 @@ message UserBindRequest {
 }
 
 message GetExtraRequest {
-  Extra kind = 1;
+  Extra kind = 1 [
+    (options.openapiv2_field) = {required: "true", array: ["1", "2"], type: INTEGER},
+    (options.openapiv2_field).description = "1是微信，2是淘宝"
+  ];
 }
 
 message GetExtraReply {
