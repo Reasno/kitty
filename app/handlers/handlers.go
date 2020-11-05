@@ -117,8 +117,12 @@ func (s appService) addUserSourceInfo(ctx context.Context, in *pb.UserLoginReque
 		u.VersionCode = in.VersionCode
 		hasExtra = true
 	}
-	if hasExtra && err != s.ur.Save(ctx, u) {
-		return kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+
+	if hasExtra {
+		err = s.ur.Save(ctx, u)
+		if err != nil {
+			return kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		}
 	}
 	return nil
 }
