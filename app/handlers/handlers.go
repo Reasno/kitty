@@ -130,7 +130,7 @@ func (s appService) addUserSourceInfo(ctx context.Context, in *pb.UserLoginReque
 	if hasExtra {
 		err = s.ur.Save(ctx, u)
 		if err != nil {
-			return kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+			return dbErr(err)
 		}
 	}
 	return nil
@@ -436,7 +436,7 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	}
 	err = s.ur.Save(ctx, user)
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		return nil, dbErr(err)
 	}
 	var resp = user.ToReply()
 	s.decorate(ctx, resp.Data)
@@ -463,7 +463,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	}
 	u, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		return nil, dbErr(err)
 	}
 
 	u.CommonSUUID = in.Device.Suuid
@@ -472,7 +472,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	u.AddNewDevice(device)
 
 	if err := s.ur.Save(ctx, u); err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		return nil, dbErr(err)
 	}
 
 	reply := u.ToReply()
@@ -485,10 +485,11 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		u.Mobile.String,
 		u.PackageName,
 	})
-	s.decorate(ctx, reply.Data)
+
 	if err != nil {
 		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
+	s.decorate(ctx, reply.Data)
 	return reply, nil
 }
 
