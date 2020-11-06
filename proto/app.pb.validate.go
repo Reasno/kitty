@@ -55,12 +55,20 @@ func (m *UserBindRequest) Validate() error {
 
 	// no validation rules for Wechat
 
-	// no validation rules for OpenId
-
 	if v, ok := interface{}(m.GetTaobaoExtra()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return UserBindRequestValidationError{
 				field:  "TaobaoExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetWechatExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserBindRequestValidationError{
+				field:  "WechatExtra",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

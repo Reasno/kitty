@@ -42,11 +42,11 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	env := config.ProvideEnv(reader)
 	histogram := provideHistogramMetrics(appName, env)
 	handlersOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer, env, appName)
-	kafkaProducerFactory := provideKafkaProducerFactory(reader, logger, tracer)
+	kafkaProducerFactory, cleanup3 := provideKafkaProducerFactory(reader, logger, tracer)
 	handlersUserBus := provideUserBus(kafkaProducerFactory, reader)
 	handlersEventBus := provideEventBus(kafkaProducerFactory, reader)
 	userRepo := repository.NewUserRepo(db)
-	universalClient, cleanup3 := provideRedis(logger, reader, tracer)
+	universalClient, cleanup4 := provideRedis(logger, reader, tracer)
 	keyManager := provideKeyManager(appName, env)
 	codeRepo := repository.NewCodeRepo(universalClient, keyManager, env)
 	extraRepo := repository.NewExtraRepo(universalClient, keyManager)
@@ -73,8 +73,9 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 		eventBus:   handlersEventBus,
 		appService: handlersAppService,
 	}
-	module := provideModule(db, tracer, logger, handlersOverallMiddleware, handlersMonitoredAppService)
+	module := provideModule(db, tracer, logger, handlersOverallMiddleware, handlersMonitoredAppService, appName)
 	return module, func() {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()

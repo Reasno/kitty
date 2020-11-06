@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"github.com/Reasno/kitty/app/entity"
+	"github.com/Reasno/kitty/app/msg"
+	"github.com/go-sql-driver/mysql"
+	"github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -12,10 +15,20 @@ type UserRepo struct {
 	db *gorm.DB
 }
 
+var ErrAlreadyBind = errors.New(msg.ErrorAlreadyBind)
+
 const emsg = "UserRepo"
 
 func (r *UserRepo) Save(ctx context.Context, user *entity.User) error {
 	if err := r.db.Save(user).Error; err != nil {
+		if err, ok := err.(*mysql.MySQLError); ok {
+			if err.Number == 1062 {
+				return ErrAlreadyBind
+			}
+		}
+		if err == sqlite3.ErrConstraintUnique {
+			return ErrAlreadyBind
+		}
 		return errors.Wrap(err, emsg)
 	}
 	return nil
@@ -27,6 +40,14 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 	)
 	err = r.db.WithContext(ctx).Model(entity.User{}).Where("id = ?", id).Updates(user).Error
 	if err != nil {
+		if err, ok := err.(*mysql.MySQLError); ok {
+			if err.Number == 1062 {
+				return nil, ErrAlreadyBind
+			}
+		}
+		if err == sqlite3.ErrConstraintUnique {
+			return nil, ErrAlreadyBind
+		}
 		return nil, errors.Wrap(err, emsg)
 	}
 	err = r.db.WithContext(ctx).First(&u, "id = ?", id).Error

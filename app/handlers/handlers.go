@@ -57,6 +57,7 @@ type FileRepository interface {
 type ExtraRepository interface {
 	Put(ctx context.Context, id uint, name string, extra []byte) error
 	Get(ctx context.Context, id uint, name string) ([]byte, error)
+	Del(ctx context.Context, id uint, name string) error
 }
 
 func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
@@ -94,7 +95,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	// 拼装返回结果
 	var resp = u.ToReply()
 	resp.Data.Token = tokenString
-	s.decorate(ctx, resp.Data)
+	s.decorateResponse(ctx, resp.Data)
 
 	return resp, nil
 }
@@ -115,6 +116,216 @@ func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.Gen
 		Code: 0,
 	}
 	return &resp, nil
+}
+
+func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
+	if in.Id == 0 {
+		claim := kittyjwt.GetClaim(ctx)
+		in.Id = claim.UserId
+	}
+	u, err := s.ur.Get(ctx, uint(in.Id))
+	if err != nil {
+		return nil, kerr.NotFoundErr(errors.Wrap(err, msg.ErrorUserNotFound))
+	}
+	var resp = u.ToReply()
+
+	if in.Taobao {
+		resp.Data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(in.Id))
+	}
+
+	if in.Wechat {
+		resp.Data.WechatExtra = s.getWechatExtra(ctx, uint(in.Id))
+	}
+
+	return resp, nil
+}
+
+func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.GetClaim(ctx)
+	device := &entity.Device{
+		Os:        uint8(in.Device.Os),
+		Imei:      in.Device.Imei,
+		Idfa:      in.Device.Idfa,
+		Suuid:     in.Device.Suuid,
+		Oaid:      in.Device.Oaid,
+		Mac:       in.Device.Mac,
+		AndroidId: in.Device.AndroidId,
+	}
+	u, err := s.ur.Get(ctx, uint(claim.UserId))
+	if err != nil {
+		return nil, dbErr(err)
+	}
+
+	u.CommonSUUID = in.Device.Suuid
+	u.Channel = in.Channel
+	u.VersionCode = in.VersionCode
+	u.AddNewDevice(device)
+
+	if err := s.ur.Save(ctx, u); err != nil {
+		return nil, dbErr(err)
+	}
+
+	reply := u.ToReply()
+	reply.Data.Token, err = s.getToken(&tokenParam{
+		uint64(u.ID),
+		u.CommonSUUID,
+		u.Channel,
+		u.VersionCode,
+		u.WechatOpenId.String,
+		u.Mobile.String,
+		u.PackageName,
+	})
+
+	if err != nil {
+		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
+	}
+	s.decorateResponse(ctx, reply.Data)
+	return reply, nil
+}
+
+func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.GetClaim(ctx)
+	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
+		UserName:     in.UserName,
+		HeadImg:      in.HeadImg,
+		Gender:       int(in.Gender),
+		Birthday:     in.Birthday,
+		ThirdPartyId: in.ThirdPartyId,
+	})
+	if err != nil {
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+	}
+
+	var resp = u.ToReply()
+	s.decorateResponse(ctx, resp.Data)
+	return resp, nil
+}
+
+func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.GetClaim(ctx)
+
+	var (
+		toUpdate entity.User
+		err      error
+	)
+
+	// 绑定手机号
+	if len(in.Mobile) > 0 && len(in.Code) > 0 {
+		if ok, err := s.verify(ctx, in.Mobile, in.Code); err != nil {
+			return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		} else if !ok {
+			return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
+		}
+		toUpdate = entity.User{Mobile: ns(in.Mobile)}
+	}
+
+	// 绑定微信号
+	if len(in.Wechat) > 0 {
+		var wechatExtra *pb.WechatExtra
+		wechatExtra, err = s.getWechatInfo(ctx, in.Wechat)
+		ctx = context.WithValue(ctx, wechatExtraKey, in.WechatExtra)
+		if err != nil {
+			return nil, kerr.UnauthorizedErr(err)
+		}
+		toUpdate = entity.User{
+			WechatOpenId:  ns(wechatExtra.OpenId),
+			WechatUnionId: ns(wechatExtra.Unionid),
+		}
+	}
+
+	// 绑定淘宝openId
+	if in.TaobaoExtra != nil && len(in.TaobaoExtra.OpenId) > 0 {
+		ctx = context.WithValue(ctx, taobaoExtraKey, in.TaobaoExtra)
+		toUpdate = entity.User{
+			TaobaoOpenId: ns(in.TaobaoExtra.OpenId),
+		}
+	}
+
+	// 绑定微信openId
+	if in.WechatExtra != nil && len(in.WechatExtra.OpenId) > 0 {
+		ctx = context.WithValue(ctx, wechatExtraKey, in.WechatExtra)
+		toUpdate = entity.User{
+			WechatOpenId: ns(in.WechatExtra.OpenId),
+		}
+	}
+
+	// 更新用户
+	newUser, err := s.ur.Update(ctx, uint(claim.UserId), toUpdate)
+	if errors.Is(err, repository.ErrAlreadyBind) {
+		return nil, kerr.InvalidArgumentErr(err)
+	}
+	if err != nil {
+		return nil, dbErr(err)
+	}
+
+	// 获取Token
+	reply := newUser.ToReply()
+	reply.Data.Token, err = s.getToken(&tokenParam{
+		uint64(newUser.ID),
+		newUser.CommonSUUID,
+		newUser.Channel,
+		newUser.VersionCode,
+		newUser.WechatOpenId.String,
+		newUser.Mobile.String,
+		newUser.PackageName,
+	})
+	if err != nil {
+		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
+	}
+
+	// 组装数据
+	s.persistExtra(ctx)
+	s.decorateResponse(ctx, reply.Data)
+	return reply, err
+}
+
+func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.GetClaim(ctx)
+	user, err := s.ur.Get(ctx, uint(claim.UserId))
+	if err != nil {
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+	}
+	if in.Mobile {
+		user.Mobile = sql.NullString{}
+	}
+	if in.Wechat {
+		user.WechatUnionId = sql.NullString{}
+		user.WechatOpenId = sql.NullString{}
+		s.warn(s.er.Del(ctx, user.ID, pb.Extra_WECHAT_EXTRA.String()))
+	}
+	if in.Taobao {
+		user.TaobaoOpenId = sql.NullString{}
+		s.warn(s.er.Del(ctx, user.ID, pb.Extra_TAOBAO_EXTRA.String()))
+	}
+	err = s.ur.Save(ctx, user)
+	if err != nil {
+		return nil, dbErr(err)
+	}
+
+	var resp = user.ToReply()
+	s.decorateResponse(ctx, resp.Data)
+	return resp, nil
+}
+
+func ns(s string) sql.NullString {
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
+}
+
+func (s appService) getToken(param *tokenParam) (string, error) {
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		kittyjwt.NewClaim(
+			param.userId,
+			s.conf.String("name"),
+			param.suuid, param.channel, param.versionCode, param.wechat, param.mobile, param.packageName,
+			time.Hour*24*30,
+		),
+	)
+	token.Header["kid"] = s.conf.String("security.kid")
+	return token.SignedString([]byte(s.conf.String("security.key")))
 }
 
 func (s appService) debug(err error) {
@@ -196,7 +407,7 @@ func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat s
 
 	u, err := s.ur.GetFromWechat(ctx, packageName, wxInfo.OpenId, device, wechatUser)
 	if err != nil {
-		return nil, nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		return nil, nil, dbErr(err)
 	}
 	s.infof(msg.WxSuccess, u.ID)
 	return u, wxInfo, nil
@@ -252,8 +463,8 @@ func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 		u.ThirdPartyId = in.ThirdPartyId
 		hasExtra = true
 	}
-	// 任何情况下Channel不得更新
-	if in.Channel != "" && u.Channel == "" {
+
+	if in.Channel != "" && u.Channel != in.Channel {
 		u.Channel = in.Channel
 		hasExtra = true
 	}
@@ -276,20 +487,6 @@ type tokenParam struct {
 	suuid, channel, versionCode, wechat, mobile, packageName string
 }
 
-func (s appService) getToken(param *tokenParam) (string, error) {
-	token := jwt.NewWithClaims(
-		jwt.SigningMethodHS256,
-		kittyjwt.NewClaim(
-			param.userId,
-			s.conf.String("name"),
-			param.suuid, param.channel, param.versionCode, param.wechat, param.mobile, param.packageName,
-			time.Hour*24*30,
-		),
-	)
-	token.Header["kid"] = s.conf.String("security.kid")
-	return token.SignedString([]byte(s.conf.String("security.key")))
-}
-
 func (s appService) verify(ctx context.Context, mobile string, code string) (bool, error) {
 	result, err := s.cr.CheckCode(ctx, mobile, code)
 	if err != nil {
@@ -298,199 +495,6 @@ func (s appService) verify(ctx context.Context, mobile string, code string) (boo
 	err = s.cr.DeleteCode(ctx, mobile)
 	s.warn(err)
 	return result, nil
-}
-
-func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
-	if in.Id == 0 {
-		claim := kittyjwt.GetClaim(ctx)
-		in.Id = claim.UserId
-	}
-	u, err := s.ur.Get(ctx, uint(in.Id))
-	if err != nil {
-		return nil, kerr.NotFoundErr(errors.Wrap(err, msg.ErrorUserNotFound))
-	}
-	var resp = u.ToReply()
-
-	if in.Taobao {
-		resp.Data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(in.Id))
-	}
-
-	if in.Wechat {
-		resp.Data.WechatExtra = s.getWechatExtra(ctx, uint(in.Id))
-	}
-
-	return resp, nil
-}
-
-func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
-	device := &entity.Device{
-		Os:        uint8(in.Device.Os),
-		Imei:      in.Device.Imei,
-		Idfa:      in.Device.Idfa,
-		Suuid:     in.Device.Suuid,
-		Oaid:      in.Device.Oaid,
-		Mac:       in.Device.Mac,
-		AndroidId: in.Device.AndroidId,
-	}
-	u, err := s.ur.Get(ctx, uint(claim.UserId))
-	if err != nil {
-		return nil, dbErr(err)
-	}
-
-	u.CommonSUUID = in.Device.Suuid
-	u.Channel = in.Channel
-	u.VersionCode = in.VersionCode
-	u.AddNewDevice(device)
-
-	if err := s.ur.Save(ctx, u); err != nil {
-		return nil, dbErr(err)
-	}
-
-	reply := u.ToReply()
-	reply.Data.Token, err = s.getToken(&tokenParam{
-		uint64(u.ID),
-		u.CommonSUUID,
-		u.Channel,
-		u.VersionCode,
-		u.WechatOpenId.String,
-		u.Mobile.String,
-		u.PackageName,
-	})
-
-	if err != nil {
-		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
-	}
-	s.decorate(ctx, reply.Data)
-	return reply, nil
-}
-
-func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
-	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
-		UserName:     in.UserName,
-		HeadImg:      in.HeadImg,
-		Gender:       int(in.Gender),
-		Birthday:     in.Birthday,
-		ThirdPartyId: in.ThirdPartyId,
-	})
-	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
-	}
-
-	var resp = u.ToReply()
-	s.decorate(ctx, resp.Data)
-	return resp, nil
-}
-
-func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
-
-	var (
-		toUpdate    entity.User
-		wechatExtra *pb.WechatExtra
-		taobaoExtra *pb.TaobaoExtra
-		err         error
-	)
-
-	// 绑定手机号
-	if len(in.Mobile) > 0 && len(in.Code) > 0 {
-		if ok, err := s.verify(ctx, in.Mobile, in.Code); err != nil {
-			return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
-		} else if !ok {
-			return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
-		}
-		toUpdate = entity.User{Mobile: ns(in.Mobile)}
-	}
-
-	// 绑定微信号
-	if len(in.Wechat) > 0 {
-		wechatExtra, err = s.getWechatInfo(ctx, in.Wechat)
-		ctx = context.WithValue(ctx, wechatExtraKey, wechatExtra)
-		if err != nil {
-			return nil, kerr.UnauthorizedErr(err)
-		}
-		toUpdate = entity.User{
-			WechatOpenId:  ns(wechatExtra.OpenId),
-			WechatUnionId: ns(wechatExtra.Unionid),
-		}
-	}
-
-	// 绑定淘宝openId
-	if in.TaobaoExtra != nil && len(in.TaobaoExtra.OpenId) > 0 {
-		taobaoExtra = in.TaobaoExtra
-		ctx = context.WithValue(ctx, taobaoExtraKey, taobaoExtra)
-		toUpdate = entity.User{
-			TaobaoOpenId: ns(in.TaobaoExtra.OpenId),
-		}
-		extra, err := in.TaobaoExtra.Marshal()
-		s.warn(err)
-
-		err = s.er.Put(ctx, uint(claim.UserId), pb.Extra_TAOBAO_EXTRA.String(), extra)
-		s.warn(err)
-
-	}
-
-	// 绑定微信openId
-	if len(in.OpenId) > 0 {
-		toUpdate = entity.User{
-			WechatOpenId: ns(in.OpenId),
-		}
-	}
-
-	// 更新用户
-	newUser, err := s.ur.Update(ctx, uint(claim.UserId), toUpdate)
-	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
-	}
-	reply := newUser.ToReply()
-	reply.Data.Token, err = s.getToken(&tokenParam{
-		uint64(newUser.ID),
-		newUser.CommonSUUID,
-		newUser.Channel,
-		newUser.VersionCode,
-		newUser.WechatOpenId.String,
-		newUser.Mobile.String,
-		newUser.PackageName,
-	})
-	if err != nil {
-		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
-	}
-
-	s.decorate(ctx, reply.Data)
-	return reply, err
-}
-
-func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
-	user, err := s.ur.Get(ctx, uint(claim.UserId))
-	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
-	}
-	if in.Mobile {
-		user.Mobile = sql.NullString{}
-	}
-	if in.Wechat {
-		user.WechatUnionId = sql.NullString{}
-		user.WechatOpenId = sql.NullString{}
-	}
-	if in.Taobao {
-		user.TaobaoOpenId = sql.NullString{}
-	}
-	err = s.ur.Save(ctx, user)
-	if err != nil {
-		return nil, dbErr(err)
-	}
-	var resp = user.ToReply()
-	s.decorate(ctx, resp.Data)
-	return resp, nil
-}
-
-func ns(s string) sql.NullString {
-	return sql.NullString{
-		String: s,
-		Valid:  true,
-	}
 }
 
 func dbErr(err error) kerr.ServerError {
@@ -527,7 +531,38 @@ func (s appService) getTaobaoExtra(ctx context.Context, id uint) *pb.TaobaoExtra
 	return &extra
 }
 
-func (s appService) decorate(ctx context.Context, data *pb.UserInfo) {
+func (s appService) decorateResponse(ctx context.Context, data *pb.UserInfo) {
 	data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(data.Id))
 	data.WechatExtra = s.getWechatExtra(ctx, uint(data.Id))
+}
+
+func (s appService) persistExtra(ctx context.Context) {
+	s.persistTaobaoExtra(ctx)
+	s.persistWechatExtra(ctx)
+}
+
+func (s appService) persistTaobaoExtra(ctx context.Context) {
+	claim := kittyjwt.GetClaim(ctx)
+	extra, ok := ctx.Value(taobaoExtraKey).(*pb.TaobaoExtra)
+	if !ok {
+		return
+	}
+	b, err := extra.Marshal()
+	s.warn(err)
+
+	err = s.er.Put(ctx, uint(claim.UserId), pb.Extra_TAOBAO_EXTRA.String(), b)
+	s.warn(err)
+}
+
+func (s appService) persistWechatExtra(ctx context.Context) {
+	claim := kittyjwt.GetClaim(ctx)
+	extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra)
+	if !ok {
+		return
+	}
+	b, err := extra.Marshal()
+	s.warn(err)
+
+	err = s.er.Put(ctx, uint(claim.UserId), pb.Extra_WECHAT_EXTRA.String(), b)
+	s.warn(err)
 }

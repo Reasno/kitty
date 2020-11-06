@@ -72,8 +72,11 @@ func provideEventBus(factory *kkafka.KafkaProducerFactory, conf contract.ConfigR
 	}}
 }
 
-func provideKafkaProducerFactory(conf contract.ConfigReader, logger log.Logger, tracer opentracing.Tracer) *kkafka.KafkaProducerFactory {
-	return kkafka.NewKafkaProducerFactoryWithTracer(conf.Strings("kafka.brokers"),logger, tracer)
+func provideKafkaProducerFactory(conf contract.ConfigReader, logger log.Logger, tracer opentracing.Tracer) (*kkafka.KafkaProducerFactory, func()) {
+	factory := kkafka.NewKafkaProducerFactoryWithTracer(conf.Strings("kafka.brokers"), logger, tracer)
+	return factory, func() {
+		_ = factory.Close()
+	}
 }
 
 func provideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader, client contract.HttpDoer) *ots3.Manager {
@@ -123,8 +126,8 @@ func provideSmsConfig(doer contract.HttpDoer, conf contract.ConfigReader) *sms.T
 func provideRedis(logging log.Logger, conf contract.ConfigReader, tracer opentracing.Tracer) (redis.UniversalClient, func()) {
 	client := redis.NewUniversalClient(
 		&redis.UniversalOptions{
-			Addrs: conf.Strings("redis.addrs"),
-			DB:    conf.Int("redis.database"),
+			Addrs:    conf.Strings("redis.addrs"),
+			DB:       conf.Int("redis.database"),
 			Password: conf.String("redis.password"),
 		})
 	client.AddHook(
@@ -212,8 +215,9 @@ func provideOpentracing(log jaeger.Logger, conf contract.ConfigReader) (opentrac
 
 type overallMiddleware func(endpoints svc.Endpoints) svc.Endpoints
 
-func provideModule(db *gorm.DB, tracer opentracing.Tracer, logger log.Logger, middleware overallMiddleware, server kitty.AppServer) *Module {
+func provideModule(db *gorm.DB, tracer opentracing.Tracer, logger log.Logger, middleware overallMiddleware, server kitty.AppServer, appName contract.AppName) *Module {
 	return &Module{
+		appName:   appName,
 		db:        db,
 		logger:    logger,
 		tracer:    tracer,

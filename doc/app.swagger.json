@@ -392,13 +392,13 @@
           "type": "string",
           "title": "微信官方下发的临时code码，非openId"
         },
-        "openId": {
-          "type": "string",
-          "title": "如果有openId 就直接走openId，不用再填微信官方下发的临时code码"
-        },
         "taobaoExtra": {
           "$ref": "#/definitions/v1TaobaoExtra",
           "title": "绑定淘宝"
+        },
+        "wechatExtra": {
+          "$ref": "#/definitions/v1WechatExtra",
+          "title": "如果有openId 就直接走openId，不用再填微信官方下发的临时code码"
         }
       }
     },

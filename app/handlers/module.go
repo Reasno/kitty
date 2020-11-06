@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/app/svc"
 	"github.com/Reasno/kitty/pkg/config"
@@ -17,10 +19,10 @@ import (
 	stdopentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 type Module struct {
+	appName   contract.AppName
 	logger    log.Logger
 	db        *gorm.DB
 	tracer    stdopentracing.Tracer
@@ -44,12 +46,12 @@ func setUp(appModuleConfig contract.ConfigReader, logger log.Logger) (contract.C
 }
 
 func (a *Module) ProvideMigration() error {
-	m := repository.ProvideMigrator(a.db)
+	m := repository.ProvideMigrator(a.db, a.appName)
 	return m.Migrate()
 }
 
 func (a *Module) ProvideRollback(id string) error {
-	m := repository.ProvideMigrator(a.db)
+	m := repository.ProvideMigrator(a.db, a.appName)
 	if id == "-1" {
 		return m.RollbackLast()
 	}

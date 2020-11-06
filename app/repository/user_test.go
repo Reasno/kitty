@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"testing"
+
 	"github.com/Reasno/kitty/app/entity"
+	"github.com/Reasno/kitty/pkg/config"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"testing"
 )
 
 var repo *UserRepo
@@ -33,7 +35,7 @@ func setUp(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to connect database")
 	}
-	m = ProvideMigrator(db)
+	m = ProvideMigrator(db, config.AppName("test"))
 	err = m.Migrate()
 	if err != nil {
 		t.Fatal("failed migration")
@@ -42,7 +44,7 @@ func setUp(t *testing.T) {
 }
 
 func tearDown() {
-	db.Migrator().DropTable("devices", "users", "migrations")
+	db.Migrator().DropTable("devices", "users", "test_migrations")
 }
 
 func TestGetFromWechat(t *testing.T) {
@@ -178,6 +180,9 @@ func TestUniqueConstraint(t *testing.T) {
 	if err == nil {
 		t.Fatal(err)
 	}
+	if err != ErrAlreadyBind {
+		t.Fatal(err)
+	}
 	user3 := entity.User{
 		WechatOpenId: sql.NullString{"110", true},
 	}
@@ -190,6 +195,9 @@ func TestUniqueConstraint(t *testing.T) {
 	}
 	err = repo.Save(ctx, &user4)
 	if err == nil {
+		t.Fatal(err)
+	}
+	if err != ErrAlreadyBind {
 		t.Fatal(err)
 	}
 }

@@ -30,6 +30,7 @@ func (m monitoredAppService) Login(ctx context.Context, request *pb.UserLoginReq
 	if err != nil {
 		return resp, err
 	}
+	// emit new user registration event
 	span := opentracing.SpanFromContext(ctx)
 	go func() {
 		ctx := opentracing.ContextWithSpan(context.Background(), span)
@@ -50,9 +51,10 @@ func (m monitoredAppService) Login(ctx context.Context, request *pb.UserLoginReq
 			err = m.eventBus.Emit(ctx, "new_user")
 			m.appService.warn(err)
 		}
-		err := m.userBus.Emit(ctx, resp.Data)
-		m.appService.warn(err)
 	}()
+
+	// emit User
+	m.emitUser(ctx, resp)
 	return resp, err
 }
 
@@ -61,6 +63,38 @@ func (m monitoredAppService) Bind(ctx context.Context, request *pb.UserBindReque
 	if err != nil {
 		return resp, err
 	}
+	m.emitUser(ctx, resp)
+	return resp, err
+}
+
+func (m monitoredAppService) Unbind(ctx context.Context, request *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
+	resp, err := m.appService.Unbind(ctx, request)
+	if err != nil {
+		return resp, err
+	}
+	m.emitUser(ctx, resp)
+	return resp, err
+}
+
+func (m monitoredAppService) UpdateInfo(ctx context.Context, request *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
+	resp, err := m.appService.UpdateInfo(ctx, request)
+	if err != nil {
+		return resp, err
+	}
+	m.emitUser(ctx, resp)
+	return resp, err
+}
+
+func (m monitoredAppService) Refresh(ctx context.Context, request *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
+	resp, err := m.appService.Refresh(ctx, request)
+	if err != nil {
+		return resp, err
+	}
+	m.emitUser(ctx, resp)
+	return resp, err
+}
+
+func (m monitoredAppService) emitUser(ctx context.Context, resp *pb.UserInfoReply) {
 	span := opentracing.SpanFromContext(ctx)
 	go func() {
 		ctx := opentracing.ContextWithSpan(context.Background(), span)
@@ -69,5 +103,4 @@ func (m monitoredAppService) Bind(ctx context.Context, request *pb.UserBindReque
 		err := m.userBus.Emit(ctx, resp.Data)
 		m.appService.warn(err)
 	}()
-	return resp, err
 }

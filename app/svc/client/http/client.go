@@ -576,9 +576,9 @@ func EncodeHTTPBindZeroRequest(_ context.Context, r *http.Request, request inter
 
 	toRet.Wechat = req.Wechat
 
-	toRet.OpenId = req.OpenId
-
 	toRet.TaobaoExtra = req.TaobaoExtra
+
+	toRet.WechatExtra = req.WechatExtra
 
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)

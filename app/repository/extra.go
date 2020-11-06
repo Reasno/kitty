@@ -40,3 +40,12 @@ func (e *ExtraRepo) Get(ctx context.Context, id uint, name string) ([]byte, erro
 	}
 	return []byte(b), err
 }
+
+func (e *ExtraRepo) Del(ctx context.Context, id uint, name string) error {
+	key := e.km.Key(fmt.Sprintf("%d", id), name)
+	_, err := e.client.Del(ctx, key).Result()
+	if err == redis.Nil {
+		return nil
+	}
+	return err
+}
