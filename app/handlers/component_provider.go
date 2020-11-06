@@ -153,7 +153,8 @@ func provideDialector(conf contract.ConfigReader) (gorm.Dialector, error) {
 
 func provideGormConfig(l log.Logger, conf contract.ConfigReader) *gorm.Config {
 	return &gorm.Config{
-		Logger: &logging.GormLogAdapter{l},
+		Logger:                                   &logging.GormLogAdapter{l},
+		DisableForeignKeyConstraintWhenMigrating: true,
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix: conf.String("name") + "_", // 表名前缀，`User` 的表名应该是 `t_users`
 		},
