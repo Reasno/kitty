@@ -2,14 +2,15 @@ package repository
 
 import (
 	"context"
+	"math/rand"
+	"strconv"
+	"time"
+
 	"github.com/Reasno/kitty/app/msg"
 	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
-	"math/rand"
-	"strconv"
-	"time"
 )
 
 const CodeKey = "CodeRepo"
@@ -22,8 +23,8 @@ type CodeRepo struct {
 	client redis.Cmdable
 	km     contract.Keyer
 	ttl    time.Duration
-	rate time.Duration
-	env contract.Env
+	rate   time.Duration
+	env    contract.Env
 }
 
 func NewCodeRepo(cmdable redis.Cmdable, keyer contract.Keyer, env contract.Env) *CodeRepo {
@@ -49,7 +50,7 @@ func (c *CodeRepo) AddCode(ctx context.Context, mobile string) (code string, err
 }
 
 func (c *CodeRepo) CheckCode(ctx context.Context, mobile, code string) (bool, error) {
-	if ! c.env.IsProd() && code == "666666" {
+	if !c.env.IsProd() && code == "666666" {
 		return true, nil
 	}
 	value, err := c.client.Get(ctx, c.km.Key(mobile)).Result()

@@ -2,14 +2,18 @@ package rule
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
+
+	"github.com/Reasno/kitty/rule/msg"
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/knadh/koanf"
+	kyaml "github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/rawbytes"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
-	"io"
-	"io/ioutil"
 )
 
 type Rule struct {
@@ -18,11 +22,40 @@ type Rule struct {
 	program *vm.Program
 }
 
+type Config struct {
+	Style string      `yaml:"style"`
+	Rule  interface{} `yaml:"rule"`
+}
+
+type CentralRules struct {
+	Style string `yaml:"style"`
+	Rule  struct {
+		List []struct {
+			Name     string `yaml:"name"`
+			Icon     string `yaml:"icon"`
+			Path     string `yaml:"path"`
+			ID       string `yaml:"id"`
+			Children []struct {
+				Name     string        `yaml:"name"`
+				Icon     string        `yaml:"icon"`
+				Path     string        `yaml:"path"`
+				ID       string        `yaml:"id"`
+				Children []interface{} `yaml:"children"`
+			} `yaml:"children"`
+		} `yaml:"list"`
+	} `yaml:"rule"`
+}
+
+type CentralConfig struct {
+	Style string       `yaml:"style"`
+	Rule  CentralRules `yaml:"rule"`
+}
+
 type ErrInvalidRules struct {
 	detail string
 }
 
-func (e ErrInvalidRules) Error() string {
+func (e *ErrInvalidRules) Error() string {
 	return e.detail
 }
 
@@ -52,14 +85,29 @@ func NewRules(reader io.Reader, logger log.Logger) []Rule {
 		err   error
 		rules []Rule
 	)
+	c := koanf.New(".")
 	b, err = ioutil.ReadAll(reader)
 	if err != nil {
 		level.Warn(logger).Log("error", errors.Wrap(err, "reader is not valid"))
 		b = []byte("{}")
 	}
-	err = yaml.Unmarshal(b, &rules)
+
+	err = c.Load(rawbytes.Provider(b), kyaml.Parser())
 	if err != nil {
-		level.Warn(logger).Log("error", errors.Wrap(err, "invalid rules"))
+		level.Warn(logger).Log("err", errors.Wrap(err, "cannot load yaml"))
+	}
+
+	if c.String("style") != "advanced" {
+		rule := Rule{
+			If: "true",
+		}
+		err = c.Unmarshal("rule", &rule.Then)
+		rules = append(rules, rule)
+	} else {
+		err = c.Unmarshal("rule", &rules)
+	}
+	if err != nil {
+		level.Warn(logger).Log("err", errors.Wrap(err, "invalid rules"))
 		rules = []Rule{}
 	}
 
@@ -81,22 +129,55 @@ func (r *Rule) Compile() error {
 }
 
 func validateRules(reader io.Reader) error {
-	var (
-		tmp   []Rule
-		value []byte
-	)
+	var tmp []Rule
+
 	value, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return ErrInvalidRules{err.Error()}
+		return &ErrInvalidRules{err.Error()}
 	}
-	err = yaml.Unmarshal(value, &tmp)
+	c := koanf.New(".")
+	err = c.Load(rawbytes.Provider(value), kyaml.Parser())
 	if err != nil {
-		return ErrInvalidRules{err.Error()}
+		return &ErrInvalidRules{err.Error()}
 	}
+
+	if c.String("style") != "advanced" {
+		rule := Rule{
+			If: "true",
+		}
+		err = c.Unmarshal("rules", &rule.Then)
+		tmp = append(tmp, rule)
+	} else {
+		err = c.Unmarshal("rules", &tmp)
+	}
+	if err != nil {
+		return &ErrInvalidRules{err.Error()}
+	}
+
 	for i := range tmp {
 		if err := tmp[i].Compile(); err != nil {
-			return ErrInvalidRules{err.Error()}
+			return &ErrInvalidRules{err.Error()}
 		}
 	}
 	return nil
+}
+
+func calculate(rules []Rule, payload *Payload, logger log.Logger) (Data, error) {
+	for _, rule := range rules {
+		output, err := expr.Run(rule.program, payload)
+		if err != nil {
+			return nil, errors.Wrap(err, msg.ErrorRules)
+		}
+		if i, ok := output.(int); ok && i == 0 {
+			level.Debug(logger).Log("msg", "negative: "+rule.If)
+			continue
+		}
+		if b, ok := output.(bool); ok && !b {
+			level.Debug(logger).Log("msg", "negative: "+rule.If)
+			continue
+		}
+		level.Debug(logger).Log("msg", "positive: "+rule.If)
+		return rule.Then, nil
+	}
+	return Data{}, nil
 }

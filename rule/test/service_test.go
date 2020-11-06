@@ -21,30 +21,36 @@ func TestGetCompiled(t *testing.T) {
 	}{
 		{
 			`
-- if: true
-  then: 
-    foo: bar
+style: advanced
+rules:
+  - if: true
+    then: 
+      foo: bar
 `,
 			rule.Payload{},
 			rule.Data{"foo": "bar"},
 		},
 		{
 			`
-- if: false
-  then: 
-    foo: bar
+style: advanced
+rules:
+  - if: false
+    then: 
+      foo: bar
 `,
 			rule.Payload{},
 			rule.Data{},
 		},
 		{
 			`
-- if: Imei == "456"
-  then: 
-    foo: bar
-- if: Imei == "123"
-  then:
-    foo: baz
+style: advanced
+rules:
+  - if: Imei == "456"
+    then: 
+      foo: bar
+  - if: Imei == "123"
+    then:
+      foo: baz
 `,
 			rule.Payload{
 				Imei: "123",
@@ -55,6 +61,8 @@ func TestGetCompiled(t *testing.T) {
 		},
 		{
 			`
+style: advanced
+rules:
 - if: Imei == "456" && Oaid = "789"
   then: 
     foo: bar

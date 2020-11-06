@@ -11,20 +11,20 @@ import (
 )
 
 type GenericResponse struct {
-	Code uint32 `json:"code"`
+	Code    uint32 `json:"code"`
 	Message string `json:"message,omitempty"`
-	Data Data `json:"data,omitempty"`
+	Data    Data   `json:"data,omitempty"`
 }
 
-type StringResponse  struct {
-	Code uint32 `json:"code"`
+type StringResponse struct {
+	Code    uint32 `json:"code"`
 	Message string `json:"message,omitempty"`
-	Data string `json:"data,omitempty"`
+	Data    string `json:"data,omitempty"`
 }
 
 type calculateRulesRequest struct {
 	ruleName string
-	payload *Payload
+	payload  *Payload
 }
 
 type getRulesRequest struct {
@@ -33,20 +33,20 @@ type getRulesRequest struct {
 
 type updateRulesRequest struct {
 	ruleName string
-	data []byte
-	dryRun bool
+	data     []byte
+	dryRun   bool
 }
 
 type preflightRequest struct {
 	ruleName string
-	hash string
+	hash     string
 }
 
 type Endpoints struct {
 	calculateRulesEndpoints endpoint.Endpoint
-	getRulesEndpoint endpoint.Endpoint
-	updateRulesEndpoint endpoint.Endpoint
-	preflightEndpoint endpoint.Endpoint
+	getRulesEndpoint        endpoint.Endpoint
+	updateRulesEndpoint     endpoint.Endpoint
+	preflightEndpoint       endpoint.Endpoint
 }
 
 func newEndpoints(s Service, hist metrics.Histogram, logger log.Logger, appName contract.AppName, env contract.Env) Endpoints {
@@ -89,7 +89,7 @@ func MakeUpdateRulesEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*updateRulesRequest)
 		err = s.UpdateRules(ctx, req.ruleName, req.data, req.dryRun)
-		var invalid ErrInvalidRules
+		var invalid *ErrInvalidRules
 		if errors.As(err, &invalid) {
 			return GenericResponse{Message: invalid.Error(), Code: 3}, nil
 		}

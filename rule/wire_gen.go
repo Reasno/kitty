@@ -19,7 +19,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	if err != nil {
 		return nil, nil, err
 	}
-	ruleRepository, err := provideRepository(client, logger, reader)
+	ruleRepository, err := provideRepository(client, logger)
 	if err != nil {
 		cleanup()
 		return nil, nil, err

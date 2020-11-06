@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
 	"github.com/go-sql-driver/mysql"
@@ -16,6 +17,7 @@ type UserRepo struct {
 }
 
 var ErrAlreadyBind = errors.New(msg.ErrorAlreadyBind)
+var ErrRecordNotFound = errors.New(msg.ErrorUserNotFound)
 
 const emsg = "UserRepo"
 
@@ -26,8 +28,10 @@ func (r *UserRepo) Save(ctx context.Context, user *entity.User) error {
 				return ErrAlreadyBind
 			}
 		}
-		if err == sqlite3.ErrConstraintUnique {
-			return ErrAlreadyBind
+		if err, ok := err.(sqlite3.Error); ok {
+			if err.Code == 19 && err.ExtendedCode == 2067 {
+				return ErrAlreadyBind
+			}
 		}
 		return errors.Wrap(err, emsg)
 	}
@@ -45,8 +49,10 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 				return nil, ErrAlreadyBind
 			}
 		}
-		if err == sqlite3.ErrConstraintUnique {
-			return nil, ErrAlreadyBind
+		if err, ok := err.(sqlite3.Error); ok {
+			if err.Code == 19 && err.ExtendedCode == 2067 {
+				return nil, ErrAlreadyBind
+			}
 		}
 		return nil, errors.Wrap(err, emsg)
 	}
@@ -110,6 +116,9 @@ func (r *UserRepo) Get(ctx context.Context, id uint) (*entity.User, error) {
 		u entity.User
 	)
 	if err := r.db.WithContext(ctx).First(&u, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, ErrRecordNotFound
+		}
 		return nil, errors.Wrap(err, emsg)
 	}
 	return &u, nil

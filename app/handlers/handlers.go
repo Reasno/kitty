@@ -124,8 +124,11 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 		in.Id = claim.UserId
 	}
 	u, err := s.ur.Get(ctx, uint(in.Id))
+	if errors.Is(err, repository.ErrRecordNotFound) {
+		return nil, kerr.NotFoundErr(err)
+	}
 	if err != nil {
-		return nil, kerr.NotFoundErr(errors.Wrap(err, msg.ErrorUserNotFound))
+		return nil, dbErr(err)
 	}
 	var resp = u.ToReply()
 

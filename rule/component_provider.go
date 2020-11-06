@@ -13,18 +13,14 @@ import (
 func provideEtcdClient(conf contract.ConfigReader) (*clientv3.Client, func(), error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	client, err := clientv3.New(clientv3.Config{
-		Endpoints:            conf.Strings("etcd.addrs"),
-		Context:              ctx,
+		Endpoints: conf.Strings("etcd.addrs"),
+		Context:   ctx,
 	})
 	return client, cancel, err
 }
 
-func provideRepository(client *clientv3.Client, logger log.Logger, conf contract.ConfigReader) (*repository, error) {
-	var ruleMapping = make(map[string]string)
-	for k, v := range conf.Get("rules").(map[string]interface{}) {
-		ruleMapping[k] = v.(string)
-	}
-	return NewRepository(client, logger, ruleMapping)
+func provideRepository(client *clientv3.Client, logger log.Logger) (*repository, error) {
+	return NewRepository(client, logger)
 }
 
 func provideHistogramMetrics(appName contract.AppName, env contract.Env) metrics.Histogram {
@@ -41,6 +37,6 @@ func provideModule(repository Repository, endpoints Endpoints) *Module {
 	// TODO: add middleware
 	return &Module{
 		repository: repository,
-		endpoints: endpoints,
+		endpoints:  endpoints,
 	}
 }

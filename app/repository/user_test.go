@@ -177,9 +177,6 @@ func TestUniqueConstraint(t *testing.T) {
 		Mobile: sql.NullString{"110", true},
 	}
 	err = repo.Save(ctx, &user2)
-	if err == nil {
-		t.Fatal(err)
-	}
 	if err != ErrAlreadyBind {
 		t.Fatal(err)
 	}
@@ -194,9 +191,6 @@ func TestUniqueConstraint(t *testing.T) {
 		WechatOpenId: sql.NullString{"110", true},
 	}
 	err = repo.Save(ctx, &user4)
-	if err == nil {
-		t.Fatal(err)
-	}
 	if err != ErrAlreadyBind {
 		t.Fatal(err)
 	}
