@@ -119,7 +119,7 @@ message UserBindRequest {
   string code = 2;
   // 微信官方下发的临时code码，非openId
   string wechat = 3;
-
+  // 废弃，请使用wechat_extra.openId
   string openId = 4 [deprecated=true];
   // 绑定淘宝
   TaobaoExtra taobao_extra = 5;
