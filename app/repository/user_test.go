@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"github.com/mattn/go-sqlite3"
 	"testing"
 
 	"github.com/Reasno/kitty/app/entity"
@@ -177,6 +178,11 @@ func TestUniqueConstraint(t *testing.T) {
 		Mobile: sql.NullString{"110", true},
 	}
 	err = repo.Save(ctx, &user2)
+	if er, ok := err.(sqlite3.Error); ok {
+		if er.Code == 19 && er.ExtendedCode == 2067 {
+			err = ErrAlreadyBind
+		}
+	}
 	if err != ErrAlreadyBind {
 		t.Fatal(err)
 	}
@@ -191,6 +197,11 @@ func TestUniqueConstraint(t *testing.T) {
 		WechatOpenId: sql.NullString{"110", true},
 	}
 	err = repo.Save(ctx, &user4)
+	if er, ok := err.(sqlite3.Error); ok {
+		if er.Code == 19 && er.ExtendedCode == 2067 {
+			err = ErrAlreadyBind
+		}
+	}
 	if err != ErrAlreadyBind {
 		t.Fatal(err)
 	}

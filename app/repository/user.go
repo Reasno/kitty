@@ -1,13 +1,14 @@
+// +build:
 package repository
 
 import (
 	"context"
 	"database/sql"
+	"github.com/mattn/go-sqlite3"
 
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
 	"github.com/go-sql-driver/mysql"
-	"github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -25,11 +26,6 @@ func (r *UserRepo) Save(ctx context.Context, user *entity.User) error {
 	if err := r.db.Save(user).Error; err != nil {
 		if err, ok := err.(*mysql.MySQLError); ok {
 			if err.Number == 1062 {
-				return ErrAlreadyBind
-			}
-		}
-		if err, ok := err.(sqlite3.Error); ok {
-			if err.Code == 19 && err.ExtendedCode == 2067 {
 				return ErrAlreadyBind
 			}
 		}
