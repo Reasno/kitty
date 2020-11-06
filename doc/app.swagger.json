@@ -392,6 +392,9 @@
           "type": "string",
           "title": "微信官方下发的临时code码，非openId"
         },
+        "openId": {
+          "type": "string"
+        },
         "taobaoExtra": {
           "$ref": "#/definitions/v1TaobaoExtra",
           "title": "绑定淘宝"

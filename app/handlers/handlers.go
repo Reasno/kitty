@@ -209,6 +209,11 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		err      error
 	)
 
+	// 兼容旧接口
+	if len(in.OpenId) > 0 {
+		in.WechatExtra = &pb.WechatExtra{OpenId: in.OpenId}
+	}
+
 	// 绑定手机号
 	if len(in.Mobile) > 0 && len(in.Code) > 0 {
 		if ok, err := s.verify(ctx, in.Mobile, in.Code); err != nil {

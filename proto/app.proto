@@ -119,6 +119,8 @@ message UserBindRequest {
   string code = 2;
   // 微信官方下发的临时code码，非openId
   string wechat = 3;
+
+  string openId = 4 [deprecated=true];
   // 绑定淘宝
   TaobaoExtra taobao_extra = 5;
   // 如果有openId 就直接走openId，不用再填微信官方下发的临时code码

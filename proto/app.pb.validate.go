@@ -55,6 +55,8 @@ func (m *UserBindRequest) Validate() error {
 
 	// no validation rules for Wechat
 
+	// no validation rules for OpenId
+
 	if v, ok := interface{}(m.GetTaobaoExtra()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return UserBindRequestValidationError{
