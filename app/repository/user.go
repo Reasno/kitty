@@ -4,8 +4,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/mattn/go-sqlite3"
-
 	"github.com/Reasno/kitty/app/entity"
 	"github.com/Reasno/kitty/app/msg"
 	"github.com/go-sql-driver/mysql"
@@ -42,11 +40,6 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 	if err != nil {
 		if err, ok := err.(*mysql.MySQLError); ok {
 			if err.Number == 1062 {
-				return nil, ErrAlreadyBind
-			}
-		}
-		if err, ok := err.(sqlite3.Error); ok {
-			if err.Code == 19 && err.ExtendedCode == 2067 {
 				return nil, ErrAlreadyBind
 			}
 		}
