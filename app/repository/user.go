@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"github.com/Reasno/kitty/app/entity"
-	"github.com/Reasno/kitty/app/msg"
 	"github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -15,8 +14,8 @@ type UserRepo struct {
 	db *gorm.DB
 }
 
-var ErrAlreadyBind = errors.New(msg.ErrorAlreadyBind)
-var ErrRecordNotFound = errors.New(msg.ErrorUserNotFound)
+var ErrAlreadyBind = errors.New("third party account is bound to another user")
+var ErrRecordNotFound = errors.New("record not found")
 
 const emsg = "UserRepo"
 

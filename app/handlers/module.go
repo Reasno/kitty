@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/Reasno/kitty/pkg/kerr"
 	"net/http"
 
 	"github.com/Reasno/kitty/app/repository"
@@ -76,5 +77,6 @@ func (a *Module) ProvideHttp(router *mux.Router) {
 		httptransport.ServerBefore(opentracing.HTTPToContext(
 			a.tracer, "app", a.logger)),
 		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(kerr.ErrorEncoder),
 	)))
 }

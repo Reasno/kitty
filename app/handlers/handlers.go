@@ -83,12 +83,12 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 	u, err = s.loginFrom(ctx, in, device)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	err = s.addChannelAndVersionInfo(ctx, in, u)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	// Create jwt token
@@ -130,7 +130,7 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	}
 	u, err := s.ur.Get(ctx, uint(in.Id))
 	if errors.Is(err, repository.ErrRecordNotFound) {
-		return nil, kerr.NotFoundErr(err)
+		return nil, kerr.NotFoundErr(errors.Wrap(err, msg.ErrorRecordNotFound))
 	}
 	if err != nil {
 		return nil, dbErr(err)
@@ -225,7 +225,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	// 绑定手机号
 	if len(in.Mobile) > 0 && len(in.Code) > 0 {
 		if ok, err := s.verify(ctx, in.Mobile, in.Code); err != nil {
-			return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+			return nil, dbErr(err)
 		} else if !ok {
 			return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
 		}
@@ -265,7 +265,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	// 更新用户
 	newUser, err := s.ur.Update(ctx, uint(claim.UserId), toUpdate)
 	if errors.Is(err, repository.ErrAlreadyBind) {
-		return nil, kerr.InvalidArgumentErr(err)
+		return nil, kerr.FailedPreconditionErr(errors.Wrap(err, msg.ErrorAlreadyBind))
 	}
 	if err != nil {
 		return nil, dbErr(err)
@@ -296,7 +296,7 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	claim := kittyjwt.GetClaim(ctx)
 	user, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		return nil, dbErr(err)
 	}
 	if in.Mobile {
 		user.Mobile = sql.NullString{}
@@ -424,7 +424,7 @@ func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, 
 		return nil, kerr.InvalidArgumentErr(errors.New(msg.InvalidParams))
 	}
 	if ok, err := s.verify(ctx, mobile, code); err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		return nil, err
 	} else if !ok {
 		return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
 	}
@@ -491,7 +491,7 @@ func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 func (s appService) verify(ctx context.Context, mobile string, code string) (bool, error) {
 	result, err := s.cr.CheckCode(ctx, mobile, code)
 	if err != nil {
-		return false, err
+		return false, dbErr(err)
 	}
 	err = s.cr.DeleteCode(ctx, mobile)
 	s.warn(err)

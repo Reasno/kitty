@@ -15,7 +15,7 @@ const (
 	InvalidParams        = "请求参数错误"
 	ErrorMobileCode      = "手机号和验证码不匹配"
 	ErrorJwtFailure      = "无法生成签名"
-	ErrorUserNotFound    = "目标用户不存在"
+	ErrorRecordNotFound  = "目标不存在"
 	ErrorExtraNotFound   = "所请求的信息不存在或已过期"
 	WxSuccess            = "微信用户%d成功登录"
 	MobileSuccess        = "手机用户%d成功登录"

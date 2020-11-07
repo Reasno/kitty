@@ -3,6 +3,7 @@ package rule
 import (
 	"context"
 	"encoding/json"
+	"github.com/Reasno/kitty/pkg/kerr"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -14,6 +15,7 @@ import (
 func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption) http.Handler {
 	serverOptions := []httptransport.ServerOption{
 		httptransport.ServerBefore(headersToContext),
+		httptransport.ServerErrorEncoder(kerr.ErrorEncoder),
 	}
 	serverOptions = append(serverOptions, options...)
 
@@ -46,11 +48,11 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		httptransport.EncodeJSONResponse,
 		serverOptions...,
 	))
-	
+
 	return m
 }
 
-func DecodeCalculateRuleRequest (_ context.Context, r *http.Request) (interface{}, error)  {
+func DecodeCalculateRuleRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	defer r.Body.Close()
 	var payload Payload
 	buf, err := ioutil.ReadAll(r.Body)
@@ -65,12 +67,12 @@ func DecodeCalculateRuleRequest (_ context.Context, r *http.Request) (interface{
 	params := mux.Vars(r)
 	var req = calculateRulesRequest{
 		ruleName: params["rule"],
-		payload: &payload,
+		payload:  &payload,
 	}
 	return &req, nil
 }
 
-func DecodeGetRuleRequest (_ context.Context, r *http.Request) (interface{}, error)  {
+func DecodeGetRuleRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	params := mux.Vars(r)
 	var req = getRulesRequest{
 		ruleName: params["rule"],
@@ -78,8 +80,7 @@ func DecodeGetRuleRequest (_ context.Context, r *http.Request) (interface{}, err
 	return &req, nil
 }
 
-
-func DecodeUpdateRuleRequest (_ context.Context, r *http.Request) (interface{}, error)  {
+func DecodeUpdateRuleRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	defer r.Body.Close()
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -89,13 +90,13 @@ func DecodeUpdateRuleRequest (_ context.Context, r *http.Request) (interface{}, 
 	_, dryRun := r.URL.Query()["verify"]
 	var req = updateRulesRequest{
 		ruleName: params["rule"],
-		dryRun: dryRun,
-		data: buf,
+		dryRun:   dryRun,
+		data:     buf,
 	}
 	return &req, nil
 }
 
-func DecodePreflightRequest (_ context.Context, r *http.Request) (interface{}, error)  {
+func DecodePreflightRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	defer r.Body.Close()
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -104,7 +105,7 @@ func DecodePreflightRequest (_ context.Context, r *http.Request) (interface{}, e
 	params := mux.Vars(r)
 	var req = preflightRequest{
 		ruleName: params["rule"],
-		hash: string(buf),
+		hash:     string(buf),
 	}
 	return &req, nil
 }

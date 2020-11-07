@@ -2,6 +2,7 @@ package kmiddleware
 
 import (
 	"context"
+	"errors"
 	"github.com/Reasno/kitty/pkg/kerr"
 	"github.com/go-kit/kit/endpoint"
 )
@@ -10,10 +11,12 @@ func NewErrorMarshallerMiddleware() endpoint.Middleware {
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			response, err = e(ctx, request)
-			if _, ok := err.(kerr.ServerError); err != nil && !ok {
-				err = kerr.UnknownErr(err)
+			var serverError kerr.ServerError
+			if err != nil && !errors.As(err, &serverError) {
+				serverError = kerr.UnknownErr(err)
 			}
-			return response, err
+			// Brings kerr.SeverError to the uppermost level
+			return response, serverError
 		}
 	}
 }
