@@ -35,6 +35,11 @@ type appService struct {
 	fr       FileRepository
 }
 
+type tokenParam struct {
+	userId                                                   uint64
+	suuid, channel, versionCode, wechat, mobile, packageName string
+}
+
 type CodeRepository interface {
 	CheckCode(ctx context.Context, mobile, code string) (bool, error)
 	AddCode(ctx context.Context, mobile string) (code string, err error)
@@ -315,13 +320,6 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	return resp, nil
 }
 
-func ns(s string) sql.NullString {
-	return sql.NullString{
-		String: s,
-		Valid:  true,
-	}
-}
-
 func (s appService) getToken(param *tokenParam) (string, error) {
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
@@ -490,11 +488,6 @@ func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 	return nil
 }
 
-type tokenParam struct {
-	userId                                                   uint64
-	suuid, channel, versionCode, wechat, mobile, packageName string
-}
-
 func (s appService) verify(ctx context.Context, mobile string, code string) (bool, error) {
 	result, err := s.cr.CheckCode(ctx, mobile, code)
 	if err != nil {
@@ -503,10 +496,6 @@ func (s appService) verify(ctx context.Context, mobile string, code string) (boo
 	err = s.cr.DeleteCode(ctx, mobile)
 	s.warn(err)
 	return result, nil
-}
-
-func dbErr(err error) kerr.ServerError {
-	return kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 }
 
 func (s appService) getWechatExtra(ctx context.Context, id uint) *pb.WechatExtra {
@@ -573,4 +562,15 @@ func (s appService) persistWechatExtra(ctx context.Context) {
 
 	err = s.er.Put(ctx, uint(claim.UserId), pb.Extra_WECHAT_EXTRA.String(), b)
 	s.warn(err)
+}
+
+func dbErr(err error) kerr.ServerError {
+	return kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+}
+
+func ns(s string) sql.NullString {
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
 }

@@ -2,7 +2,9 @@ package rule
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/Reasno/kitty/pkg/kmiddleware"
 	"github.com/go-kit/kit/endpoint"
@@ -16,10 +18,20 @@ type GenericResponse struct {
 	Data    Data   `json:"data,omitempty"`
 }
 
+func (g GenericResponse) String() string {
+	ss, _ := json.Marshal(g)
+	return string(ss)
+}
+
 type StringResponse struct {
 	Code    uint32 `json:"code"`
 	Message string `json:"message,omitempty"`
 	Data    string `json:"data,omitempty"`
+}
+
+func (s StringResponse) String() string {
+	ss, _ := json.Marshal(s)
+	return string(ss)
 }
 
 type calculateRulesRequest struct {
@@ -27,8 +39,16 @@ type calculateRulesRequest struct {
 	payload  *Payload
 }
 
+func (c calculateRulesRequest) String() string {
+	return fmt.Sprintf("%s: %s", c.ruleName, c.payload)
+}
+
 type getRulesRequest struct {
 	ruleName string
+}
+
+func (g getRulesRequest) String() string {
+	return fmt.Sprintf("%s", g.ruleName)
 }
 
 type updateRulesRequest struct {
@@ -37,9 +57,17 @@ type updateRulesRequest struct {
 	dryRun   bool
 }
 
+func (u updateRulesRequest) String() string {
+	return fmt.Sprintf("%s: %s(%t)", u.ruleName, u.data, u.dryRun)
+}
+
 type preflightRequest struct {
 	ruleName string
 	hash     string
+}
+
+func (p preflightRequest) String() string {
+	return fmt.Sprintf("%s: %s", p.ruleName, p.hash)
 }
 
 type Endpoints struct {
