@@ -164,7 +164,7 @@ func TestGetSave(t *testing.T) {
 
 func TestUniqueConstraint(t *testing.T) {
 	if !useMysql {
-		return
+		t.Skip("unique constraints tests must be run on mysql")
 	}
 	setUp(t)
 	defer tearDown()
