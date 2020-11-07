@@ -18,8 +18,8 @@ func NewLoggingMiddleware(logger log.Logger, printTrace bool) endpoint.Middlewar
 			response, err = endpoint(ctx, request)
 			if err != nil {
 				l.Log("err", err)
-				if err, ok := err.(interface{ StackTrace() errors.StackTrace }); printTrace && ok {
-					fmt.Printf("\n%+v\n\n", err.StackTrace())
+				if stacktracer, ok := err.(interface{ StackTrace() errors.StackTrace }); printTrace && ok {
+					fmt.Printf("\n%+v\n\n", stacktracer)
 				}
 			}
 			return response, err
