@@ -1,8 +1,9 @@
 //+build wireinject
 
-package handlers
+package module
 
 import (
+	"github.com/Reasno/kitty/app/handlers"
 	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/pkg/config"
 	"github.com/Reasno/kitty/pkg/contract"
@@ -45,7 +46,7 @@ var AppServerSet = wire.NewSet(
 	repository.NewExtraRepo,
 	config.ProvideAppName,
 	config.ProvideEnv,
-	wire.Struct(new(appService), "*"),
+	handlers.NewAppService,
 	wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)),
 	wire.Bind(new(contract.SmsSender), new(*sms.Transport)),
 	wire.Bind(new(contract.Keyer), new(otredis.KeyManager)),
@@ -53,10 +54,10 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
 	wire.Bind(new(contract.Env), new(config.Env)),
 	wire.Bind(new(contract.AppName), new(config.AppName)),
-	wire.Bind(new(UserRepository), new(*repository.UserRepo)),
-	wire.Bind(new(CodeRepository), new(*repository.CodeRepo)),
-	wire.Bind(new(FileRepository), new(*repository.FileRepo)),
-	wire.Bind(new(ExtraRepository), new(*repository.ExtraRepo)),
+	wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)),
+	wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)),
+	wire.Bind(new(handlers.FileRepository), new(*repository.FileRepo)),
+	wire.Bind(new(handlers.ExtraRepository), new(*repository.ExtraRepo)),
 )
 
 func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, func(), error) {
@@ -69,9 +70,9 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 		provideHistogramMetrics,
 		provideEndpointsMiddleware,
 		provideModule,
-		wire.Struct(new(monitoredAppService), "*"),
-		wire.Bind(new(EventBus), new(*eventBus)),
-		wire.Bind(new(UserBus), new(*userBus)),
-		wire.Bind(new(pb.AppServer), new(monitoredAppService)),
+		handlers.NewMonitoredAppService,
+		wire.Bind(new(handlers.EventBus), new(*eventBus)),
+		wire.Bind(new(handlers.UserBus), new(*userBus)),
+		wire.Bind(new(pb.AppServer), new(*handlers.MonitoredAppService)),
 	))
 }

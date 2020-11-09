@@ -12,10 +12,14 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-type monitoredAppService struct {
+type MonitoredAppService struct {
 	userBus  UserBus
 	eventBus EventBus
-	appService
+	pb.AppServer
+}
+
+func NewMonitoredAppService(userBus UserBus, eventBus EventBus, appServer *AppService) *MonitoredAppService {
+	return &MonitoredAppService{userBus: userBus, eventBus: eventBus, AppServer: appServer}
 }
 
 type UserBus interface {
@@ -25,8 +29,8 @@ type EventBus interface {
 	Emit(ctx context.Context, event string) error
 }
 
-func (m monitoredAppService) Login(ctx context.Context, request *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
-	resp, err := m.appService.Login(ctx, request)
+func (m MonitoredAppService) Login(ctx context.Context, request *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
+	resp, err := m.AppServer.Login(ctx, request)
 	if err != nil {
 		return resp, err
 	}
@@ -48,8 +52,7 @@ func (m monitoredAppService) Login(ctx context.Context, request *pb.UserLoginReq
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		if resp.Data.IsNew {
-			err = m.eventBus.Emit(ctx, "new_user")
-			m.appService.warn(err)
+			_ = m.eventBus.Emit(ctx, "new_user")
 		}
 	}()
 
@@ -58,8 +61,8 @@ func (m monitoredAppService) Login(ctx context.Context, request *pb.UserLoginReq
 	return resp, err
 }
 
-func (m monitoredAppService) Bind(ctx context.Context, request *pb.UserBindRequest) (*pb.UserInfoReply, error) {
-	resp, err := m.appService.Bind(ctx, request)
+func (m MonitoredAppService) Bind(ctx context.Context, request *pb.UserBindRequest) (*pb.UserInfoReply, error) {
+	resp, err := m.AppServer.Bind(ctx, request)
 	if err != nil {
 		return resp, err
 	}
@@ -67,8 +70,8 @@ func (m monitoredAppService) Bind(ctx context.Context, request *pb.UserBindReque
 	return resp, err
 }
 
-func (m monitoredAppService) Unbind(ctx context.Context, request *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
-	resp, err := m.appService.Unbind(ctx, request)
+func (m MonitoredAppService) Unbind(ctx context.Context, request *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
+	resp, err := m.AppServer.Unbind(ctx, request)
 	if err != nil {
 		return resp, err
 	}
@@ -76,8 +79,8 @@ func (m monitoredAppService) Unbind(ctx context.Context, request *pb.UserUnbindR
 	return resp, err
 }
 
-func (m monitoredAppService) UpdateInfo(ctx context.Context, request *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
-	resp, err := m.appService.UpdateInfo(ctx, request)
+func (m MonitoredAppService) UpdateInfo(ctx context.Context, request *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
+	resp, err := m.AppServer.UpdateInfo(ctx, request)
 	if err != nil {
 		return resp, err
 	}
@@ -85,8 +88,8 @@ func (m monitoredAppService) UpdateInfo(ctx context.Context, request *pb.UserInf
 	return resp, err
 }
 
-func (m monitoredAppService) Refresh(ctx context.Context, request *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
-	resp, err := m.appService.Refresh(ctx, request)
+func (m MonitoredAppService) Refresh(ctx context.Context, request *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
+	resp, err := m.AppServer.Refresh(ctx, request)
 	if err != nil {
 		return resp, err
 	}
@@ -94,13 +97,12 @@ func (m monitoredAppService) Refresh(ctx context.Context, request *pb.UserRefres
 	return resp, err
 }
 
-func (m monitoredAppService) emitUser(ctx context.Context, resp *pb.UserInfoReply) {
+func (m MonitoredAppService) emitUser(ctx context.Context, resp *pb.UserInfoReply) {
 	span := opentracing.SpanFromContext(ctx)
 	go func() {
 		ctx := opentracing.ContextWithSpan(context.Background(), span)
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		err := m.userBus.Emit(ctx, resp.Data)
-		m.appService.warn(err)
+		_ = m.userBus.Emit(ctx, resp.Data)
 	}()
 }

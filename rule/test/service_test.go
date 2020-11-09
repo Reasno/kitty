@@ -22,7 +22,7 @@ func TestGetCompiled(t *testing.T) {
 		{
 			`
 style: advanced
-rules:
+rule:
   - if: true
     then: 
       foo: bar
@@ -33,7 +33,7 @@ rules:
 		{
 			`
 style: advanced
-rules:
+rule:
   - if: false
     then: 
       foo: bar
@@ -44,7 +44,7 @@ rules:
 		{
 			`
 style: advanced
-rules:
+rule:
   - if: Imei == "456"
     then: 
       foo: bar
@@ -62,7 +62,7 @@ rules:
 		{
 			`
 style: advanced
-rules:
+rule:
 - if: Imei == "456" && Oaid = "789"
   then: 
     foo: bar
@@ -108,6 +108,8 @@ func TestSet(t *testing.T) {
 		t.Fatal("err should not be null")
 	}
 	data := []byte(`
+style: advanced
+rule:
 - if: true
   then:
     data: ok

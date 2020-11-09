@@ -393,7 +393,8 @@
           "title": "微信官方下发的临时code码，非openId"
         },
         "openId": {
-          "type": "string"
+          "type": "string",
+          "title": "废弃，请使用wechat_extra.openId"
         },
         "taobaoExtra": {
           "$ref": "#/definitions/v1TaobaoExtra",

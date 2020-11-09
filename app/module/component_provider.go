@@ -1,4 +1,4 @@
-package handlers
+package module
 
 import (
 	"fmt"
@@ -222,6 +222,6 @@ func provideModule(db *gorm.DB, tracer opentracing.Tracer, logger log.Logger, mi
 		db:        db,
 		logger:    logger,
 		tracer:    tracer,
-		endpoints: middleware(NewEndpoints(server)),
+		endpoints: middleware(svc.NewEndpoints(server)),
 	}
 }

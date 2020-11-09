@@ -1,7 +1,8 @@
-package handlers
+package module
 
 import (
 	"context"
+
 	"github.com/Reasno/kitty/app/svc"
 	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/Reasno/kitty/pkg/kmiddleware"

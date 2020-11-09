@@ -3,9 +3,10 @@
 //go:generate wire
 //+build !wireinject
 
-package handlers
+package module
 
 import (
+	"github.com/Reasno/kitty/app/handlers"
 	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/pkg/config"
 	"github.com/Reasno/kitty/pkg/contract"
@@ -41,10 +42,10 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	appName := config.ProvideAppName(reader)
 	env := config.ProvideEnv(reader)
 	histogram := provideHistogramMetrics(appName, env)
-	handlersOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer, env, appName)
+	moduleOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer, env, appName)
 	kafkaProducerFactory, cleanup3 := provideKafkaProducerFactory(reader, logger, tracer)
-	handlersUserBus := provideUserBus(kafkaProducerFactory, reader)
-	handlersEventBus := provideEventBus(kafkaProducerFactory, reader)
+	moduleUserBus := provideUserBus(kafkaProducerFactory, reader)
+	moduleEventBus := provideEventBus(kafkaProducerFactory, reader)
 	userRepo := repository.NewUserRepo(db)
 	universalClient, cleanup4 := provideRedis(logger, reader, tracer)
 	keyManager := provideKeyManager(appName, env)
@@ -57,23 +58,9 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	wechatTransport := wechat.NewTransport(wechatConfig)
 	manager := provideUploadManager(tracer, reader, client)
 	fileRepo := repository.NewFileRepo(manager, client)
-	handlersAppService := appService{
-		conf:     reader,
-		log:      logger,
-		ur:       userRepo,
-		cr:       codeRepo,
-		er:       extraRepo,
-		sender:   transport,
-		wechat:   wechatTransport,
-		uploader: manager,
-		fr:       fileRepo,
-	}
-	handlersMonitoredAppService := monitoredAppService{
-		userBus:    handlersUserBus,
-		eventBus:   handlersEventBus,
-		appService: handlersAppService,
-	}
-	module := provideModule(db, tracer, logger, handlersOverallMiddleware, handlersMonitoredAppService, appName)
+	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, extraRepo, transport, wechatTransport, manager, fileRepo)
+	monitoredAppService := handlers.NewMonitoredAppService(moduleUserBus, moduleEventBus, appService)
+	module := provideModule(db, tracer, logger, moduleOverallMiddleware, monitoredAppService, appName)
 	return module, func() {
 		cleanup4()
 		cleanup3()
@@ -103,5 +90,5 @@ var AppServerSet = wire.NewSet(
 	provideHttpClient,
 	provideUploadManager,
 	provideRedis,
-	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, config.ProvideAppName, config.ProvideEnv, wire.Struct(new(appService), "*"), wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)), wire.Bind(new(UserRepository), new(*repository.UserRepo)), wire.Bind(new(CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(FileRepository), new(*repository.FileRepo)), wire.Bind(new(ExtraRepository), new(*repository.ExtraRepo)),
+	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, config.ProvideAppName, config.ProvideEnv, handlers.NewAppService, wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(handlers.FileRepository), new(*repository.FileRepo)), wire.Bind(new(handlers.ExtraRepository), new(*repository.ExtraRepo)),
 )

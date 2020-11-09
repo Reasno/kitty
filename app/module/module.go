@@ -1,8 +1,9 @@
-package handlers
+package module
 
 import (
-	"github.com/Reasno/kitty/pkg/kerr"
 	"net/http"
+
+	"github.com/Reasno/kitty/pkg/kerr"
 
 	"github.com/Reasno/kitty/app/repository"
 	"github.com/Reasno/kitty/app/svc"

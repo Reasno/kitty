@@ -86,11 +86,14 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 					TaobaoOpenId sql.NullString `json:"taobao_openid" gorm:"type:varchar(255);uniqueIndex:taobao_openid_index"`
 				}
 				if !db.Migrator().HasColumn(&User{}, "TaobaoOpenId") {
-					err := db.Migrator().CreateIndex(&User{}, "taobao_openid_index")
+					err := db.Migrator().AddColumn(&User{}, "TaobaoOpenId")
 					if err != nil {
 						return err
 					}
-					return db.Migrator().AddColumn(&User{}, "TaobaoOpenId")
+					err = db.Migrator().CreateIndex(&User{}, "taobao_openid_index")
+					if err != nil {
+						return err
+					}
 				}
 				return nil
 			},

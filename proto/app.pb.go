@@ -121,6 +121,7 @@ type UserBindRequest struct {
 	Code string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
 	// 微信官方下发的临时code码，非openId
 	Wechat string `protobuf:"bytes,3,opt,name=wechat,proto3" json:"wechat,omitempty"`
+	// 废弃，请使用wechat_extra.openId
 	OpenId string `protobuf:"bytes,4,opt,name=openId,proto3" json:"openId,omitempty"` // Deprecated: Do not use.
 	// 绑定淘宝
 	TaobaoExtra *TaobaoExtra `protobuf:"bytes,5,opt,name=taobao_extra,json=taobaoExtra,proto3" json:"taobao_extra,omitempty"`

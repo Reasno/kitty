@@ -14,7 +14,7 @@ func TestNewRules(t *testing.T) {
 	}{{
 		`
 style: basic
-rules:
+rule:
   foo: bar
 `,
 		[]Rule{
@@ -29,7 +29,7 @@ rules:
 		{
 			`
 style: advanced
-rules:
+rule:
   - if: "true"
     then:
       foo: bar
