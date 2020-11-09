@@ -30,7 +30,7 @@ type appService struct {
 	ur       UserRepository
 	cr       CodeRepository
 	er       ExtraRepository
-	sender   *sms.TransportFactory
+	sender   *sms.SenderFactory
 	wechat   *wechat.Transport
 	uploader contract.Uploader
 	fr       FileRepository
@@ -533,6 +533,10 @@ func (s appService) getTaobaoExtra(ctx context.Context, id uint) *pb.TaobaoExtra
 func (s appService) decorateResponse(ctx context.Context, data *pb.UserInfo) {
 	data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(data.Id))
 	data.WechatExtra = s.getWechatExtra(ctx, uint(data.Id))
+	// 如果不是用户本人，则隐去手机号部分内容
+	if data.Id != kittyjwt.GetClaim(ctx).UserId && len(data.Mobile) >= 11 {
+		data.Mobile = data.Mobile[:3] + "****" + data.Mobile[7:]
+	}
 }
 
 func (s appService) persistExtra(ctx context.Context) {

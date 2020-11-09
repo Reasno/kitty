@@ -696,6 +696,8 @@ func (m *UserInfo) Validate() error {
 		}
 	}
 
+	// no validation rules for Mobile
+
 	return nil
 }
 

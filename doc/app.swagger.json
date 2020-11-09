@@ -450,6 +450,9 @@
         },
         "taobaoExtra": {
           "$ref": "#/definitions/v1TaobaoExtra"
+        },
+        "mobile": {
+          "type": "string"
         }
       }
     },

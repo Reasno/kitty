@@ -7,7 +7,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 )
 
-func NewAppService(conf contract.ConfigReader, log log.Logger, ur UserRepository, cr CodeRepository, er ExtraRepository, sender *sms.TransportFactory, wechat *wechat.Transport, uploader contract.Uploader, fr FileRepository) *appService {
+func NewAppService(conf contract.ConfigReader, log log.Logger, ur UserRepository, cr CodeRepository, er ExtraRepository, sender *sms.SenderFactory, wechat *wechat.Transport, uploader contract.Uploader, fr FileRepository) *appService {
 	return &appService{conf: conf, log: log, ur: ur, cr: cr, er: er, sender: sender, wechat: wechat, uploader: uploader, fr: fr}
 }
 

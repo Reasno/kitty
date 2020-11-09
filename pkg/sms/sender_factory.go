@@ -7,18 +7,18 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
-type TransportFactory struct {
+type SenderFactory struct {
 	mutex sync.Mutex
-	cache map[string]*Transport
+	cache map[string]contract.SmsSender
 	conf  contract.ConfigReader
-	doer contract.HttpDoer
+	doer  contract.HttpDoer
 }
 
-func NewTransportFactory(conf contract.ConfigReader, doer contract.HttpDoer) *TransportFactory {
-	return &TransportFactory{conf: conf, doer: doer, cache: make(map[string]*Transport)}
+func NewTransportFactory(conf contract.ConfigReader, doer contract.HttpDoer) *SenderFactory {
+	return &SenderFactory{conf: conf, doer: doer, cache: make(map[string]contract.SmsSender)}
 }
 
-func (t *TransportFactory) getSmsConfig(conf contract.ConfigReader, name string) *TransportConfig {
+func (t *SenderFactory) getSmsConfig(conf contract.ConfigReader, name string) *TransportConfig {
 	conf = conf.Cut(name)
 	return &TransportConfig{
 		Tag:        conf.String("sms.tag"),
@@ -30,7 +30,7 @@ func (t *TransportFactory) getSmsConfig(conf contract.ConfigReader, name string)
 	}
 }
 
-func (t *TransportFactory) GetTransport(name string) *Transport {
+func (t *SenderFactory) GetTransport(name string) contract.SmsSender {
 	name = strings.ReplaceAll(name, ".", "_")
 	if name == "" {
 		name = "default"
@@ -41,6 +41,7 @@ func (t *TransportFactory) GetTransport(name string) *Transport {
 	if tsp, ok := t.cache[name]; ok {
 		return tsp
 	}
+	// Currently we only have one kind of sender.
 	t.cache[name] = NewTransport(t.getSmsConfig(t.conf, name))
 	return t.cache[name]
 }
