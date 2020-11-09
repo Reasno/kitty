@@ -21,3 +21,7 @@ type Env interface {
 type AppName interface {
 	String() string
 }
+
+type PackageName interface {
+	String() string
+}

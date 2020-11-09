@@ -847,6 +847,8 @@ func (m *GetCodeRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for PackageName
+
 	return nil
 }
 

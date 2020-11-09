@@ -438,6 +438,8 @@ func EncodeHTTPGetCodeZeroRequest(_ context.Context, r *http.Request, request in
 
 	values.Add("mobile", fmt.Sprint(req.Mobile))
 
+	values.Add("packageName", fmt.Sprint(req.PackageName))
+
 	r.URL.RawQuery = values.Encode()
 	return nil
 }

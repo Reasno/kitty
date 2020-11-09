@@ -18,7 +18,7 @@ type MonitoredAppService struct {
 	pb.AppServer
 }
 
-func NewMonitoredAppService(userBus UserBus, eventBus EventBus, appServer *AppService) *MonitoredAppService {
+func NewMonitoredAppService(userBus UserBus, eventBus EventBus, appServer *appService) *MonitoredAppService {
 	return &MonitoredAppService{userBus: userBus, eventBus: eventBus, AppServer: appServer}
 }
 

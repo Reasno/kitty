@@ -52,13 +52,12 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	codeRepo := repository.NewCodeRepo(universalClient, keyManager, env)
 	extraRepo := repository.NewExtraRepo(universalClient, keyManager)
 	client := provideHttpClient(tracer)
-	transportConfig := provideSmsConfig(client, reader)
-	transport := sms.NewTransport(transportConfig)
+	transportFactory := sms.NewTransportFactory(reader, client)
 	wechatConfig := provideWechatConfig(reader, client)
-	wechatTransport := wechat.NewTransport(wechatConfig)
+	transport := wechat.NewTransport(wechatConfig)
 	manager := provideUploadManager(tracer, reader, client)
 	fileRepo := repository.NewFileRepo(manager, client)
-	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, extraRepo, transport, wechatTransport, manager, fileRepo)
+	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, extraRepo, transportFactory, transport, manager, fileRepo)
 	monitoredAppService := handlers.NewMonitoredAppService(moduleUserBus, moduleEventBus, appService)
 	module := provideModule(db, tracer, logger, moduleOverallMiddleware, monitoredAppService, appName)
 	return module, func() {
@@ -90,5 +89,5 @@ var AppServerSet = wire.NewSet(
 	provideHttpClient,
 	provideUploadManager,
 	provideRedis,
-	provideWechatConfig, wechat.NewTransport, sms.NewTransport, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, config.ProvideAppName, config.ProvideEnv, handlers.NewAppService, wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.SmsSender), new(*sms.Transport)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(handlers.FileRepository), new(*repository.FileRepo)), wire.Bind(new(handlers.ExtraRepository), new(*repository.ExtraRepo)),
+	provideWechatConfig, wechat.NewTransport, sms.NewTransportFactory, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, config.ProvideAppName, config.ProvideEnv, handlers.NewAppService, wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(handlers.FileRepository), new(*repository.FileRepo)), wire.Bind(new(handlers.ExtraRepository), new(*repository.ExtraRepo)),
 )

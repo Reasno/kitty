@@ -231,6 +231,12 @@ func DecodeHTTPGetCodeZeroRequest(_ context.Context, r *http.Request) (interface
 		req.Mobile = MobileGetCode
 	}
 
+	if PackageNameGetCodeStrArr, ok := queryParams["packageName"]; ok {
+		PackageNameGetCodeStr := PackageNameGetCodeStrArr[0]
+		PackageNameGetCode := PackageNameGetCodeStr
+		req.PackageName = PackageNameGetCode
+	}
+
 	return &req, err
 }
 

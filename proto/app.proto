@@ -260,6 +260,7 @@ message GetCodeRequest {
     (options.openapiv2_field) = {required: "true", pattern: "\\d{11}"},
     (validate.rules).string = {pattern: "\\d{11}"}
   ];
+  string packageName = 2;
 }
 
 message UserInfoRequest {
