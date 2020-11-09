@@ -17,7 +17,7 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 
 	// This Service
-	pb "github.com/Reasno/kitty/proto"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 // MakeGRPCServer makes a set of endpoints available as a gRPC AppServer.

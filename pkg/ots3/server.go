@@ -3,12 +3,12 @@ package ots3
 import (
 	"context"
 	"fmt"
-	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/kerr"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	"io"
 	"net/http"
 )

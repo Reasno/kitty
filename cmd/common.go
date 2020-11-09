@@ -1,17 +1,17 @@
 package cmd
 
 import (
-	"github.com/Reasno/kitty/app/module"
-	"github.com/Reasno/kitty/pkg/config"
-	"github.com/Reasno/kitty/pkg/container"
-	kittyhttp "github.com/Reasno/kitty/pkg/khttp"
-	kitty_log "github.com/Reasno/kitty/pkg/klog"
-	"github.com/Reasno/kitty/rule"
 	"github.com/go-kit/kit/log"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/spf13/cobra"
+	"glab.tagtic.cn/ad_gains/kitty/app/module"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/container"
+	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
+	kitty_log "glab.tagtic.cn/ad_gains/kitty/pkg/klog"
+	"glab.tagtic.cn/ad_gains/kitty/rule"
 )
 
 var moduleContainer container.ModuleContainer

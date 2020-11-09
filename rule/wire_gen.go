@@ -6,10 +6,10 @@
 package rule
 
 import (
-	"github.com/Reasno/kitty/pkg/config"
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/go-kit/kit/log"
 	"github.com/google/wire"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
 // Injectors from wire.go:

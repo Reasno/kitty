@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Reasno/kitty/pkg/config"
 	"github.com/go-kit/kit/log/level"
 	"github.com/spf13/cobra"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"os"
 )
 

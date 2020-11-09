@@ -5,10 +5,10 @@ import (
 	"context"
 	"io"
 
-	"github.com/Reasno/kitty/pkg/kerr"
-	"github.com/Reasno/kitty/rule/msg"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
+	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
 )
 
 var ErrDataHasChanged = errors.New(msg.ErrorRulesHasChanged)

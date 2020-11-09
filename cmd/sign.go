@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	kittyjwt "github.com/Reasno/kitty/pkg/kjwt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/log/level"
 	"github.com/spf13/cobra"
+	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"os"
 	"time"
 )

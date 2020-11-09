@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/go-redis/redis/v8"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/otredis"
 	"time"
 )
 

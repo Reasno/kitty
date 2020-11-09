@@ -6,9 +6,9 @@ import (
 	"flag"
 	"testing"
 
-	"github.com/Reasno/kitty/app/entity"
-	"github.com/Reasno/kitty/pkg/config"
 	"github.com/go-gormigrate/gormigrate/v2"
+	"glab.tagtic.cn/ad_gains/kitty/app/entity"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

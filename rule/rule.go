@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/Reasno/kitty/rule/msg"
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	"github.com/go-kit/kit/log"
@@ -14,6 +13,7 @@ import (
 	kyaml "github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/rawbytes"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
 )
 
 type Rule struct {

@@ -2,14 +2,14 @@ package ots3
 
 import (
 	"fmt"
-	"github.com/Reasno/kitty/pkg/contract"
-	kittyhttp "github.com/Reasno/kitty/pkg/khttp"
-	logging "github.com/Reasno/kitty/pkg/klog"
 	"github.com/go-kit/kit/log"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegermetric "github.com/uber/jaeger-lib/metrics"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
+	logging "glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 	"io"
 )
 

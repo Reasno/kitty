@@ -2,8 +2,8 @@ package repository
 
 import (
 	"context"
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"io"
 	"net/http"
 )

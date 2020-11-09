@@ -3,9 +3,9 @@
 package ots3
 
 import (
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/go-kit/kit/log"
 	"github.com/google/wire"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
 func injectModule(conf contract.ConfigReader, logger log.Logger) *Module {

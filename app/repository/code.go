@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Reasno/kitty/app/msg"
-	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/app/msg"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/otredis"
 )
 
 const CodeKey = "CodeRepo"

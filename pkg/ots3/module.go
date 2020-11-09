@@ -1,9 +1,9 @@
 package ots3
 
 import (
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"net/http"
 )
 
@@ -18,6 +18,3 @@ func (m Module) ProvideHttp(router *mux.Router) {
 func New(conf contract.ConfigReader, logger log.Logger) *Module {
 	return injectModule(conf, logger)
 }
-
-
-

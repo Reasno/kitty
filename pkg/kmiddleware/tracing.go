@@ -3,10 +3,10 @@ package kmiddleware
 import (
 	"context"
 	"fmt"
-	"github.com/Reasno/kitty/pkg/kjwt"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/tracing/opentracing"
 	stdtracing "github.com/opentracing/opentracing-go"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 )
 
 type LabeledMiddleware func(string, endpoint.Endpoint) endpoint.Endpoint

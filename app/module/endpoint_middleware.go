@@ -3,15 +3,15 @@ package module
 import (
 	"context"
 
-	"github.com/Reasno/kitty/app/svc"
-	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/kmiddleware"
-	pb "github.com/Reasno/kitty/proto"
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"github.com/opentracing/opentracing-go"
+	"glab.tagtic.cn/ad_gains/kitty/app/svc"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kmiddleware"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 // newLoginToBindMiddleware deprecated

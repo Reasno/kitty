@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/go-kit/kit/log"
 	"github.com/spf13/cobra"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
 var (
 	// Used for flags.
-	cfgFile  string
+	cfgFile string
 
 	logger log.Logger
 	conf   contract.ConfigReader

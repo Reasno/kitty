@@ -3,14 +3,8 @@ package module
 import (
 	"net/http"
 
-	"github.com/Reasno/kitty/pkg/kerr"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 
-	"github.com/Reasno/kitty/app/repository"
-	"github.com/Reasno/kitty/app/svc"
-	"github.com/Reasno/kitty/pkg/config"
-	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/klog"
-	pb "github.com/Reasno/kitty/proto"
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -19,6 +13,12 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	stdopentracing "github.com/opentracing/opentracing-go"
+	"glab.tagtic.cn/ad_gains/kitty/app/repository"
+	"glab.tagtic.cn/ad_gains/kitty/app/svc"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
 )

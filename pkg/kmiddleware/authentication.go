@@ -2,10 +2,10 @@ package kmiddleware
 
 import (
 	"context"
-	kittyjwt "github.com/Reasno/kitty/pkg/kjwt"
 	stdjwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
+	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

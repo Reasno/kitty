@@ -3,11 +3,11 @@ package kmiddleware
 import (
 	"context"
 	"fmt"
-	"github.com/Reasno/kitty/pkg/klog"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 )
 
 func NewLoggingMiddleware(logger log.Logger, printTrace bool) endpoint.Middleware {

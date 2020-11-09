@@ -6,8 +6,8 @@
 package ots3
 
 import (
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/go-kit/kit/log"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
 // Injectors from wire.go:

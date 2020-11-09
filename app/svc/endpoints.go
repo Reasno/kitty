@@ -16,7 +16,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 
-	pb "github.com/Reasno/kitty/proto"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 // Endpoints collects all of the endpoints that compose an add service. It's

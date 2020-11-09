@@ -5,10 +5,10 @@ package test
 import (
 	"bytes"
 	"context"
-	"github.com/Reasno/kitty/rule"
-	"github.com/Reasno/kitty/rule/mocks"
 	"github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/mock"
+	"glab.tagtic.cn/ad_gains/kitty/rule"
+	"glab.tagtic.cn/ad_gains/kitty/rule/mocks"
 	"reflect"
 	"testing"
 )

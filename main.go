@@ -2,7 +2,7 @@
 package main
 
 import (
-	"github.com/Reasno/kitty/cmd"
+	"glab.tagtic.cn/ad_gains/kitty/cmd"
 )
 
 func main() {

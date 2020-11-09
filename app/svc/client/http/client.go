@@ -24,8 +24,8 @@ import (
 	"github.com/pkg/errors"
 
 	// This Service
-	"github.com/Reasno/kitty/app/svc"
-	pb "github.com/Reasno/kitty/proto"
+	"glab.tagtic.cn/ad_gains/kitty/app/svc"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 var (

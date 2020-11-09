@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"flag"
-	"github.com/Reasno/kitty/pkg/config"
-	"github.com/Reasno/kitty/pkg/otredis"
 	"github.com/go-redis/redis/v8"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/otredis"
 	"testing"
 	"time"
 )

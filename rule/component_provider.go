@@ -2,11 +2,11 @@ package rule
 
 import (
 	"context"
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"github.com/go-kit/kit/metrics/prometheus"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"go.etcd.io/etcd/clientv3"
 )
 

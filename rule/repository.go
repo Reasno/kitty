@@ -9,13 +9,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Reasno/kitty/rule/msg"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/knadh/koanf"
 	kyaml "github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/rawbytes"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
 	"go.etcd.io/etcd/clientv3"
 	"gopkg.in/yaml.v3"
 )

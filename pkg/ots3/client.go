@@ -3,9 +3,9 @@ package ots3
 import (
 	"context"
 	"encoding/json"
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"io"
 	"io/ioutil"
 	"net/http"

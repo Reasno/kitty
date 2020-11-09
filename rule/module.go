@@ -2,20 +2,20 @@ package rule
 
 import (
 	"context"
-	"github.com/Reasno/kitty/pkg/config"
-	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/klog"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
 	"github.com/oklog/run"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 	"net/http"
 )
 
 type Module struct {
 	repository Repository
-	endpoints Endpoints
-	close func()
+	endpoints  Endpoints
+	close      func()
 }
 
 func New(moduleConfig contract.ConfigReader, logger log.Logger) *Module {
@@ -34,7 +34,7 @@ func setUp(moduleConfig contract.ConfigReader, logger log.Logger) (contract.Conf
 }
 
 func (m *Module) ProvideHttp(router *mux.Router) {
-	router.PathPrefix("/rule/").Handler(http.StripPrefix("/rule",MakeHTTPHandler(m.endpoints)))
+	router.PathPrefix("/rule/").Handler(http.StripPrefix("/rule", MakeHTTPHandler(m.endpoints)))
 }
 
 func (m *Module) ProvideCloser() {
@@ -49,4 +49,3 @@ func (m *Module) ProvideRunGroup(group *run.Group) {
 		cancel()
 	})
 }
-

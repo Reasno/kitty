@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Reasno/kitty/app/entity"
-	"github.com/Reasno/kitty/app/msg"
-	"github.com/Reasno/kitty/app/repository"
-	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/kerr"
-	kittyjwt "github.com/Reasno/kitty/pkg/kjwt"
-	"github.com/Reasno/kitty/pkg/wechat"
-	pb "github.com/Reasno/kitty/proto"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/app/entity"
+	"glab.tagtic.cn/ad_gains/kitty/app/msg"
+	"glab.tagtic.cn/ad_gains/kitty/app/repository"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
+	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 var taobaoExtraKey struct{}

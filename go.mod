@@ -1,4 +1,4 @@
-module github.com/Reasno/kitty
+module glab.tagtic.cn/ad_gains/kitty
 
 go 1.14
 

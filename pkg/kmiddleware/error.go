@@ -3,8 +3,8 @@ package kmiddleware
 import (
 	"context"
 	"errors"
-	"github.com/Reasno/kitty/pkg/kerr"
 	"github.com/go-kit/kit/endpoint"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 )
 
 func NewErrorMarshallerMiddleware() endpoint.Middleware {

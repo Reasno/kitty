@@ -6,18 +6,18 @@
 package module
 
 import (
-	"github.com/Reasno/kitty/app/handlers"
-	"github.com/Reasno/kitty/app/repository"
-	"github.com/Reasno/kitty/pkg/config"
-	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/khttp"
-	"github.com/Reasno/kitty/pkg/otredis"
-	"github.com/Reasno/kitty/pkg/ots3"
-	"github.com/Reasno/kitty/pkg/sms"
-	"github.com/Reasno/kitty/pkg/wechat"
 	"github.com/go-kit/kit/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
+	"glab.tagtic.cn/ad_gains/kitty/app/handlers"
+	"glab.tagtic.cn/ad_gains/kitty/app/repository"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/otredis"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/sms"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 )
 
 // Injectors from wire.go:

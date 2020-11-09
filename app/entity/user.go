@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	pb "github.com/Reasno/kitty/proto"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

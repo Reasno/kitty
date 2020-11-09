@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/Reasno/kitty/app/entity"
 	"github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"gorm.io/gorm"
 )
 

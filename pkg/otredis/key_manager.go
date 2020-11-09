@@ -1,7 +1,7 @@
 package otredis
 
 import (
-	"github.com/Reasno/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"strings"
 )
 

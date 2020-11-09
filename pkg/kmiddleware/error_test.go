@@ -2,9 +2,9 @@ package kmiddleware
 
 import (
 	"context"
-	"github.com/Reasno/kitty/pkg/kerr"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	"testing"
 )
 

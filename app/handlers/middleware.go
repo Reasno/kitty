@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/Reasno/kitty/pkg/contract"
-	"github.com/Reasno/kitty/pkg/kjwt"
-	pb "github.com/Reasno/kitty/proto"
 	stdjwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/opentracing/opentracing-go"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 type MonitoredAppService struct {

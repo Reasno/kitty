@@ -28,7 +28,7 @@ import (
 	"github.com/pkg/errors"
 
 	// This service
-	pb "github.com/Reasno/kitty/proto"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 const contentType = "application/json; charset=utf-8"

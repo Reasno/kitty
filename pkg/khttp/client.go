@@ -1,14 +1,14 @@
 package khttp
 
 import (
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"net/http"
 )
 
 type Client struct {
-	tracer opentracing.Tracer
+	tracer     opentracing.Tracer
 	underlying contract.HttpDoer
 }
 

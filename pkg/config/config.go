@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/knadh/koanf"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
 //func ProvideChildConfig(root *viper.Viper, nodes ...string) (*viper.Viper, error) {

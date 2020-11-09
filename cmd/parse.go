@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	jwt2 "github.com/Reasno/kitty/pkg/kjwt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/log/level"
 	"github.com/spf13/cobra"
+	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 )
 
 func init() {

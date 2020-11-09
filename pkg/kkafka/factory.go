@@ -3,11 +3,11 @@ package kkafka
 import (
 	"sync"
 
-	"github.com/Reasno/kitty/pkg/klog"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/opentracing/opentracing-go"
 	"github.com/segmentio/kafka-go"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 )
 
 type KafkaProducerFactory struct {
@@ -45,10 +45,10 @@ func (k *KafkaProducerFactory) Writer(topic string) *kafka.Writer {
 		return w
 	}
 	writer := &kafka.Writer{
-		Addr:     kafka.TCP(k.brokers...),
-		Topic:    topic,
-		Balancer: &kafka.LeastBytes{},
-		Logger:   klog.KafkaLogAdapter{level.Debug(k.logger)},
+		Addr:        kafka.TCP(k.brokers...),
+		Topic:       topic,
+		Balancer:    &kafka.LeastBytes{},
+		Logger:      klog.KafkaLogAdapter{level.Debug(k.logger)},
 		ErrorLogger: klog.KafkaLogAdapter{level.Warn(k.logger)},
 	}
 	if k.tracer != nil {

@@ -7,16 +7,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Reasno/kitty/pkg/kjwt"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 )
 
 type EventStore struct {
 	Factory *KafkaProducerFactory
-	Topic string
-	once sync.Once
-	writer *kafka.Writer
+	Topic   string
+	once    sync.Once
+	writer  *kafka.Writer
 }
 
 func (e *EventStore) Emit(ctx context.Context, event string) error {

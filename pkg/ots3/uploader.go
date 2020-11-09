@@ -3,7 +3,6 @@ package ots3
 import (
 	"context"
 	"fmt"
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -14,6 +13,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"io"
 	"net/http"
 )
