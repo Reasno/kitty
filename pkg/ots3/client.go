@@ -12,8 +12,8 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
-func NewClient(uri url.URL) *httptransport.Client {
-	return httptransport.NewClient("POST", &uri, encodeClientRequest, decodeClientResponse)
+func NewClient(uri *url.URL) *httptransport.Client {
+	return httptransport.NewClient("POST", uri, encodeClientRequest, decodeClientResponse)
 }
 
 func decodeClientResponse(_ context.Context, response2 *http.Response) (response interface{}, err error) {

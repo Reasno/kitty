@@ -8,6 +8,7 @@ package ots3
 import (
 	"github.com/go-kit/kit/log"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"net/url"
 )
 
 // Injectors from wire.go:
@@ -26,8 +27,8 @@ func injectModule(conf contract.ConfigReader, logger log.Logger) *Module {
 	return module
 }
 
-func InjectClientUploader(conf contract.ConfigReader) *ClientUploader {
-	client := NewClient(conf)
+func InjectClientUploader(uri *url.URL) *ClientUploader {
+	client := NewClient(uri)
 	clientUploader := NewClientUploader(client)
 	return clientUploader
 }
