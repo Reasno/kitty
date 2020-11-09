@@ -18,10 +18,6 @@ type MonitoredAppService struct {
 	pb.AppServer
 }
 
-func NewMonitoredAppService(userBus UserBus, eventBus EventBus, appServer *appService) *MonitoredAppService {
-	return &MonitoredAppService{userBus: userBus, eventBus: eventBus, AppServer: appServer}
-}
-
 type UserBus interface {
 	Emit(ctx context.Context, info contract.Marshaller) error
 }
