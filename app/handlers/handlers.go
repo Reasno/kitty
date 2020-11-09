@@ -534,8 +534,8 @@ func (s appService) decorateResponse(ctx context.Context, data *pb.UserInfo) {
 	data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(data.Id))
 	data.WechatExtra = s.getWechatExtra(ctx, uint(data.Id))
 	// 如果不是用户本人，则隐去手机号部分内容
-	if data.Id != kittyjwt.GetClaim(ctx).UserId && len(data.Mobile) >= 11 {
-		data.Mobile = data.Mobile[:3] + "****" + data.Mobile[7:]
+	if data.Id != kittyjwt.GetClaim(ctx).UserId {
+		data.Mobile = redact(data.Mobile)
 	}
 }
 
@@ -579,4 +579,11 @@ func ns(s string) sql.NullString {
 		String: s,
 		Valid:  true,
 	}
+}
+
+func redact(mobile string) string {
+	if len(mobile) >= 11 {
+		mobile = mobile[:3] + "****" + mobile[7:]
+	}
+	return mobile
 }
