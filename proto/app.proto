@@ -11,8 +11,8 @@ option go_package = "kitty";
 
 option (options.openapiv2_swagger) = {
   info: {
-    title: "A kitty app";
-    version: "1.0";
+    title: "商业化中台用户中心";
+    version: "0.1.0";
   };
   base_path: "/app"
   security_definitions: {
@@ -38,6 +38,9 @@ option (options.openapiv2_swagger) = {
 service App {
   // 用户从未登录状态注册或登录时调用。如果用户已登录，需要绑定手机号或微信号，请使用bind接口。
   rpc Login(UserLoginRequest) returns (UserInfoReply) {
+    option (options.openapiv2_operation) = {
+      tags: "登录"
+    };
     option (google.api.http) = {
       post: "/v1/login"
       body: "*"
@@ -45,6 +48,9 @@ service App {
   }
   // 获得验证码
   rpc GetCode(GetCodeRequest) returns (GenericReply) {
+    option (options.openapiv2_operation) = {
+      tags: "登录"
+    };
     option (google.api.http) = {
       get: "/v1/code"
     };
@@ -54,9 +60,15 @@ service App {
     option (google.api.http) = {
       get: "/v1/info/{id}"
     };
+    option (options.openapiv2_operation) = {
+      tags: "用户信息"
+    };
   }
   // 更新个人信息
   rpc UpdateInfo (UserInfoUpdateRequest) returns (UserInfoReply) {
+    option (options.openapiv2_operation) = {
+      tags: "用户信息"
+    };
     option (google.api.http) = {
       post: "/v1/info"
       body: "*"
@@ -64,20 +76,32 @@ service App {
   }
   // 用户已登录后，绑定额外的手机号或微信号
   rpc Bind (UserBindRequest) returns (UserInfoReply) {
+    option (options.openapiv2_operation) = {
+      tags: "用户信息"
+    };
     option (google.api.http) = {
       post: "/v1/bind"
       body: "*"
     };
   }
-  // Unbind 针对已登录用户，额外绑定手机或微信登录方式
+  // 针对已登录用户，取消绑定手机或微信登录方式
   rpc Unbind (UserUnbindRequest) returns (UserInfoReply) {
+    option (options.openapiv2_operation) = {
+      tags: "用户信息"
+    };
     option (google.api.http) = {
       post: "/v1/unbind"
       body: "*"
     };
   }
-  // JWT Token续期，需要在每次升级系统或每次冷启动前调用，避免jwt中的信息与实际信息不一致
+
+  // JWT Token续期，需要在每次升级系统或每次冷启动前调用，
+  // 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
+  // 后续请求务必请将老JWT替换为新JWT。
   rpc Refresh (UserRefreshRequest) returns (UserInfoReply) {
+    option (options.openapiv2_operation) = {
+      tags: "登录"
+    };
     option (google.api.http) = {
       post: "/v1/refresh"
       body: "*"
@@ -86,23 +110,63 @@ service App {
 }
 
 message UserBindRequest {
+  // 手机号
   string mobile = 1 [
     (validate.rules).string.pattern = "(^$|^[\\d]{11}$)",
     (options.openapiv2_field) = {pattern: "(^$|^[\\d]{11}$)"}
   ];
+  // 手机验证码（配合手机号使用）
   string code = 2;
+  // 微信官方下发的临时code码，非openId
   string wechat = 3;
-  // 如果有openid 就直接走openid
-  string open_id = 4;
+  // 废弃，请使用wechat_extra.openId
+  string openId = 4 [deprecated=true];
+  // 绑定淘宝
+  TaobaoExtra taobao_extra = 5;
+  // 如果有openId 就直接走openId，不用再填微信官方下发的临时code码
+  WechatExtra wechat_extra = 6;
 }
 
-// UserRefreshRequest Token续期
+message TaobaoExtra {
+  string userid = 1;
+  string open_sid = 2;
+  string top_access_token = 3;
+  string avatar_url = 4;
+  string havana_sso_token = 5;
+  string nick = 6;
+  string open_id = 7;
+  string top_auth_code = 8;
+  string top_expire_time = 9;
+}
+
+message WechatExtra {
+  string access_token = 1;
+  int64 expiresIn = 2;
+  string refresh_token = 3;
+  string open_id = 4;
+  string scope = 5;
+  string nick_name = 6;
+  int32 sex = 7;
+  string province = 8;
+  string city = 9;
+  string country = 10;
+  string headimgurl = 11;
+  repeated string privilege = 12;
+  string unionid = 13;
+}
+
+enum Extra {
+  UNKNOWN_EXTRA = 0;
+  WECHAT_EXTRA = 1;
+  TAOBAO_EXTRA = 2;
+}
+
+// Token续期
 message UserRefreshRequest {
   Device device = 4;
-  string channel = 5 [
-    (options.openapiv2_field) = {required: "true"},
-    (validate.rules).string.min_len = 1
-  ];
+  // 渠道号
+  string channel = 5;
+  // 版本号
   string version_code = 6 [
     (options.openapiv2_field) = {required: "true"},
     (validate.rules).string.min_len = 1
@@ -110,28 +174,40 @@ message UserRefreshRequest {
 }
 
 message UserUnbindRequest {
+  // true则解绑手机
   bool mobile = 1;
+  // true则解绑微信
   bool wechat = 2;
+  // true则解绑淘宝
+  bool taobao = 3;
 }
 
 message UserLoginRequest {
+  // 手机号
   string mobile = 1 [
     (validate.rules).string.pattern = "(^$|^[\\d]{11}$)",
     (options.openapiv2_field) = {pattern: "(^$|^[\\d]{11}$)"}
   ];
+  // 手机验证码
   string code = 2;
   // 手机发起微信登录的token，非openid
   string wechat = 3;
 
   Device device = 4;
-  string channel = 5 [
-    (options.openapiv2_field) = {required: "true"},
-    (validate.rules).string.min_len = 1
-  ];
+  // 渠道
+  string channel = 5;
+  // 版本号
   string version_code = 6 [
     (options.openapiv2_field) = {required: "true"},
+    (validate.rules).string.min_len = 4
+  ];
+  // 包名
+  string package_name = 7 [
+    (options.openapiv2_field) = {required: "true"},
     (validate.rules).string.min_len = 1
   ];
+  // 第三方ID
+  string third_party_id = 8;
 }
 
 message Device {
@@ -144,7 +220,9 @@ message Device {
   string idfa = 2;
   string android_id = 3;
   string suuid = 4;
+  // MAC 地址
   string mac = 5;
+  // 1 苹果，2 安卓
   OS os = 6;
   string oaid = 7;
 }
@@ -153,10 +231,16 @@ message UserInfo {
   uint64 id = 1;
   string user_name = 2;
   string wechat = 3;
+  // 头像地址
   string head_img = 4;
   Gender gender = 5;
   string birthday = 6;
   string token = 7;
+  // 第三方ID
+  string third_party_id = 8;
+  bool is_new = 9 [(gogoproto.jsontag) = "is_new"];
+  WechatExtra wechat_extra = 10;
+  TaobaoExtra taobao_extra = 11;
 }
 
 message UserInfoReply {
@@ -180,28 +264,37 @@ message GetCodeRequest {
 
 message UserInfoRequest {
   uint64 id = 1;
+  // 同时获得微信相关信息
+  bool wechat = 2;
+  // 同时获得淘宝相关信息
+  bool taobao = 3;
 }
 
 message UserInfoUpdateRequest {
+  // 用户名
   string user_name = 2 [
     (options.openapiv2_field).minimum = 2,
     (options.openapiv2_field).maximum = 10,
     (validate.rules).string.min_len = 2,
     (validate.rules).string.max_len = 10
   ];
+  // 头像地址
   string head_img = 4 [
     (options.openapiv2_field) = {pattern: "^(|https?://.*)$"},
     (validate.rules).string = {pattern: "^(|https?://.*)$"}
   ];
+  // 性别
   Gender gender = 5;
+  // 生日
   string birthday = 6 [
     (options.openapiv2_field) = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"},
     (validate.rules).string = {pattern: "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"}
   ];
+  // 第三方ID
+  string third_party_id = 7;
 }
 
 message EmptyRequest {
-
 }
 
 message GenericReply {
@@ -209,31 +302,3 @@ message GenericReply {
   string message = 2;
 }
 
-message UserRequest {
-  string nick_name = 2 [(validate.rules).string = {max_len: 10}];
-  string real_name = 3;
-  string real_id = 4; // 身份证号
-
-  enum Gender {
-    // 未知
-    UNKNOWN = 0;
-    // 男
-    MALE = 1;
-    // 女
-    FEMALE = 2;
-  }
-
-  Gender gender = 5;
-  string autograph = 6;
-  uint32 age = 7;
-  string mobile = 8 [
-    (options.openapiv2_field) = {
-      description: "手机号"
-    },
-    (validate.rules).string.len = 5
-  ] ;
-  int32 code = 9 [(options.openapiv2_field) = {description: "验证码"}]; // 验证码
-  string wechat_open_id = 10 [(options.openapiv2_field) = {description: "微信 openId"}];
-  string qq_open_id = 11 [(.options.openapiv2_field) = {description: "QQ openId"}];
-  map<string, string> third_party_ids = 12;
-}

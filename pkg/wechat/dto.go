@@ -18,4 +18,3 @@ type WxUserInfoResult struct {
 	Privilege  []string `json:"privilege"`  // 用户特权信息，json数组，如微信沃卡用户为（chinaunicom）
 	Unionid    string   `json:"unionid"`    // 用户统一标识。针对一个微信开放平台帐号下的应用，同一用户的unionid是唯一的。
 }
-

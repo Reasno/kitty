@@ -30,6 +30,34 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type Extra int32
+
+const (
+	Extra_UNKNOWN_EXTRA Extra = 0
+	Extra_WECHAT_EXTRA  Extra = 1
+	Extra_TAOBAO_EXTRA  Extra = 2
+)
+
+var Extra_name = map[int32]string{
+	0: "UNKNOWN_EXTRA",
+	1: "WECHAT_EXTRA",
+	2: "TAOBAO_EXTRA",
+}
+
+var Extra_value = map[string]int32{
+	"UNKNOWN_EXTRA": 0,
+	"WECHAT_EXTRA":  1,
+	"TAOBAO_EXTRA":  2,
+}
+
+func (x Extra) String() string {
+	return proto.EnumName(Extra_name, int32(x))
+}
+
+func (Extra) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{0}
+}
+
 type Gender int32
 
 const (
@@ -55,7 +83,7 @@ func (x Gender) String() string {
 }
 
 func (Gender) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{0}
+	return fileDescriptor_e0f9056a14b86d47, []int{1}
 }
 
 type Device_OS int32
@@ -83,49 +111,25 @@ func (x Device_OS) String() string {
 }
 
 func (Device_OS) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{4, 0}
-}
-
-type UserRequest_Gender int32
-
-const (
-	// 未知
-	UserRequest_UNKNOWN UserRequest_Gender = 0
-	// 男
-	UserRequest_MALE UserRequest_Gender = 1
-	// 女
-	UserRequest_FEMALE UserRequest_Gender = 2
-)
-
-var UserRequest_Gender_name = map[int32]string{
-	0: "UNKNOWN",
-	1: "MALE",
-	2: "FEMALE",
-}
-
-var UserRequest_Gender_value = map[string]int32{
-	"UNKNOWN": 0,
-	"MALE":    1,
-	"FEMALE":  2,
-}
-
-func (x UserRequest_Gender) String() string {
-	return proto.EnumName(UserRequest_Gender_name, int32(x))
-}
-
-func (UserRequest_Gender) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{12, 0}
+	return fileDescriptor_e0f9056a14b86d47, []int{6, 0}
 }
 
 type UserBindRequest struct {
+	// 手机号
 	Mobile string `protobuf:"bytes,1,opt,name=mobile,proto3" json:"mobile,omitempty"`
-	Code   string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+	// 手机验证码（配合手机号使用）
+	Code string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+	// 微信官方下发的临时code码，非openId
 	Wechat string `protobuf:"bytes,3,opt,name=wechat,proto3" json:"wechat,omitempty"`
-	// 如果有openid 就直接走openid
-	OpenId               string   `protobuf:"bytes,4,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	// 废弃，请使用wechat_extra.openId
+	OpenId string `protobuf:"bytes,4,opt,name=openId,proto3" json:"openId,omitempty"` // Deprecated: Do not use.
+	// 绑定淘宝
+	TaobaoExtra *TaobaoExtra `protobuf:"bytes,5,opt,name=taobao_extra,json=taobaoExtra,proto3" json:"taobao_extra,omitempty"`
+	// 如果有openId 就直接走openId，不用再填微信官方下发的临时code码
+	WechatExtra          *WechatExtra `protobuf:"bytes,6,opt,name=wechat_extra,json=wechatExtra,proto3" json:"wechat_extra,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
 func (m *UserBindRequest) Reset()         { *m = UserBindRequest{} }
@@ -182,6 +186,7 @@ func (m *UserBindRequest) GetWechat() string {
 	return ""
 }
 
+// Deprecated: Do not use.
 func (m *UserBindRequest) GetOpenId() string {
 	if m != nil {
 		return m.OpenId
@@ -189,10 +194,280 @@ func (m *UserBindRequest) GetOpenId() string {
 	return ""
 }
 
-// UserRefreshRequest Token续期
+func (m *UserBindRequest) GetTaobaoExtra() *TaobaoExtra {
+	if m != nil {
+		return m.TaobaoExtra
+	}
+	return nil
+}
+
+func (m *UserBindRequest) GetWechatExtra() *WechatExtra {
+	if m != nil {
+		return m.WechatExtra
+	}
+	return nil
+}
+
+type TaobaoExtra struct {
+	Userid               string   `protobuf:"bytes,1,opt,name=userid,proto3" json:"userid,omitempty"`
+	OpenSid              string   `protobuf:"bytes,2,opt,name=open_sid,json=openSid,proto3" json:"open_sid,omitempty"`
+	TopAccessToken       string   `protobuf:"bytes,3,opt,name=top_access_token,json=topAccessToken,proto3" json:"top_access_token,omitempty"`
+	AvatarUrl            string   `protobuf:"bytes,4,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	HavanaSsoToken       string   `protobuf:"bytes,5,opt,name=havana_sso_token,json=havanaSsoToken,proto3" json:"havana_sso_token,omitempty"`
+	Nick                 string   `protobuf:"bytes,6,opt,name=nick,proto3" json:"nick,omitempty"`
+	OpenId               string   `protobuf:"bytes,7,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	TopAuthCode          string   `protobuf:"bytes,8,opt,name=top_auth_code,json=topAuthCode,proto3" json:"top_auth_code,omitempty"`
+	TopExpireTime        string   `protobuf:"bytes,9,opt,name=top_expire_time,json=topExpireTime,proto3" json:"top_expire_time,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *TaobaoExtra) Reset()         { *m = TaobaoExtra{} }
+func (m *TaobaoExtra) String() string { return proto.CompactTextString(m) }
+func (*TaobaoExtra) ProtoMessage()    {}
+func (*TaobaoExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{1}
+}
+func (m *TaobaoExtra) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TaobaoExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TaobaoExtra.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TaobaoExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TaobaoExtra.Merge(m, src)
+}
+func (m *TaobaoExtra) XXX_Size() int {
+	return m.Size()
+}
+func (m *TaobaoExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_TaobaoExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TaobaoExtra proto.InternalMessageInfo
+
+func (m *TaobaoExtra) GetUserid() string {
+	if m != nil {
+		return m.Userid
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetOpenSid() string {
+	if m != nil {
+		return m.OpenSid
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetTopAccessToken() string {
+	if m != nil {
+		return m.TopAccessToken
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetAvatarUrl() string {
+	if m != nil {
+		return m.AvatarUrl
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetHavanaSsoToken() string {
+	if m != nil {
+		return m.HavanaSsoToken
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetNick() string {
+	if m != nil {
+		return m.Nick
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetOpenId() string {
+	if m != nil {
+		return m.OpenId
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetTopAuthCode() string {
+	if m != nil {
+		return m.TopAuthCode
+	}
+	return ""
+}
+
+func (m *TaobaoExtra) GetTopExpireTime() string {
+	if m != nil {
+		return m.TopExpireTime
+	}
+	return ""
+}
+
+type WechatExtra struct {
+	AccessToken          string   `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	ExpiresIn            int64    `protobuf:"varint,2,opt,name=expiresIn,proto3" json:"expiresIn,omitempty"`
+	RefreshToken         string   `protobuf:"bytes,3,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	OpenId               string   `protobuf:"bytes,4,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	Scope                string   `protobuf:"bytes,5,opt,name=scope,proto3" json:"scope,omitempty"`
+	NickName             string   `protobuf:"bytes,6,opt,name=nick_name,json=nickName,proto3" json:"nick_name,omitempty"`
+	Sex                  int32    `protobuf:"varint,7,opt,name=sex,proto3" json:"sex,omitempty"`
+	Province             string   `protobuf:"bytes,8,opt,name=province,proto3" json:"province,omitempty"`
+	City                 string   `protobuf:"bytes,9,opt,name=city,proto3" json:"city,omitempty"`
+	Country              string   `protobuf:"bytes,10,opt,name=country,proto3" json:"country,omitempty"`
+	Headimgurl           string   `protobuf:"bytes,11,opt,name=headimgurl,proto3" json:"headimgurl,omitempty"`
+	Privilege            []string `protobuf:"bytes,12,rep,name=privilege,proto3" json:"privilege,omitempty"`
+	Unionid              string   `protobuf:"bytes,13,opt,name=unionid,proto3" json:"unionid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *WechatExtra) Reset()         { *m = WechatExtra{} }
+func (m *WechatExtra) String() string { return proto.CompactTextString(m) }
+func (*WechatExtra) ProtoMessage()    {}
+func (*WechatExtra) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0f9056a14b86d47, []int{2}
+}
+func (m *WechatExtra) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *WechatExtra) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_WechatExtra.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *WechatExtra) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_WechatExtra.Merge(m, src)
+}
+func (m *WechatExtra) XXX_Size() int {
+	return m.Size()
+}
+func (m *WechatExtra) XXX_DiscardUnknown() {
+	xxx_messageInfo_WechatExtra.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_WechatExtra proto.InternalMessageInfo
+
+func (m *WechatExtra) GetAccessToken() string {
+	if m != nil {
+		return m.AccessToken
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetExpiresIn() int64 {
+	if m != nil {
+		return m.ExpiresIn
+	}
+	return 0
+}
+
+func (m *WechatExtra) GetRefreshToken() string {
+	if m != nil {
+		return m.RefreshToken
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetOpenId() string {
+	if m != nil {
+		return m.OpenId
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetNickName() string {
+	if m != nil {
+		return m.NickName
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetSex() int32 {
+	if m != nil {
+		return m.Sex
+	}
+	return 0
+}
+
+func (m *WechatExtra) GetProvince() string {
+	if m != nil {
+		return m.Province
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetCity() string {
+	if m != nil {
+		return m.City
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetCountry() string {
+	if m != nil {
+		return m.Country
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetHeadimgurl() string {
+	if m != nil {
+		return m.Headimgurl
+	}
+	return ""
+}
+
+func (m *WechatExtra) GetPrivilege() []string {
+	if m != nil {
+		return m.Privilege
+	}
+	return nil
+}
+
+func (m *WechatExtra) GetUnionid() string {
+	if m != nil {
+		return m.Unionid
+	}
+	return ""
+}
+
+// Token续期
 type UserRefreshRequest struct {
-	Device               *Device  `protobuf:"bytes,4,opt,name=device,proto3" json:"device,omitempty"`
-	Channel              string   `protobuf:"bytes,5,opt,name=channel,proto3" json:"channel,omitempty"`
+	Device *Device `protobuf:"bytes,4,opt,name=device,proto3" json:"device,omitempty"`
+	// 渠道号
+	Channel string `protobuf:"bytes,5,opt,name=channel,proto3" json:"channel,omitempty"`
+	// 版本号
 	VersionCode          string   `protobuf:"bytes,6,opt,name=version_code,json=versionCode,proto3" json:"version_code,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -203,7 +478,7 @@ func (m *UserRefreshRequest) Reset()         { *m = UserRefreshRequest{} }
 func (m *UserRefreshRequest) String() string { return proto.CompactTextString(m) }
 func (*UserRefreshRequest) ProtoMessage()    {}
 func (*UserRefreshRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{1}
+	return fileDescriptor_e0f9056a14b86d47, []int{3}
 }
 func (m *UserRefreshRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -254,8 +529,12 @@ func (m *UserRefreshRequest) GetVersionCode() string {
 }
 
 type UserUnbindRequest struct {
-	Mobile               bool     `protobuf:"varint,1,opt,name=mobile,proto3" json:"mobile,omitempty"`
-	Wechat               bool     `protobuf:"varint,2,opt,name=wechat,proto3" json:"wechat,omitempty"`
+	// true则解绑手机
+	Mobile bool `protobuf:"varint,1,opt,name=mobile,proto3" json:"mobile,omitempty"`
+	// true则解绑微信
+	Wechat bool `protobuf:"varint,2,opt,name=wechat,proto3" json:"wechat,omitempty"`
+	// true则解绑淘宝
+	Taobao               bool     `protobuf:"varint,3,opt,name=taobao,proto3" json:"taobao,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -265,7 +544,7 @@ func (m *UserUnbindRequest) Reset()         { *m = UserUnbindRequest{} }
 func (m *UserUnbindRequest) String() string { return proto.CompactTextString(m) }
 func (*UserUnbindRequest) ProtoMessage()    {}
 func (*UserUnbindRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{2}
+	return fileDescriptor_e0f9056a14b86d47, []int{4}
 }
 func (m *UserUnbindRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -308,14 +587,29 @@ func (m *UserUnbindRequest) GetWechat() bool {
 	return false
 }
 
+func (m *UserUnbindRequest) GetTaobao() bool {
+	if m != nil {
+		return m.Taobao
+	}
+	return false
+}
+
 type UserLoginRequest struct {
+	// 手机号
 	Mobile string `protobuf:"bytes,1,opt,name=mobile,proto3" json:"mobile,omitempty"`
-	Code   string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
+	// 手机验证码
+	Code string `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`
 	// 手机发起微信登录的token，非openid
-	Wechat               string   `protobuf:"bytes,3,opt,name=wechat,proto3" json:"wechat,omitempty"`
-	Device               *Device  `protobuf:"bytes,4,opt,name=device,proto3" json:"device,omitempty"`
-	Channel              string   `protobuf:"bytes,5,opt,name=channel,proto3" json:"channel,omitempty"`
-	VersionCode          string   `protobuf:"bytes,6,opt,name=version_code,json=versionCode,proto3" json:"version_code,omitempty"`
+	Wechat string  `protobuf:"bytes,3,opt,name=wechat,proto3" json:"wechat,omitempty"`
+	Device *Device `protobuf:"bytes,4,opt,name=device,proto3" json:"device,omitempty"`
+	// 渠道
+	Channel string `protobuf:"bytes,5,opt,name=channel,proto3" json:"channel,omitempty"`
+	// 版本号
+	VersionCode string `protobuf:"bytes,6,opt,name=version_code,json=versionCode,proto3" json:"version_code,omitempty"`
+	// 包名
+	PackageName string `protobuf:"bytes,7,opt,name=package_name,json=packageName,proto3" json:"package_name,omitempty"`
+	// 第三方ID
+	ThirdPartyId         string   `protobuf:"bytes,8,opt,name=third_party_id,json=thirdPartyId,proto3" json:"third_party_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -325,7 +619,7 @@ func (m *UserLoginRequest) Reset()         { *m = UserLoginRequest{} }
 func (m *UserLoginRequest) String() string { return proto.CompactTextString(m) }
 func (*UserLoginRequest) ProtoMessage()    {}
 func (*UserLoginRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{3}
+	return fileDescriptor_e0f9056a14b86d47, []int{5}
 }
 func (m *UserLoginRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -396,12 +690,28 @@ func (m *UserLoginRequest) GetVersionCode() string {
 	return ""
 }
 
+func (m *UserLoginRequest) GetPackageName() string {
+	if m != nil {
+		return m.PackageName
+	}
+	return ""
+}
+
+func (m *UserLoginRequest) GetThirdPartyId() string {
+	if m != nil {
+		return m.ThirdPartyId
+	}
+	return ""
+}
+
 type Device struct {
-	Imei                 string    `protobuf:"bytes,1,opt,name=imei,proto3" json:"imei,omitempty"`
-	Idfa                 string    `protobuf:"bytes,2,opt,name=idfa,proto3" json:"idfa,omitempty"`
-	AndroidId            string    `protobuf:"bytes,3,opt,name=android_id,json=androidId,proto3" json:"android_id,omitempty"`
-	Suuid                string    `protobuf:"bytes,4,opt,name=suuid,proto3" json:"suuid,omitempty"`
-	Mac                  string    `protobuf:"bytes,5,opt,name=mac,proto3" json:"mac,omitempty"`
+	Imei      string `protobuf:"bytes,1,opt,name=imei,proto3" json:"imei,omitempty"`
+	Idfa      string `protobuf:"bytes,2,opt,name=idfa,proto3" json:"idfa,omitempty"`
+	AndroidId string `protobuf:"bytes,3,opt,name=android_id,json=androidId,proto3" json:"android_id,omitempty"`
+	Suuid     string `protobuf:"bytes,4,opt,name=suuid,proto3" json:"suuid,omitempty"`
+	// MAC 地址
+	Mac string `protobuf:"bytes,5,opt,name=mac,proto3" json:"mac,omitempty"`
+	// 1 苹果，2 安卓
 	Os                   Device_OS `protobuf:"varint,6,opt,name=os,proto3,enum=app.v1.Device_OS" json:"os,omitempty"`
 	Oaid                 string    `protobuf:"bytes,7,opt,name=oaid,proto3" json:"oaid,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
@@ -413,7 +723,7 @@ func (m *Device) Reset()         { *m = Device{} }
 func (m *Device) String() string { return proto.CompactTextString(m) }
 func (*Device) ProtoMessage()    {}
 func (*Device) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{4}
+	return fileDescriptor_e0f9056a14b86d47, []int{6}
 }
 func (m *Device) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -492,23 +802,29 @@ func (m *Device) GetOaid() string {
 }
 
 type UserInfo struct {
-	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserName             string   `protobuf:"bytes,2,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
-	Wechat               string   `protobuf:"bytes,3,opt,name=wechat,proto3" json:"wechat,omitempty"`
-	HeadImg              string   `protobuf:"bytes,4,opt,name=head_img,json=headImg,proto3" json:"head_img,omitempty"`
-	Gender               Gender   `protobuf:"varint,5,opt,name=gender,proto3,enum=app.v1.Gender" json:"gender,omitempty"`
-	Birthday             string   `protobuf:"bytes,6,opt,name=birthday,proto3" json:"birthday,omitempty"`
-	Token                string   `protobuf:"bytes,7,opt,name=token,proto3" json:"token,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Id       uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserName string `protobuf:"bytes,2,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
+	Wechat   string `protobuf:"bytes,3,opt,name=wechat,proto3" json:"wechat,omitempty"`
+	// 头像地址
+	HeadImg  string `protobuf:"bytes,4,opt,name=head_img,json=headImg,proto3" json:"head_img,omitempty"`
+	Gender   Gender `protobuf:"varint,5,opt,name=gender,proto3,enum=app.v1.Gender" json:"gender,omitempty"`
+	Birthday string `protobuf:"bytes,6,opt,name=birthday,proto3" json:"birthday,omitempty"`
+	Token    string `protobuf:"bytes,7,opt,name=token,proto3" json:"token,omitempty"`
+	// 第三方ID
+	ThirdPartyId         string       `protobuf:"bytes,8,opt,name=third_party_id,json=thirdPartyId,proto3" json:"third_party_id,omitempty"`
+	IsNew                bool         `protobuf:"varint,9,opt,name=is_new,json=isNew,proto3" json:"is_new"`
+	WechatExtra          *WechatExtra `protobuf:"bytes,10,opt,name=wechat_extra,json=wechatExtra,proto3" json:"wechat_extra,omitempty"`
+	TaobaoExtra          *TaobaoExtra `protobuf:"bytes,11,opt,name=taobao_extra,json=taobaoExtra,proto3" json:"taobao_extra,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
 func (m *UserInfo) Reset()         { *m = UserInfo{} }
 func (m *UserInfo) String() string { return proto.CompactTextString(m) }
 func (*UserInfo) ProtoMessage()    {}
 func (*UserInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{5}
+	return fileDescriptor_e0f9056a14b86d47, []int{7}
 }
 func (m *UserInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -586,6 +902,34 @@ func (m *UserInfo) GetToken() string {
 	return ""
 }
 
+func (m *UserInfo) GetThirdPartyId() string {
+	if m != nil {
+		return m.ThirdPartyId
+	}
+	return ""
+}
+
+func (m *UserInfo) GetIsNew() bool {
+	if m != nil {
+		return m.IsNew
+	}
+	return false
+}
+
+func (m *UserInfo) GetWechatExtra() *WechatExtra {
+	if m != nil {
+		return m.WechatExtra
+	}
+	return nil
+}
+
+func (m *UserInfo) GetTaobaoExtra() *TaobaoExtra {
+	if m != nil {
+		return m.TaobaoExtra
+	}
+	return nil
+}
+
 type UserInfoReply struct {
 	Code                 int32     `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
 	Message              string    `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
@@ -599,7 +943,7 @@ func (m *UserInfoReply) Reset()         { *m = UserInfoReply{} }
 func (m *UserInfoReply) String() string { return proto.CompactTextString(m) }
 func (*UserInfoReply) ProtoMessage()    {}
 func (*UserInfoReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{6}
+	return fileDescriptor_e0f9056a14b86d47, []int{8}
 }
 func (m *UserInfoReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -660,7 +1004,7 @@ func (m *GetCodeRequest) Reset()         { *m = GetCodeRequest{} }
 func (m *GetCodeRequest) String() string { return proto.CompactTextString(m) }
 func (*GetCodeRequest) ProtoMessage()    {}
 func (*GetCodeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{7}
+	return fileDescriptor_e0f9056a14b86d47, []int{9}
 }
 func (m *GetCodeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -697,7 +1041,11 @@ func (m *GetCodeRequest) GetMobile() string {
 }
 
 type UserInfoRequest struct {
-	Id                   uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// 同时获得微信相关信息
+	Wechat bool `protobuf:"varint,2,opt,name=wechat,proto3" json:"wechat,omitempty"`
+	// 同时获得淘宝相关信息
+	Taobao               bool     `protobuf:"varint,3,opt,name=taobao,proto3" json:"taobao,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -707,7 +1055,7 @@ func (m *UserInfoRequest) Reset()         { *m = UserInfoRequest{} }
 func (m *UserInfoRequest) String() string { return proto.CompactTextString(m) }
 func (*UserInfoRequest) ProtoMessage()    {}
 func (*UserInfoRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{8}
+	return fileDescriptor_e0f9056a14b86d47, []int{10}
 }
 func (m *UserInfoRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -743,11 +1091,31 @@ func (m *UserInfoRequest) GetId() uint64 {
 	return 0
 }
 
+func (m *UserInfoRequest) GetWechat() bool {
+	if m != nil {
+		return m.Wechat
+	}
+	return false
+}
+
+func (m *UserInfoRequest) GetTaobao() bool {
+	if m != nil {
+		return m.Taobao
+	}
+	return false
+}
+
 type UserInfoUpdateRequest struct {
-	UserName             string   `protobuf:"bytes,2,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
-	HeadImg              string   `protobuf:"bytes,4,opt,name=head_img,json=headImg,proto3" json:"head_img,omitempty"`
-	Gender               Gender   `protobuf:"varint,5,opt,name=gender,proto3,enum=app.v1.Gender" json:"gender,omitempty"`
-	Birthday             string   `protobuf:"bytes,6,opt,name=birthday,proto3" json:"birthday,omitempty"`
+	// 用户名
+	UserName string `protobuf:"bytes,2,opt,name=user_name,json=userName,proto3" json:"user_name,omitempty"`
+	// 头像地址
+	HeadImg string `protobuf:"bytes,4,opt,name=head_img,json=headImg,proto3" json:"head_img,omitempty"`
+	// 性别
+	Gender Gender `protobuf:"varint,5,opt,name=gender,proto3,enum=app.v1.Gender" json:"gender,omitempty"`
+	// 生日
+	Birthday string `protobuf:"bytes,6,opt,name=birthday,proto3" json:"birthday,omitempty"`
+	// 第三方ID
+	ThirdPartyId         string   `protobuf:"bytes,7,opt,name=third_party_id,json=thirdPartyId,proto3" json:"third_party_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -757,7 +1125,7 @@ func (m *UserInfoUpdateRequest) Reset()         { *m = UserInfoUpdateRequest{} }
 func (m *UserInfoUpdateRequest) String() string { return proto.CompactTextString(m) }
 func (*UserInfoUpdateRequest) ProtoMessage()    {}
 func (*UserInfoUpdateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{9}
+	return fileDescriptor_e0f9056a14b86d47, []int{11}
 }
 func (m *UserInfoUpdateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -814,6 +1182,13 @@ func (m *UserInfoUpdateRequest) GetBirthday() string {
 	return ""
 }
 
+func (m *UserInfoUpdateRequest) GetThirdPartyId() string {
+	if m != nil {
+		return m.ThirdPartyId
+	}
+	return ""
+}
+
 type EmptyRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -824,7 +1199,7 @@ func (m *EmptyRequest) Reset()         { *m = EmptyRequest{} }
 func (m *EmptyRequest) String() string { return proto.CompactTextString(m) }
 func (*EmptyRequest) ProtoMessage()    {}
 func (*EmptyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{10}
+	return fileDescriptor_e0f9056a14b86d47, []int{12}
 }
 func (m *EmptyRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -865,7 +1240,7 @@ func (m *GenericReply) Reset()         { *m = GenericReply{} }
 func (m *GenericReply) String() string { return proto.CompactTextString(m) }
 func (*GenericReply) ProtoMessage()    {}
 func (*GenericReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{11}
+	return fileDescriptor_e0f9056a14b86d47, []int{13}
 }
 func (m *GenericReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -908,138 +1283,13 @@ func (m *GenericReply) GetMessage() string {
 	return ""
 }
 
-type UserRequest struct {
-	NickName             string             `protobuf:"bytes,2,opt,name=nick_name,json=nickName,proto3" json:"nick_name,omitempty"`
-	RealName             string             `protobuf:"bytes,3,opt,name=real_name,json=realName,proto3" json:"real_name,omitempty"`
-	RealId               string             `protobuf:"bytes,4,opt,name=real_id,json=realId,proto3" json:"real_id,omitempty"`
-	Gender               UserRequest_Gender `protobuf:"varint,5,opt,name=gender,proto3,enum=app.v1.UserRequest_Gender" json:"gender,omitempty"`
-	Autograph            string             `protobuf:"bytes,6,opt,name=autograph,proto3" json:"autograph,omitempty"`
-	Age                  uint32             `protobuf:"varint,7,opt,name=age,proto3" json:"age,omitempty"`
-	Mobile               string             `protobuf:"bytes,8,opt,name=mobile,proto3" json:"mobile,omitempty"`
-	Code                 int32              `protobuf:"varint,9,opt,name=code,proto3" json:"code,omitempty"`
-	WechatOpenId         string             `protobuf:"bytes,10,opt,name=wechat_open_id,json=wechatOpenId,proto3" json:"wechat_open_id,omitempty"`
-	QqOpenId             string             `protobuf:"bytes,11,opt,name=qq_open_id,json=qqOpenId,proto3" json:"qq_open_id,omitempty"`
-	ThirdPartyIds        map[string]string  `protobuf:"bytes,12,rep,name=third_party_ids,json=thirdPartyIds,proto3" json:"third_party_ids,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
-	XXX_unrecognized     []byte             `json:"-"`
-	XXX_sizecache        int32              `json:"-"`
-}
-
-func (m *UserRequest) Reset()         { *m = UserRequest{} }
-func (m *UserRequest) String() string { return proto.CompactTextString(m) }
-func (*UserRequest) ProtoMessage()    {}
-func (*UserRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e0f9056a14b86d47, []int{12}
-}
-func (m *UserRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *UserRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_UserRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *UserRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserRequest.Merge(m, src)
-}
-func (m *UserRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *UserRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_UserRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_UserRequest proto.InternalMessageInfo
-
-func (m *UserRequest) GetNickName() string {
-	if m != nil {
-		return m.NickName
-	}
-	return ""
-}
-
-func (m *UserRequest) GetRealName() string {
-	if m != nil {
-		return m.RealName
-	}
-	return ""
-}
-
-func (m *UserRequest) GetRealId() string {
-	if m != nil {
-		return m.RealId
-	}
-	return ""
-}
-
-func (m *UserRequest) GetGender() UserRequest_Gender {
-	if m != nil {
-		return m.Gender
-	}
-	return UserRequest_UNKNOWN
-}
-
-func (m *UserRequest) GetAutograph() string {
-	if m != nil {
-		return m.Autograph
-	}
-	return ""
-}
-
-func (m *UserRequest) GetAge() uint32 {
-	if m != nil {
-		return m.Age
-	}
-	return 0
-}
-
-func (m *UserRequest) GetMobile() string {
-	if m != nil {
-		return m.Mobile
-	}
-	return ""
-}
-
-func (m *UserRequest) GetCode() int32 {
-	if m != nil {
-		return m.Code
-	}
-	return 0
-}
-
-func (m *UserRequest) GetWechatOpenId() string {
-	if m != nil {
-		return m.WechatOpenId
-	}
-	return ""
-}
-
-func (m *UserRequest) GetQqOpenId() string {
-	if m != nil {
-		return m.QqOpenId
-	}
-	return ""
-}
-
-func (m *UserRequest) GetThirdPartyIds() map[string]string {
-	if m != nil {
-		return m.ThirdPartyIds
-	}
-	return nil
-}
-
 func init() {
+	proto.RegisterEnum("app.v1.Extra", Extra_name, Extra_value)
 	proto.RegisterEnum("app.v1.Gender", Gender_name, Gender_value)
 	proto.RegisterEnum("app.v1.Device_OS", Device_OS_name, Device_OS_value)
-	proto.RegisterEnum("app.v1.UserRequest_Gender", UserRequest_Gender_name, UserRequest_Gender_value)
 	proto.RegisterType((*UserBindRequest)(nil), "app.v1.UserBindRequest")
+	proto.RegisterType((*TaobaoExtra)(nil), "app.v1.TaobaoExtra")
+	proto.RegisterType((*WechatExtra)(nil), "app.v1.WechatExtra")
 	proto.RegisterType((*UserRefreshRequest)(nil), "app.v1.UserRefreshRequest")
 	proto.RegisterType((*UserUnbindRequest)(nil), "app.v1.UserUnbindRequest")
 	proto.RegisterType((*UserLoginRequest)(nil), "app.v1.UserLoginRequest")
@@ -1051,105 +1301,121 @@ func init() {
 	proto.RegisterType((*UserInfoUpdateRequest)(nil), "app.v1.UserInfoUpdateRequest")
 	proto.RegisterType((*EmptyRequest)(nil), "app.v1.EmptyRequest")
 	proto.RegisterType((*GenericReply)(nil), "app.v1.GenericReply")
-	proto.RegisterType((*UserRequest)(nil), "app.v1.UserRequest")
-	proto.RegisterMapType((map[string]string)(nil), "app.v1.UserRequest.ThirdPartyIdsEntry")
 }
 
 func init() { proto.RegisterFile("app.proto", fileDescriptor_e0f9056a14b86d47) }
 
 var fileDescriptor_e0f9056a14b86d47 = []byte{
-	// 1449 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0xcf, 0x6f, 0x1b, 0xc5,
-	0x17, 0xcf, 0xae, 0x1d, 0xff, 0x78, 0x8e, 0x1d, 0x67, 0x92, 0xa6, 0xae, 0x9b, 0xe6, 0x9b, 0xae,
-	0xa2, 0x2a, 0x4d, 0x1a, 0xfb, 0x9b, 0xa5, 0x87, 0x2a, 0x17, 0xb2, 0x6e, 0xd2, 0xe0, 0xb6, 0x38,
-	0xed, 0xa6, 0x51, 0x45, 0x69, 0x63, 0x6d, 0xbc, 0x13, 0x7b, 0x88, 0xbd, 0xbb, 0xd9, 0x5d, 0x07,
-	0x99, 0xb6, 0x87, 0x72, 0x23, 0x20, 0x90, 0xcc, 0xa5, 0x12, 0x48, 0xc0, 0x15, 0x09, 0x38, 0x22,
-	0x71, 0x00, 0x21, 0x71, 0xe8, 0x11, 0xc1, 0x8d, 0x03, 0x42, 0xa5, 0x2d, 0x3f, 0xfe, 0x84, 0x9c,
-	0xd0, 0xcc, 0xec, 0xda, 0x1b, 0xa7, 0x29, 0x20, 0x0e, 0xe0, 0x8b, 0xdf, 0x7b, 0xf3, 0xde, 0x67,
-	0xdf, 0xef, 0x19, 0x88, 0x6b, 0x96, 0x95, 0xb3, 0x6c, 0xd3, 0x35, 0x51, 0x84, 0x92, 0x3b, 0x73,
-	0xd9, 0xb1, 0xaa, 0x69, 0x56, 0xeb, 0x38, 0xaf, 0x59, 0x24, 0xaf, 0x19, 0x86, 0xe9, 0x6a, 0x2e,
-	0x31, 0x0d, 0x87, 0x6b, 0x65, 0x67, 0xd8, 0x5f, 0x65, 0xb6, 0x8a, 0x8d, 0xd9, 0x1d, 0xad, 0x4e,
-	0x74, 0xcd, 0xc5, 0xf9, 0x03, 0x84, 0xa7, 0x9c, 0x0b, 0x28, 0x9b, 0x16, 0x36, 0x34, 0x8b, 0xec,
-	0xc8, 0x79, 0xd3, 0x62, 0x80, 0x4f, 0x01, 0x1f, 0xa9, 0x9a, 0x55, 0x93, 0x91, 0x79, 0x4a, 0x71,
-	0xa9, 0xf4, 0x9e, 0x00, 0x83, 0x6b, 0x0e, 0xb6, 0x0b, 0xc4, 0xd0, 0x55, 0xbc, 0xdd, 0xc4, 0x8e,
-	0x8b, 0xce, 0x43, 0xa4, 0x61, 0x6e, 0x90, 0x3a, 0xce, 0x08, 0x13, 0xc2, 0x54, 0xbc, 0x30, 0xd3,
-	0x56, 0xd0, 0xae, 0x30, 0x38, 0xb5, 0x3e, 0x79, 0x67, 0xfd, 0xe5, 0x9b, 0xfa, 0xad, 0xdb, 0x73,
-	0x73, 0x77, 0x27, 0x4f, 0xef, 0x15, 0x86, 0xed, 0x21, 0xb9, 0x57, 0xaa, 0x7a, 0xa6, 0x08, 0x41,
-	0xb8, 0x62, 0xea, 0x38, 0x23, 0x52, 0x08, 0x95, 0xd1, 0x68, 0x14, 0x22, 0xaf, 0xe2, 0x4a, 0x4d,
-	0x73, 0x33, 0x21, 0x26, 0xf5, 0x38, 0x74, 0x14, 0xa2, 0x34, 0x82, 0x32, 0xd1, 0x33, 0x61, 0x7e,
-	0x40, 0xd9, 0xa2, 0x2e, 0x7d, 0x20, 0x00, 0xa2, 0xde, 0xa9, 0x78, 0xd3, 0xc6, 0x4e, 0xcd, 0x77,
-	0xf0, 0x14, 0x44, 0x74, 0xbc, 0x43, 0x2a, 0x98, 0xa9, 0x27, 0xe4, 0x54, 0x8e, 0xa7, 0x37, 0xb7,
-	0xc8, 0xa4, 0xaa, 0x77, 0x8a, 0x66, 0x20, 0x5a, 0xa9, 0x69, 0x86, 0x81, 0xeb, 0x99, 0x7e, 0x16,
-	0xc9, 0x50, 0x5b, 0x89, 0x7e, 0x27, 0x84, 0x5d, 0xbb, 0x89, 0xf7, 0x0a, 0x61, 0x5b, 0x4c, 0x0b,
-	0xaa, 0xaf, 0x81, 0xce, 0xc2, 0xc0, 0x0e, 0xb6, 0x1d, 0x62, 0x1a, 0x65, 0xe6, 0x78, 0xe4, 0x30,
-	0x8b, 0x84, 0xa7, 0x76, 0xde, 0xd4, 0xb1, 0x74, 0x1e, 0x86, 0xa8, 0x83, 0x6b, 0xc6, 0x46, 0x20,
-	0x81, 0xa3, 0xfb, 0x12, 0x18, 0xeb, 0xe4, 0xa4, 0x1b, 0xbf, 0xc8, 0xe5, 0x9c, 0x93, 0xde, 0x16,
-	0x21, 0x4d, 0x51, 0x2e, 0x9b, 0x55, 0x62, 0xfc, 0x6b, 0x55, 0xf8, 0x0f, 0x65, 0xf5, 0x07, 0x01,
-	0x22, 0xfc, 0xab, 0x34, 0x02, 0xd2, 0xc0, 0x84, 0x27, 0x41, 0x65, 0x34, 0x93, 0xe9, 0x9b, 0x9a,
-	0x1f, 0x15, 0xa5, 0xd1, 0x09, 0x00, 0xcd, 0xd0, 0x6d, 0x93, 0xe8, 0xb4, 0x8d, 0x78, 0x64, 0x71,
-	0x4f, 0x52, 0xd4, 0xd1, 0x08, 0xf4, 0x3b, 0xcd, 0x66, 0xa7, 0xc1, 0x38, 0x83, 0xd2, 0x10, 0x6a,
-	0x68, 0x15, 0x1e, 0x86, 0x4a, 0x49, 0x74, 0x12, 0x44, 0xd3, 0x61, 0x5e, 0xa6, 0xe4, 0xa1, 0xfd,
-	0x09, 0xc8, 0xad, 0xac, 0xaa, 0xa2, 0xe9, 0xd0, 0xaf, 0x9b, 0x1a, 0xd1, 0x33, 0x51, 0xfe, 0x75,
-	0x4a, 0x4b, 0xd3, 0x20, 0xae, 0xac, 0xa2, 0x14, 0xc0, 0xca, 0x6a, 0x79, 0xad, 0x74, 0xa9, 0xb4,
-	0x72, 0xbd, 0x94, 0xee, 0x43, 0x51, 0x08, 0x15, 0x57, 0x56, 0xd3, 0x02, 0x4a, 0x40, 0x54, 0x29,
-	0x2d, 0xaa, 0x2b, 0xc5, 0xc5, 0xb4, 0x28, 0x7d, 0x23, 0x40, 0x8c, 0x56, 0xbb, 0x68, 0x6c, 0x9a,
-	0x28, 0x05, 0x22, 0xd1, 0x59, 0x70, 0x61, 0x55, 0x24, 0x3a, 0x3a, 0x0e, 0xf1, 0xa6, 0x83, 0xed,
-	0xb2, 0xa1, 0x35, 0xfc, 0xaa, 0xc5, 0xa8, 0xa0, 0xa4, 0x35, 0x0e, 0xaf, 0xdc, 0x31, 0x88, 0xd5,
-	0xb0, 0xa6, 0x97, 0x49, 0xa3, 0xea, 0xc5, 0x17, 0xa5, 0x7c, 0xb1, 0x51, 0xa5, 0x45, 0xad, 0x62,
-	0x43, 0xc7, 0x36, 0x0b, 0x32, 0xd5, 0x2d, 0xea, 0x32, 0x93, 0xaa, 0xde, 0x29, 0xca, 0x42, 0x6c,
-	0x83, 0xd8, 0x6e, 0x4d, 0xd7, 0x5a, 0xbc, 0x46, 0x6a, 0x87, 0xa7, 0xb9, 0x73, 0xcd, 0x2d, 0x6c,
-	0x78, 0x11, 0x73, 0x46, 0x6a, 0x40, 0xd2, 0x8f, 0x42, 0xc5, 0x56, 0xbd, 0x85, 0xc6, 0xbc, 0x5e,
-	0xa3, 0xc1, 0xf4, 0x17, 0x62, 0xbf, 0xff, 0xf8, 0x3f, 0xc6, 0x7b, 0x5d, 0x97, 0x81, 0x68, 0x03,
-	0x3b, 0x8e, 0x56, 0xf5, 0xc3, 0xf2, 0x59, 0x34, 0x09, 0x61, 0x5d, 0x73, 0x35, 0x16, 0x53, 0x42,
-	0x4e, 0xfb, 0x0e, 0x76, 0xc0, 0xd9, 0xa9, 0x74, 0x11, 0x52, 0xcb, 0xd8, 0xa5, 0xdd, 0xe1, 0x0f,
-	0xc8, 0xb9, 0x9e, 0x01, 0x99, 0x68, 0x2b, 0xe9, 0x5d, 0x21, 0x72, 0x53, 0xa7, 0x33, 0xd0, 0xe9,
-	0x2e, 0xb0, 0x63, 0xb2, 0x27, 0xf3, 0xa7, 0x42, 0x3a, 0xc9, 0x77, 0x1e, 0x77, 0x9d, 0x83, 0xf5,
-	0xd4, 0x41, 0xfa, 0x44, 0x84, 0x23, 0xbe, 0xce, 0x9a, 0x45, 0xd7, 0x6e, 0x77, 0x2e, 0x7b, 0x2b,
-	0x54, 0x38, 0xd5, 0x56, 0xe2, 0xa4, 0x8f, 0xff, 0x16, 0xda, 0x4a, 0xfc, 0x25, 0x4e, 0x4e, 0x2e,
-	0xf0, 0xe6, 0x16, 0xd9, 0x5f, 0x06, 0x02, 0x95, 0x7c, 0xa1, 0xb7, 0x62, 0x85, 0xd9, 0xb6, 0x32,
-	0xbc, 0x2b, 0xa4, 0xd7, 0xa7, 0xee, 0xd4, 0x5c, 0xd7, 0x72, 0x9e, 0x9f, 0xcf, 0xe7, 0x73, 0xd3,
-	0xa7, 0x27, 0xf7, 0x0a, 0x23, 0x36, 0x92, 0x0f, 0x88, 0xff, 0x7e, 0x81, 0x6f, 0xf5, 0x16, 0xb8,
-	0xa0, 0xb4, 0x95, 0x13, 0xbb, 0x42, 0x76, 0x7d, 0xea, 0xce, 0x4d, 0xfd, 0xf6, 0xd9, 0xbb, 0xb3,
-	0x34, 0x49, 0x67, 0xe4, 0xce, 0x3f, 0xfd, 0xf6, 0xb8, 0x3d, 0x26, 0x3f, 0x43, 0xa1, 0xdb, 0x23,
-	0x52, 0x0a, 0x06, 0x96, 0x1a, 0x96, 0xdb, 0xf2, 0xb2, 0x24, 0x5d, 0x80, 0x81, 0x65, 0x6c, 0x60,
-	0x9b, 0x54, 0xfe, 0x51, 0x73, 0x48, 0x0f, 0xc2, 0x90, 0xe0, 0x37, 0x00, 0xcf, 0xfe, 0x24, 0xc4,
-	0x0d, 0x52, 0xd9, 0x0a, 0x66, 0x3f, 0xda, 0x49, 0x2f, 0x3d, 0x61, 0xe9, 0x3d, 0x0e, 0x71, 0x1b,
-	0x6b, 0x75, 0xae, 0xc5, 0x67, 0x25, 0x46, 0x05, 0xec, 0xf0, 0x28, 0x44, 0xd9, 0x61, 0xf7, 0xb6,
-	0xa1, 0x6c, 0x51, 0x47, 0x72, 0x4f, 0x2a, 0xb3, 0xc1, 0x56, 0xf4, 0x1c, 0xe8, 0x4d, 0xeb, 0x18,
-	0xc4, 0xb5, 0xa6, 0x6b, 0x56, 0x6d, 0xcd, 0xaa, 0x79, 0x83, 0xd3, 0x15, 0xd0, 0xfd, 0x42, 0x63,
-	0xa2, 0x73, 0x93, 0x54, 0x29, 0x89, 0x72, 0x9d, 0xa6, 0x8d, 0x31, 0xe7, 0x47, 0xdb, 0x4a, 0x42,
-	0x8e, 0x3f, 0x79, 0xe3, 0xcd, 0x27, 0xef, 0x7f, 0xf1, 0xf8, 0x9d, 0xcf, 0xf7, 0x0a, 0xfd, 0x76,
-	0xe8, 0xbe, 0xd0, 0xdf, 0x59, 0xe0, 0x92, 0x97, 0xb7, 0x38, 0xcb, 0x5b, 0x8a, 0x69, 0xff, 0xf6,
-	0xf1, 0x5b, 0xbf, 0x7e, 0x76, 0xef, 0x97, 0x0f, 0xef, 0x79, 0xd9, 0x3b, 0x07, 0x29, 0xbe, 0x08,
-	0xca, 0xfe, 0x2d, 0x0a, 0x0c, 0x1b, 0xb5, 0x95, 0x41, 0x39, 0xf9, 0xf8, 0xcb, 0x4f, 0x1f, 0x7d,
-	0xf5, 0xd1, 0x04, 0xbf, 0x51, 0xd5, 0x01, 0xae, 0xb9, 0xc2, 0x38, 0x74, 0x06, 0x60, 0x7b, 0xbb,
-	0x63, 0x95, 0x60, 0x56, 0xfc, 0x1b, 0x57, 0xaf, 0xfa, 0x16, 0xb1, 0xed, 0x6d, 0x4f, 0xbb, 0x04,
-	0x83, 0x6e, 0x8d, 0xd8, 0x7a, 0xd9, 0xd2, 0x6c, 0xb7, 0x55, 0x26, 0xba, 0x93, 0x19, 0x98, 0x08,
-	0x4d, 0x25, 0xe4, 0x53, 0x4f, 0x4b, 0xd4, 0x35, 0xaa, 0x7a, 0x85, 0x6a, 0x16, 0x75, 0x67, 0xc9,
-	0x70, 0xed, 0x96, 0x9a, 0x74, 0x83, 0xb2, 0xec, 0x02, 0xa0, 0x83, 0x4a, 0x34, 0x67, 0x5b, 0xb8,
-	0xe5, 0xed, 0x7b, 0x4a, 0xd2, 0xfd, 0xb3, 0xa3, 0xd5, 0x9b, 0x7e, 0x6f, 0x70, 0x66, 0x5e, 0x3c,
-	0x27, 0x48, 0x33, 0x10, 0xe1, 0xf5, 0xa0, 0x1b, 0xb6, 0xbb, 0x77, 0x63, 0x10, 0x7e, 0x51, 0xb9,
-	0xbc, 0x94, 0x16, 0x10, 0x40, 0xe4, 0xc2, 0x12, 0xa3, 0xc5, 0xe9, 0x85, 0x8e, 0x32, 0x82, 0xd4,
-	0xf2, 0x52, 0x69, 0x71, 0x49, 0x0d, 0xec, 0xea, 0x41, 0x48, 0x78, 0x32, 0xcf, 0x74, 0x08, 0x92,
-	0x9e, 0xc0, 0x47, 0x90, 0xbf, 0x0e, 0x43, 0x48, 0xb1, 0x2c, 0x54, 0x82, 0x7e, 0x76, 0x55, 0xa3,
-	0x4c, 0x30, 0xf0, 0xe0, 0xed, 0x9d, 0x3d, 0x72, 0x60, 0x8d, 0xd1, 0x31, 0x90, 0x46, 0x5e, 0xff,
-	0xfe, 0xd1, 0xbb, 0x62, 0x4a, 0x8a, 0xe7, 0x77, 0xe6, 0xf2, 0x75, 0x6a, 0x30, 0x2f, 0x4c, 0xa3,
-	0x22, 0x44, 0xbd, 0xdd, 0x86, 0x46, 0xbb, 0xe3, 0x1b, 0x5c, 0x76, 0xd9, 0x91, 0xc0, 0x58, 0x77,
-	0xa6, 0x4a, 0x4a, 0x33, 0x38, 0x40, 0x31, 0x0a, 0xc7, 0x7a, 0xe1, 0x0a, 0x83, 0x62, 0x57, 0xcb,
-	0xd1, 0x83, 0x2e, 0x3c, 0xd3, 0xb7, 0x23, 0x0c, 0x6c, 0x10, 0x25, 0x29, 0x18, 0x31, 0x36, 0xcd,
-	0xfc, 0x6d, 0xa2, 0xdf, 0x45, 0xd7, 0x01, 0xf8, 0x02, 0x64, 0xa0, 0x27, 0x7a, 0x6d, 0xf7, 0x2d,
-	0xc7, 0xc3, 0xa0, 0x87, 0x19, 0x74, 0x52, 0x8a, 0xf9, 0xd0, 0x34, 0xea, 0x4b, 0x10, 0xa6, 0xaf,
-	0xce, 0xfd, 0x7e, 0x06, 0xde, 0xa1, 0x7f, 0x09, 0x8c, 0x3e, 0xbb, 0x28, 0xd8, 0x55, 0x88, 0xf0,
-	0x37, 0x18, 0x3a, 0x16, 0xb4, 0xda, 0xf7, 0x2e, 0xfb, 0x93, 0xc0, 0x25, 0xa0, 0x80, 0x4d, 0xc3,
-	0x87, 0xbc, 0x06, 0x51, 0xef, 0xdd, 0x89, 0x7a, 0x36, 0x41, 0xf0, 0x31, 0x7a, 0x18, 0xe8, 0x28,
-	0x03, 0x4d, 0x4b, 0x09, 0x0a, 0x6a, 0x73, 0x93, 0x79, 0x61, 0xba, 0x70, 0x4f, 0x68, 0x2b, 0x55,
-	0x84, 0x20, 0xa1, 0x4c, 0x6c, 0x11, 0xd7, 0x6d, 0x4d, 0x68, 0x96, 0x25, 0x87, 0xe6, 0x72, 0xff,
-	0x97, 0xc2, 0x79, 0x4a, 0xa6, 0x35, 0xcb, 0xaa, 0x93, 0x0a, 0x7b, 0xba, 0xe7, 0x5f, 0x71, 0x4c,
-	0x63, 0xfe, 0x80, 0xe4, 0xc6, 0x18, 0x64, 0x21, 0x74, 0xf1, 0xfa, 0x35, 0x34, 0x1c, 0x13, 0xb3,
-	0x49, 0xa5, 0xe9, 0xd6, 0x4c, 0x9b, 0xbc, 0xc6, 0x14, 0x26, 0xc4, 0x8d, 0x38, 0x44, 0xf9, 0x69,
-	0xdf, 0x83, 0x87, 0xe3, 0xc2, 0xb7, 0x0f, 0xc7, 0x85, 0x9f, 0x1e, 0x8e, 0x0b, 0xf7, 0x7f, 0x1e,
-	0xef, 0xbb, 0xd1, 0xcf, 0x3e, 0xb9, 0x11, 0x61, 0x6f, 0xff, 0xe7, 0xfe, 0x08, 0x00, 0x00, 0xff,
-	0xff, 0x9f, 0x1c, 0x00, 0xee, 0xa1, 0x0c, 0x00, 0x00,
+	// 1733 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0x4f, 0x8c, 0x5b, 0x47,
+	0x19, 0xdf, 0xf7, 0xd6, 0x7f, 0x3f, 0x7b, 0xbd, 0xde, 0x49, 0x9a, 0x3a, 0xce, 0x66, 0xb3, 0x79,
+	0xac, 0xa2, 0xed, 0x96, 0xac, 0xbb, 0xa6, 0x42, 0x28, 0x07, 0xc8, 0x73, 0xe2, 0xa6, 0x5b, 0xca,
+	0x2e, 0xbc, 0xdd, 0x55, 0x68, 0x9b, 0xc6, 0x9a, 0xf5, 0x9b, 0xd8, 0x43, 0xec, 0x37, 0x8f, 0xf7,
+	0x9e, 0x9d, 0x2c, 0x49, 0x0e, 0x80, 0x84, 0x50, 0x54, 0x81, 0xe4, 0x52, 0x04, 0xdc, 0xb8, 0x20,
+	0x0e, 0x54, 0x70, 0x23, 0x12, 0x42, 0xbd, 0x72, 0x44, 0xf4, 0x80, 0xc4, 0xa1, 0x42, 0x21, 0xdb,
+	0x4a, 0xbd, 0x72, 0x8b, 0x84, 0x84, 0xbe, 0x99, 0xb1, 0xf7, 0xd9, 0x9b, 0xad, 0x12, 0x90, 0xc0,
+	0x17, 0xcf, 0xf7, 0x9b, 0x99, 0xdf, 0xcc, 0xf7, 0x9b, 0xef, 0xfb, 0x66, 0x1e, 0x64, 0xa9, 0xef,
+	0xaf, 0xfa, 0x81, 0x88, 0x04, 0x49, 0x61, 0xb3, 0xbf, 0x56, 0x9e, 0x6f, 0x09, 0xd1, 0xea, 0xb0,
+	0x0a, 0xf5, 0x79, 0x85, 0x7a, 0x9e, 0x88, 0x68, 0xc4, 0x85, 0x17, 0xaa, 0x51, 0xe5, 0x17, 0xe5,
+	0x5f, 0xf3, 0x7c, 0x8b, 0x79, 0xe7, 0xfb, 0xb4, 0xc3, 0x5d, 0x1a, 0xb1, 0xca, 0xa1, 0x86, 0x1e,
+	0xbc, 0x1a, 0x1b, 0x2c, 0x7c, 0xe6, 0x51, 0x9f, 0xf7, 0xab, 0x15, 0xe1, 0x4b, 0xc2, 0x27, 0x90,
+	0x1f, 0x6f, 0x89, 0x96, 0x90, 0xcd, 0x0a, 0xb6, 0x14, 0x6a, 0xfd, 0xc8, 0x84, 0xd9, 0x9d, 0x90,
+	0x05, 0x35, 0xee, 0xb9, 0x0e, 0xfb, 0x76, 0x8f, 0x85, 0x11, 0xb9, 0x04, 0xa9, 0xae, 0xd8, 0xe5,
+	0x1d, 0x56, 0x32, 0x16, 0x8d, 0xe5, 0x6c, 0xed, 0xc5, 0x81, 0x4d, 0xee, 0x1b, 0xb3, 0xcb, 0xd7,
+	0x97, 0xee, 0x5e, 0x7f, 0xeb, 0x9a, 0xfb, 0xf6, 0x9d, 0xb5, 0xb5, 0x7b, 0x4b, 0x2f, 0x3c, 0xae,
+	0x1d, 0x0b, 0xe6, 0xaa, 0x93, 0xa8, 0xa3, 0xa7, 0x12, 0x02, 0x89, 0xa6, 0x70, 0x59, 0xc9, 0x44,
+	0x0a, 0x47, 0xb6, 0xc9, 0x09, 0x48, 0xdd, 0x62, 0xcd, 0x36, 0x8d, 0x4a, 0xd3, 0x12, 0xd5, 0x16,
+	0x29, 0x43, 0x0a, 0x3d, 0x58, 0x77, 0x4b, 0x09, 0xb9, 0xa0, 0x59, 0x32, 0x1c, 0x8d, 0x90, 0x2f,
+	0x42, 0x3e, 0xa2, 0x62, 0x97, 0x8a, 0x06, 0xbb, 0x1d, 0x05, 0xb4, 0x94, 0x5c, 0x34, 0x96, 0x73,
+	0xd5, 0x63, 0xab, 0x4a, 0xd0, 0xd5, 0x6d, 0xd9, 0x57, 0xc7, 0x2e, 0x27, 0x17, 0x1d, 0x18, 0x38,
+	0x4f, 0xb1, 0xeb, 0x79, 0xa9, 0xf1, 0x79, 0x57, 0x65, 0x9f, 0x9e, 0x77, 0xeb, 0xc0, 0xb0, 0x7e,
+	0x63, 0x42, 0x2e, 0x46, 0x8a, 0x7b, 0xee, 0x85, 0x2c, 0xe0, 0xae, 0x12, 0xc3, 0xd1, 0x16, 0x39,
+	0x09, 0x19, 0xdc, 0x61, 0x23, 0xe4, 0xae, 0xf6, 0x31, 0x8d, 0xf6, 0x16, 0x77, 0xc9, 0x32, 0x14,
+	0x23, 0xe1, 0x37, 0x68, 0xb3, 0xc9, 0xc2, 0xb0, 0x11, 0x89, 0x9b, 0xcc, 0xd3, 0x0e, 0x17, 0x22,
+	0xe1, 0xdb, 0x12, 0xde, 0x46, 0x94, 0x9c, 0x06, 0xa0, 0x7d, 0x1a, 0xd1, 0xa0, 0xd1, 0x0b, 0x3a,
+	0xca, 0x79, 0x27, 0xab, 0x90, 0x9d, 0xa0, 0x83, 0x44, 0x6d, 0xda, 0xa7, 0x1e, 0x6d, 0x84, 0xa1,
+	0xd0, 0x44, 0x49, 0x45, 0xa4, 0xf0, 0xad, 0x50, 0x28, 0x22, 0x02, 0x09, 0x8f, 0x37, 0x6f, 0x4a,
+	0x2f, 0xb3, 0x8e, 0x6c, 0x93, 0xe7, 0x41, 0xee, 0xa8, 0xc1, 0xdd, 0x52, 0x5a, 0x6d, 0x5d, 0x4b,
+	0x6a, 0xc1, 0x8c, 0xdc, 0x5f, 0x2f, 0x6a, 0x37, 0xe4, 0x19, 0x65, 0x64, 0x77, 0x0e, 0x37, 0xd7,
+	0x8b, 0xda, 0x97, 0xf0, 0xa8, 0xce, 0xc1, 0x2c, 0x8e, 0x61, 0xb7, 0x7d, 0x1e, 0xb0, 0x46, 0xc4,
+	0xbb, 0xac, 0x94, 0x95, 0xa3, 0x70, 0x6a, 0x5d, 0xa2, 0xdb, 0xbc, 0xcb, 0xac, 0x7f, 0x9a, 0x90,
+	0x8b, 0x69, 0x49, 0xce, 0x42, 0x7e, 0xcc, 0x6f, 0x25, 0x5a, 0x8e, 0xc6, 0x9c, 0x9e, 0x87, 0xac,
+	0xa2, 0x0d, 0xd7, 0x3d, 0x29, 0xdd, 0xb4, 0x73, 0x00, 0x90, 0xcf, 0xc1, 0x4c, 0xc0, 0x6e, 0x04,
+	0x2c, 0x6c, 0x8f, 0x29, 0x97, 0xd7, 0xa0, 0xa2, 0x88, 0xb9, 0x96, 0x18, 0x73, 0xed, 0x38, 0x24,
+	0xc3, 0xa6, 0xf0, 0x99, 0x96, 0x49, 0x19, 0xe4, 0x14, 0x64, 0x51, 0x91, 0x86, 0x47, 0xbb, 0x4c,
+	0x4b, 0x94, 0x41, 0x60, 0x83, 0x76, 0x19, 0x29, 0xc2, 0x74, 0xc8, 0x6e, 0x4b, 0x89, 0x92, 0x0e,
+	0x36, 0x49, 0x19, 0x32, 0x7e, 0x20, 0xfa, 0xdc, 0x6b, 0x0e, 0xa5, 0x19, 0xd9, 0x32, 0xac, 0x79,
+	0xb4, 0xa7, 0xc5, 0x90, 0x6d, 0x52, 0x82, 0x74, 0x53, 0xf4, 0xbc, 0x28, 0xd8, 0x2b, 0x81, 0x8a,
+	0x04, 0x6d, 0x92, 0x05, 0x80, 0x36, 0xa3, 0x2e, 0xef, 0xb6, 0xf0, 0x7c, 0x73, 0xb2, 0x33, 0x86,
+	0xa0, 0x14, 0x7e, 0xc0, 0xfb, 0xbc, 0xc3, 0x5a, 0xac, 0x94, 0x5f, 0x9c, 0xc6, 0xe3, 0x1f, 0x01,
+	0xc8, 0xdb, 0xf3, 0xb8, 0xf0, 0xb8, 0x5b, 0x9a, 0x51, 0xbc, 0xda, 0xb4, 0xde, 0x31, 0x80, 0x60,
+	0xd6, 0x3a, 0x4a, 0x94, 0x61, 0xe2, 0x9e, 0x83, 0x94, 0xcb, 0xfa, 0xbc, 0xc9, 0xa4, 0x2a, 0xb9,
+	0x6a, 0x61, 0x18, 0xed, 0x97, 0x25, 0xea, 0xe8, 0x5e, 0xb9, 0xe1, 0x36, 0xf5, 0x3c, 0xd6, 0xd1,
+	0x3a, 0x0d, 0x4d, 0xf2, 0x32, 0xe4, 0xfb, 0x2c, 0x08, 0xb9, 0xf0, 0x54, 0x64, 0x48, 0xb1, 0x6a,
+	0x73, 0x03, 0x3b, 0xfd, 0x17, 0x23, 0x11, 0x05, 0x3d, 0xf6, 0xb8, 0x96, 0x08, 0xcc, 0xa2, 0xe1,
+	0xe4, 0xf4, 0x30, 0x0c, 0x16, 0xeb, 0x2d, 0x98, 0xc3, 0xdd, 0xec, 0x78, 0xbb, 0xb1, 0x2a, 0x72,
+	0x62, 0xac, 0x8a, 0x64, 0x46, 0x85, 0xe1, 0xa0, 0x08, 0x98, 0x0a, 0xd7, 0x45, 0xe0, 0x04, 0xa4,
+	0x54, 0xfe, 0xca, 0x13, 0xcf, 0x38, 0xda, 0xb2, 0xfe, 0x6a, 0x42, 0x11, 0xd9, 0x5f, 0x17, 0x2d,
+	0xee, 0xfd, 0xdf, 0x4a, 0xd4, 0xff, 0x4c, 0xda, 0xc4, 0x98, 0xb4, 0x38, 0xcb, 0xa7, 0xcd, 0x9b,
+	0xb4, 0xc5, 0x54, 0xf4, 0xa6, 0x8f, 0x3c, 0x10, 0x3d, 0x4c, 0xc6, 0xf4, 0x12, 0x14, 0xa2, 0x36,
+	0x0f, 0xdc, 0x86, 0x4f, 0x83, 0x68, 0x0f, 0xd3, 0x44, 0xc5, 0x71, 0x5e, 0xa2, 0x5f, 0x47, 0x70,
+	0xdd, 0xb5, 0xfe, 0x66, 0x40, 0x4a, 0x6d, 0x1f, 0xa5, 0xe0, 0x5d, 0xc6, 0x75, 0xba, 0xca, 0xb6,
+	0xc4, 0xdc, 0x1b, 0x74, 0x28, 0x0f, 0xb6, 0x65, 0xc1, 0xf2, 0xdc, 0x40, 0x70, 0x17, 0x49, 0xa7,
+	0x75, 0xc1, 0x52, 0x88, 0x4e, 0xbf, 0x5e, 0x6f, 0x94, 0x95, 0xca, 0xc0, 0x0c, 0xeb, 0xd2, 0xa6,
+	0xd6, 0x03, 0x9b, 0xe4, 0x2c, 0x98, 0x22, 0x94, 0x0a, 0x14, 0xaa, 0x73, 0xe3, 0x4a, 0xae, 0x6e,
+	0x6e, 0x39, 0xa6, 0x08, 0x71, 0x75, 0x41, 0x47, 0xa5, 0x4b, 0xb6, 0xad, 0x15, 0x30, 0x37, 0xb7,
+	0x48, 0x01, 0x60, 0x73, 0xab, 0xb1, 0xb3, 0xf1, 0xd5, 0x8d, 0xcd, 0xab, 0x1b, 0xc5, 0x29, 0x92,
+	0x86, 0xe9, 0xf5, 0xcd, 0xad, 0xa2, 0x41, 0x72, 0x90, 0xb6, 0x37, 0x2e, 0x3b, 0x9b, 0xeb, 0x97,
+	0x8b, 0xa6, 0xf5, 0x2f, 0x13, 0x32, 0x18, 0x36, 0xeb, 0xde, 0x0d, 0x41, 0x0a, 0x60, 0xea, 0x02,
+	0x9e, 0x70, 0x4c, 0xee, 0x62, 0x41, 0xc0, 0x32, 0xae, 0x24, 0x55, 0xfe, 0x65, 0x10, 0x90, 0xe2,
+	0x1d, 0x15, 0x02, 0x27, 0x21, 0x83, 0xa9, 0xdb, 0xe0, 0xdd, 0x96, 0xf6, 0x2f, 0x8d, 0xf6, 0x7a,
+	0xb7, 0x85, 0xd1, 0xd1, 0x62, 0x9e, 0xcb, 0x02, 0xe9, 0x64, 0xe1, 0x20, 0x3a, 0xae, 0x48, 0xd4,
+	0xd1, 0xbd, 0x58, 0x59, 0x76, 0x79, 0x10, 0xb5, 0x5d, 0xba, 0x37, 0xac, 0x43, 0x43, 0x1b, 0xb5,
+	0x53, 0x05, 0x4f, 0x79, 0xac, 0x8c, 0xa7, 0x3b, 0x49, 0x72, 0x16, 0x52, 0x3c, 0x6c, 0x78, 0xec,
+	0x96, 0xac, 0x4b, 0x99, 0x1a, 0x7c, 0xfa, 0xd1, 0x19, 0x8d, 0x38, 0x49, 0x1e, 0x6e, 0xb0, 0x5b,
+	0x87, 0xee, 0x43, 0x78, 0xba, 0xfb, 0xf0, 0xd0, 0xfd, 0x9b, 0x7b, 0xba, 0xfb, 0xd7, 0xea, 0xc2,
+	0xcc, 0x50, 0x7e, 0x87, 0xf9, 0x9d, 0x3d, 0x32, 0xaf, 0xb3, 0x0d, 0x4f, 0x21, 0x59, 0xcb, 0x7c,
+	0xfa, 0xd1, 0x19, 0x69, 0xeb, 0xbc, 0x2b, 0x41, 0xba, 0xcb, 0xc2, 0x90, 0xb6, 0x86, 0xe7, 0x31,
+	0x34, 0xc9, 0x12, 0x24, 0x5c, 0x1a, 0x51, 0x79, 0x18, 0xb9, 0x6a, 0x71, 0xb8, 0xf0, 0x88, 0x5c,
+	0xf6, 0x5a, 0xaf, 0x41, 0xe1, 0x0a, 0x8b, 0x30, 0x65, 0x86, 0x25, 0xe2, 0x4b, 0x13, 0x25, 0x62,
+	0x71, 0x60, 0x17, 0xef, 0x1b, 0xa9, 0x6b, 0x2e, 0x56, 0x81, 0x51, 0xf2, 0x40, 0x90, 0xa9, 0x6a,
+	0x6c, 0x58, 0x17, 0xac, 0x6f, 0xa8, 0x27, 0x91, 0xda, 0xba, 0x22, 0x9b, 0x0c, 0xa0, 0x67, 0x2d,
+	0x62, 0x1f, 0x9a, 0xf0, 0xdc, 0x90, 0x73, 0xc7, 0xc7, 0x57, 0xdc, 0x41, 0x25, 0x9b, 0x0c, 0xc5,
+	0xda, 0xb9, 0x81, 0x9d, 0xe5, 0x53, 0xea, 0x77, 0x71, 0x60, 0x67, 0xdf, 0x50, 0xcd, 0xa5, 0x8b,
+	0x2a, 0xd7, 0x4d, 0xf9, 0x57, 0x82, 0x58, 0xc8, 0xbe, 0x3a, 0x19, 0x9a, 0xb5, 0xf3, 0x03, 0xfb,
+	0xd8, 0x7d, 0xa3, 0x78, 0x7d, 0xf9, 0x6e, 0x3b, 0x8a, 0xfc, 0xf0, 0x2b, 0x17, 0x2a, 0x95, 0xd5,
+	0x95, 0x17, 0x96, 0x1e, 0xd7, 0x8e, 0x07, 0xa4, 0x7a, 0x08, 0x7e, 0xf6, 0x48, 0x7e, 0x7b, 0x32,
+	0x92, 0x6b, 0xf6, 0xc0, 0x3e, 0x7d, 0xdf, 0x28, 0x5f, 0x5f, 0xbe, 0x7b, 0xcd, 0xbd, 0xf3, 0xf2,
+	0xbd, 0xf3, 0x28, 0xea, 0xe7, 0xab, 0xa3, 0x7f, 0x5c, 0x7b, 0x21, 0x98, 0xaf, 0x7e, 0xc6, 0x80,
+	0x58, 0x32, 0x1c, 0x0e, 0xfb, 0xf4, 0x13, 0x0a, 0x58, 0x01, 0xf2, 0xf5, 0xae, 0x1f, 0xed, 0x69,
+	0x2d, 0xad, 0x57, 0x20, 0x7f, 0x85, 0x79, 0x2c, 0xe0, 0xcd, 0xff, 0x2a, 0xe4, 0x56, 0xbe, 0x0c,
+	0x49, 0x15, 0xfc, 0x73, 0x30, 0xa3, 0xeb, 0x4c, 0xa3, 0xfe, 0xcd, 0x6d, 0xc7, 0x2e, 0x4e, 0x91,
+	0x22, 0xe4, 0xaf, 0xd6, 0x2f, 0xbd, 0x6a, 0x6f, 0x6b, 0xc4, 0x40, 0x64, 0xdb, 0xde, 0xac, 0xd9,
+	0x9b, 0x1a, 0x31, 0x57, 0x2e, 0x42, 0x4a, 0xc9, 0x45, 0x08, 0x14, 0xae, 0xd4, 0x37, 0x2e, 0xd7,
+	0x9d, 0x58, 0xbd, 0x9a, 0x85, 0x9c, 0xc6, 0xbe, 0x66, 0xbf, 0x5e, 0x2f, 0x1a, 0xb8, 0x8a, 0x06,
+	0x5e, 0xa9, 0x4b, 0xc8, 0xac, 0xfe, 0x2a, 0x09, 0xd3, 0xb6, 0xef, 0x93, 0x37, 0x20, 0x29, 0xef,
+	0x3d, 0x52, 0x8a, 0xc7, 0x7d, 0xfc, 0x2a, 0x2c, 0x3f, 0x77, 0x28, 0x23, 0xd0, 0x77, 0xeb, 0xcc,
+	0xc0, 0xce, 0x40, 0xea, 0x93, 0x9f, 0xff, 0x61, 0xff, 0x8f, 0xef, 0x7d, 0xef, 0xc3, 0x47, 0xef,
+	0x9a, 0x05, 0x2b, 0x5b, 0xe9, 0xaf, 0x55, 0x3a, 0x38, 0xf7, 0x82, 0xb1, 0x42, 0xb6, 0x21, 0xad,
+	0x33, 0x86, 0x9c, 0x38, 0x38, 0xe4, 0x78, 0x0a, 0x95, 0x8f, 0xc7, 0x0e, 0x7f, 0xa4, 0xaa, 0x75,
+	0x6a, 0x92, 0x19, 0x48, 0x06, 0x99, 0xa5, 0xa8, 0x54, 0xb2, 0xca, 0xa2, 0xfb, 0xfc, 0xe1, 0x8d,
+	0x7d, 0xe6, 0x8e, 0xcf, 0x0d, 0xec, 0x02, 0xe4, 0x3f, 0xf9, 0xc9, 0xaf, 0x3f, 0xfe, 0xe1, 0xef,
+	0x1f, 0x7d, 0xf0, 0xcb, 0x8f, 0xbf, 0xfb, 0x5b, 0xc9, 0x3e, 0x4b, 0x66, 0x90, 0x9d, 0x7b, 0x37,
+	0x44, 0xe5, 0x0e, 0x77, 0xef, 0x91, 0x36, 0x80, 0x4a, 0x21, 0xb9, 0xca, 0xe9, 0x49, 0xb2, 0xb1,
+	0xf4, 0x3a, 0x6a, 0xad, 0xa5, 0x27, 0xaf, 0x35, 0x63, 0x65, 0x86, 0x6b, 0xa1, 0x44, 0xd7, 0x20,
+	0x81, 0xdf, 0x45, 0xe3, 0x9e, 0xc4, 0xbe, 0x94, 0xfe, 0x33, 0x76, 0x7c, 0x24, 0x21, 0xfb, 0x2e,
+	0xa4, 0xd4, 0x8b, 0x89, 0x9c, 0x8c, 0xd3, 0x8c, 0xbd, 0xa2, 0x9e, 0x55, 0x2b, 0x0b, 0x70, 0x85,
+	0x9e, 0x37, 0x5c, 0xa3, 0x01, 0x69, 0xfd, 0x46, 0x24, 0xe5, 0x38, 0xd3, 0xf8, 0xc3, 0xf1, 0xa8,
+	0x55, 0xce, 0x4e, 0x9e, 0x74, 0xd1, 0xca, 0x21, 0xbf, 0x7e, 0x8b, 0x5f, 0x30, 0x56, 0x6a, 0xef,
+	0x1a, 0x03, 0x1b, 0xd3, 0xf5, 0xd4, 0xfe, 0x7b, 0x3f, 0x78, 0xf4, 0xe0, 0x17, 0xfb, 0xef, 0xfc,
+	0xf4, 0xd1, 0x83, 0xf7, 0xf7, 0x7f, 0xfc, 0x3b, 0xbd, 0xb5, 0x07, 0xef, 0xef, 0x7f, 0xf0, 0xfd,
+	0x6a, 0xf2, 0xa5, 0xd5, 0xb5, 0xd5, 0x97, 0xac, 0x44, 0x85, 0xfa, 0x7e, 0xb5, 0x48, 0x7d, 0xbf,
+	0xc3, 0x9b, 0xf2, 0xdb, 0xb4, 0xf2, 0xad, 0x50, 0x78, 0x17, 0x0e, 0x21, 0x6f, 0xce, 0x43, 0x19,
+	0xa6, 0x5f, 0xbb, 0xba, 0x4d, 0x8e, 0x65, 0xcc, 0xf2, 0x0c, 0x7e, 0x94, 0x88, 0x80, 0x7f, 0x47,
+	0x0e, 0x58, 0x34, 0x77, 0xb3, 0x90, 0x56, 0xbd, 0x53, 0x7f, 0x7a, 0xb8, 0x60, 0xfc, 0xf9, 0xe1,
+	0x82, 0xf1, 0xf7, 0x87, 0x0b, 0xc6, 0xcf, 0xfe, 0xb1, 0x30, 0xf5, 0x66, 0xf2, 0x26, 0x8f, 0xa2,
+	0xbd, 0xdd, 0x94, 0xfc, 0xb8, 0xfd, 0xc2, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0xec, 0x50, 0x6a,
+	0x42, 0x82, 0x0f, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1174,9 +1440,11 @@ type AppClient interface {
 	UpdateInfo(ctx context.Context, in *UserInfoUpdateRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
 	// 用户已登录后，绑定额外的手机号或微信号
 	Bind(ctx context.Context, in *UserBindRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
-	// Unbind 针对已登录用户，额外绑定手机或微信登录方式
+	// 针对已登录用户，取消绑定手机或微信登录方式
 	Unbind(ctx context.Context, in *UserUnbindRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
-	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，避免jwt中的信息与实际信息不一致
+	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，
+	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
+	// 后续请求务必请将老JWT替换为新JWT。
 	Refresh(ctx context.Context, in *UserRefreshRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
 }
 
@@ -1263,9 +1531,11 @@ type AppServer interface {
 	UpdateInfo(context.Context, *UserInfoUpdateRequest) (*UserInfoReply, error)
 	// 用户已登录后，绑定额外的手机号或微信号
 	Bind(context.Context, *UserBindRequest) (*UserInfoReply, error)
-	// Unbind 针对已登录用户，额外绑定手机或微信登录方式
+	// 针对已登录用户，取消绑定手机或微信登录方式
 	Unbind(context.Context, *UserUnbindRequest) (*UserInfoReply, error)
-	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，避免jwt中的信息与实际信息不一致
+	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，
+	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
+	// 后续请求务必请将老JWT替换为新JWT。
 	Refresh(context.Context, *UserRefreshRequest) (*UserInfoReply, error)
 }
 
@@ -1486,6 +1756,30 @@ func (m *UserBindRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
+	if m.WechatExtra != nil {
+		{
+			size, err := m.WechatExtra.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintApp(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	if m.TaobaoExtra != nil {
+		{
+			size, err := m.TaobaoExtra.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintApp(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x2a
+	}
 	if len(m.OpenId) > 0 {
 		i -= len(m.OpenId)
 		copy(dAtA[i:], m.OpenId)
@@ -1511,6 +1805,212 @@ func (m *UserBindRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.Mobile)
 		copy(dAtA[i:], m.Mobile)
 		i = encodeVarintApp(dAtA, i, uint64(len(m.Mobile)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TaobaoExtra) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TaobaoExtra) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TaobaoExtra) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.TopExpireTime) > 0 {
+		i -= len(m.TopExpireTime)
+		copy(dAtA[i:], m.TopExpireTime)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.TopExpireTime)))
+		i--
+		dAtA[i] = 0x4a
+	}
+	if len(m.TopAuthCode) > 0 {
+		i -= len(m.TopAuthCode)
+		copy(dAtA[i:], m.TopAuthCode)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.TopAuthCode)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.OpenId) > 0 {
+		i -= len(m.OpenId)
+		copy(dAtA[i:], m.OpenId)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.OpenId)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if len(m.Nick) > 0 {
+		i -= len(m.Nick)
+		copy(dAtA[i:], m.Nick)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Nick)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.HavanaSsoToken) > 0 {
+		i -= len(m.HavanaSsoToken)
+		copy(dAtA[i:], m.HavanaSsoToken)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.HavanaSsoToken)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.AvatarUrl) > 0 {
+		i -= len(m.AvatarUrl)
+		copy(dAtA[i:], m.AvatarUrl)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AvatarUrl)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.TopAccessToken) > 0 {
+		i -= len(m.TopAccessToken)
+		copy(dAtA[i:], m.TopAccessToken)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.TopAccessToken)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.OpenSid) > 0 {
+		i -= len(m.OpenSid)
+		copy(dAtA[i:], m.OpenSid)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.OpenSid)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Userid) > 0 {
+		i -= len(m.Userid)
+		copy(dAtA[i:], m.Userid)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Userid)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *WechatExtra) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *WechatExtra) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *WechatExtra) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Unionid) > 0 {
+		i -= len(m.Unionid)
+		copy(dAtA[i:], m.Unionid)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Unionid)))
+		i--
+		dAtA[i] = 0x6a
+	}
+	if len(m.Privilege) > 0 {
+		for iNdEx := len(m.Privilege) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Privilege[iNdEx])
+			copy(dAtA[i:], m.Privilege[iNdEx])
+			i = encodeVarintApp(dAtA, i, uint64(len(m.Privilege[iNdEx])))
+			i--
+			dAtA[i] = 0x62
+		}
+	}
+	if len(m.Headimgurl) > 0 {
+		i -= len(m.Headimgurl)
+		copy(dAtA[i:], m.Headimgurl)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Headimgurl)))
+		i--
+		dAtA[i] = 0x5a
+	}
+	if len(m.Country) > 0 {
+		i -= len(m.Country)
+		copy(dAtA[i:], m.Country)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Country)))
+		i--
+		dAtA[i] = 0x52
+	}
+	if len(m.City) > 0 {
+		i -= len(m.City)
+		copy(dAtA[i:], m.City)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.City)))
+		i--
+		dAtA[i] = 0x4a
+	}
+	if len(m.Province) > 0 {
+		i -= len(m.Province)
+		copy(dAtA[i:], m.Province)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Province)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if m.Sex != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.Sex))
+		i--
+		dAtA[i] = 0x38
+	}
+	if len(m.NickName) > 0 {
+		i -= len(m.NickName)
+		copy(dAtA[i:], m.NickName)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.NickName)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.Scope) > 0 {
+		i -= len(m.Scope)
+		copy(dAtA[i:], m.Scope)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Scope)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.OpenId) > 0 {
+		i -= len(m.OpenId)
+		copy(dAtA[i:], m.OpenId)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.OpenId)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.RefreshToken) > 0 {
+		i -= len(m.RefreshToken)
+		copy(dAtA[i:], m.RefreshToken)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.RefreshToken)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.ExpiresIn != 0 {
+		i = encodeVarintApp(dAtA, i, uint64(m.ExpiresIn))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.AccessToken) > 0 {
+		i -= len(m.AccessToken)
+		copy(dAtA[i:], m.AccessToken)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AccessToken)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1594,6 +2094,16 @@ func (m *UserUnbindRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
+	if m.Taobao {
+		i--
+		if m.Taobao {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
 	if m.Wechat {
 		i--
 		if m.Wechat {
@@ -1640,6 +2150,20 @@ func (m *UserLoginRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.XXX_unrecognized != nil {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.ThirdPartyId) > 0 {
+		i -= len(m.ThirdPartyId)
+		copy(dAtA[i:], m.ThirdPartyId)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.ThirdPartyId)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.PackageName) > 0 {
+		i -= len(m.PackageName)
+		copy(dAtA[i:], m.PackageName)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.PackageName)))
+		i--
+		dAtA[i] = 0x3a
 	}
 	if len(m.VersionCode) > 0 {
 		i -= len(m.VersionCode)
@@ -1788,6 +2312,47 @@ func (m *UserInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.XXX_unrecognized != nil {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.TaobaoExtra != nil {
+		{
+			size, err := m.TaobaoExtra.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintApp(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x5a
+	}
+	if m.WechatExtra != nil {
+		{
+			size, err := m.WechatExtra.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintApp(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x52
+	}
+	if m.IsNew {
+		i--
+		if m.IsNew {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x48
+	}
+	if len(m.ThirdPartyId) > 0 {
+		i -= len(m.ThirdPartyId)
+		copy(dAtA[i:], m.ThirdPartyId)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.ThirdPartyId)))
+		i--
+		dAtA[i] = 0x42
 	}
 	if len(m.Token) > 0 {
 		i -= len(m.Token)
@@ -1946,6 +2511,26 @@ func (m *UserInfoRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
+	if m.Taobao {
+		i--
+		if m.Taobao {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Wechat {
+		i--
+		if m.Wechat {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
 	if m.Id != 0 {
 		i = encodeVarintApp(dAtA, i, uint64(m.Id))
 		i--
@@ -1977,6 +2562,13 @@ func (m *UserInfoUpdateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.XXX_unrecognized != nil {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.ThirdPartyId) > 0 {
+		i -= len(m.ThirdPartyId)
+		copy(dAtA[i:], m.ThirdPartyId)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.ThirdPartyId)))
+		i--
+		dAtA[i] = 0x3a
 	}
 	if len(m.Birthday) > 0 {
 		i -= len(m.Birthday)
@@ -2073,116 +2665,6 @@ func (m *GenericReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *UserRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *UserRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *UserRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if len(m.ThirdPartyIds) > 0 {
-		for k := range m.ThirdPartyIds {
-			v := m.ThirdPartyIds[k]
-			baseI := i
-			i -= len(v)
-			copy(dAtA[i:], v)
-			i = encodeVarintApp(dAtA, i, uint64(len(v)))
-			i--
-			dAtA[i] = 0x12
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintApp(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintApp(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0x62
-		}
-	}
-	if len(m.QqOpenId) > 0 {
-		i -= len(m.QqOpenId)
-		copy(dAtA[i:], m.QqOpenId)
-		i = encodeVarintApp(dAtA, i, uint64(len(m.QqOpenId)))
-		i--
-		dAtA[i] = 0x5a
-	}
-	if len(m.WechatOpenId) > 0 {
-		i -= len(m.WechatOpenId)
-		copy(dAtA[i:], m.WechatOpenId)
-		i = encodeVarintApp(dAtA, i, uint64(len(m.WechatOpenId)))
-		i--
-		dAtA[i] = 0x52
-	}
-	if m.Code != 0 {
-		i = encodeVarintApp(dAtA, i, uint64(m.Code))
-		i--
-		dAtA[i] = 0x48
-	}
-	if len(m.Mobile) > 0 {
-		i -= len(m.Mobile)
-		copy(dAtA[i:], m.Mobile)
-		i = encodeVarintApp(dAtA, i, uint64(len(m.Mobile)))
-		i--
-		dAtA[i] = 0x42
-	}
-	if m.Age != 0 {
-		i = encodeVarintApp(dAtA, i, uint64(m.Age))
-		i--
-		dAtA[i] = 0x38
-	}
-	if len(m.Autograph) > 0 {
-		i -= len(m.Autograph)
-		copy(dAtA[i:], m.Autograph)
-		i = encodeVarintApp(dAtA, i, uint64(len(m.Autograph)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if m.Gender != 0 {
-		i = encodeVarintApp(dAtA, i, uint64(m.Gender))
-		i--
-		dAtA[i] = 0x28
-	}
-	if len(m.RealId) > 0 {
-		i -= len(m.RealId)
-		copy(dAtA[i:], m.RealId)
-		i = encodeVarintApp(dAtA, i, uint64(len(m.RealId)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.RealName) > 0 {
-		i -= len(m.RealName)
-		copy(dAtA[i:], m.RealName)
-		i = encodeVarintApp(dAtA, i, uint64(len(m.RealName)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.NickName) > 0 {
-		i -= len(m.NickName)
-		copy(dAtA[i:], m.NickName)
-		i = encodeVarintApp(dAtA, i, uint64(len(m.NickName)))
-		i--
-		dAtA[i] = 0x12
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintApp(dAtA []byte, offset int, v uint64) int {
 	offset -= sovApp(v)
 	base := offset
@@ -2213,6 +2695,126 @@ func (m *UserBindRequest) Size() (n int) {
 		n += 1 + l + sovApp(uint64(l))
 	}
 	l = len(m.OpenId)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.TaobaoExtra != nil {
+		l = m.TaobaoExtra.Size()
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.WechatExtra != nil {
+		l = m.WechatExtra.Size()
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *TaobaoExtra) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Userid)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.OpenSid)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.TopAccessToken)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.AvatarUrl)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.HavanaSsoToken)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.Nick)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.OpenId)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.TopAuthCode)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.TopExpireTime)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *WechatExtra) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AccessToken)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.ExpiresIn != 0 {
+		n += 1 + sovApp(uint64(m.ExpiresIn))
+	}
+	l = len(m.RefreshToken)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.OpenId)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.Scope)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.NickName)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.Sex != 0 {
+		n += 1 + sovApp(uint64(m.Sex))
+	}
+	l = len(m.Province)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.City)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.Country)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.Headimgurl)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if len(m.Privilege) > 0 {
+		for _, s := range m.Privilege {
+			l = len(s)
+			n += 1 + l + sovApp(uint64(l))
+		}
+	}
+	l = len(m.Unionid)
 	if l > 0 {
 		n += 1 + l + sovApp(uint64(l))
 	}
@@ -2258,6 +2860,9 @@ func (m *UserUnbindRequest) Size() (n int) {
 	if m.Wechat {
 		n += 2
 	}
+	if m.Taobao {
+		n += 2
+	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
@@ -2291,6 +2896,14 @@ func (m *UserLoginRequest) Size() (n int) {
 		n += 1 + l + sovApp(uint64(l))
 	}
 	l = len(m.VersionCode)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.PackageName)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.ThirdPartyId)
 	if l > 0 {
 		n += 1 + l + sovApp(uint64(l))
 	}
@@ -2371,6 +2984,21 @@ func (m *UserInfo) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovApp(uint64(l))
 	}
+	l = len(m.ThirdPartyId)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.IsNew {
+		n += 2
+	}
+	if m.WechatExtra != nil {
+		l = m.WechatExtra.Size()
+		n += 1 + l + sovApp(uint64(l))
+	}
+	if m.TaobaoExtra != nil {
+		l = m.TaobaoExtra.Size()
+		n += 1 + l + sovApp(uint64(l))
+	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
@@ -2425,6 +3053,12 @@ func (m *UserInfoRequest) Size() (n int) {
 	if m.Id != 0 {
 		n += 1 + sovApp(uint64(m.Id))
 	}
+	if m.Wechat {
+		n += 2
+	}
+	if m.Taobao {
+		n += 2
+	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
@@ -2449,6 +3083,10 @@ func (m *UserInfoUpdateRequest) Size() (n int) {
 		n += 1 + sovApp(uint64(m.Gender))
 	}
 	l = len(m.Birthday)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.ThirdPartyId)
 	if l > 0 {
 		n += 1 + l + sovApp(uint64(l))
 	}
@@ -2482,63 +3120,6 @@ func (m *GenericReply) Size() (n int) {
 	l = len(m.Message)
 	if l > 0 {
 		n += 1 + l + sovApp(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
-}
-
-func (m *UserRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.NickName)
-	if l > 0 {
-		n += 1 + l + sovApp(uint64(l))
-	}
-	l = len(m.RealName)
-	if l > 0 {
-		n += 1 + l + sovApp(uint64(l))
-	}
-	l = len(m.RealId)
-	if l > 0 {
-		n += 1 + l + sovApp(uint64(l))
-	}
-	if m.Gender != 0 {
-		n += 1 + sovApp(uint64(m.Gender))
-	}
-	l = len(m.Autograph)
-	if l > 0 {
-		n += 1 + l + sovApp(uint64(l))
-	}
-	if m.Age != 0 {
-		n += 1 + sovApp(uint64(m.Age))
-	}
-	l = len(m.Mobile)
-	if l > 0 {
-		n += 1 + l + sovApp(uint64(l))
-	}
-	if m.Code != 0 {
-		n += 1 + sovApp(uint64(m.Code))
-	}
-	l = len(m.WechatOpenId)
-	if l > 0 {
-		n += 1 + l + sovApp(uint64(l))
-	}
-	l = len(m.QqOpenId)
-	if l > 0 {
-		n += 1 + l + sovApp(uint64(l))
-	}
-	if len(m.ThirdPartyIds) > 0 {
-		for k, v := range m.ThirdPartyIds {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovApp(uint64(len(k))) + 1 + len(v) + sovApp(uint64(len(v)))
-			n += mapEntrySize + 1 + sovApp(uint64(mapEntrySize))
-		}
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -2708,6 +3289,864 @@ func (m *UserBindRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.OpenId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaobaoExtra", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TaobaoExtra == nil {
+				m.TaobaoExtra = &TaobaoExtra{}
+			}
+			if err := m.TaobaoExtra.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field WechatExtra", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.WechatExtra == nil {
+				m.WechatExtra = &WechatExtra{}
+			}
+			if err := m.WechatExtra.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApp(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TaobaoExtra) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApp
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TaobaoExtra: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TaobaoExtra: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Userid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Userid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpenSid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OpenSid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TopAccessToken", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TopAccessToken = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AvatarUrl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AvatarUrl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HavanaSsoToken", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HavanaSsoToken = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nick", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Nick = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpenId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OpenId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TopAuthCode", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TopAuthCode = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TopExpireTime", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TopExpireTime = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApp(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApp
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *WechatExtra) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApp
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WechatExtra: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WechatExtra: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessToken", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccessToken = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpiresIn", wireType)
+			}
+			m.ExpiresIn = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ExpiresIn |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RefreshToken", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RefreshToken = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpenId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OpenId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Scope", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Scope = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NickName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NickName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sex", wireType)
+			}
+			m.Sex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Sex |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Province", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Province = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field City", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.City = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Country", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Country = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Headimgurl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Headimgurl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Privilege", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Privilege = append(m.Privilege, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Unionid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Unionid = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2957,6 +4396,26 @@ func (m *UserUnbindRequest) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Wechat = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Taobao", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Taobao = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApp(dAtA[iNdEx:])
@@ -3206,6 +4665,70 @@ func (m *UserLoginRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.VersionCode = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PackageName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PackageName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ThirdPartyId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ThirdPartyId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3724,6 +5247,130 @@ func (m *UserInfo) Unmarshal(dAtA []byte) error {
 			}
 			m.Token = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ThirdPartyId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ThirdPartyId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IsNew", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IsNew = bool(v != 0)
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field WechatExtra", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.WechatExtra == nil {
+				m.WechatExtra = &WechatExtra{}
+			}
+			if err := m.WechatExtra.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TaobaoExtra", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TaobaoExtra == nil {
+				m.TaobaoExtra = &TaobaoExtra{}
+			}
+			if err := m.TaobaoExtra.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApp(dAtA[iNdEx:])
@@ -4024,6 +5671,46 @@ func (m *UserInfoRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Wechat", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Wechat = bool(v != 0)
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Taobao", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Taobao = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApp(dAtA[iNdEx:])
@@ -4193,6 +5880,38 @@ func (m *UserInfoUpdateRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.Birthday = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ThirdPartyId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ThirdPartyId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApp(dAtA[iNdEx:])
@@ -4351,468 +6070,6 @@ func (m *GenericReply) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Message = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipApp(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthApp
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthApp
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *UserRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowApp
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: UserRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UserRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NickName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthApp
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthApp
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.NickName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RealName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthApp
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthApp
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RealName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RealId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthApp
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthApp
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RealId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Gender", wireType)
-			}
-			m.Gender = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Gender |= UserRequest_Gender(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Autograph", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthApp
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthApp
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Autograph = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Age", wireType)
-			}
-			m.Age = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Age |= uint32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Mobile", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthApp
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthApp
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Mobile = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 9:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
-			}
-			m.Code = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Code |= int32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 10:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field WechatOpenId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthApp
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthApp
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.WechatOpenId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 11:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QqOpenId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthApp
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthApp
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.QqOpenId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 12:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ThirdPartyIds", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowApp
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthApp
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthApp
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.ThirdPartyIds == nil {
-				m.ThirdPartyIds = make(map[string]string)
-			}
-			var mapkey string
-			var mapvalue string
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowApp
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowApp
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthApp
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthApp
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var stringLenmapvalue uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowApp
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapvalue |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapvalue := int(stringLenmapvalue)
-					if intStringLenmapvalue < 0 {
-						return ErrInvalidLengthApp
-					}
-					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
-					if postStringIndexmapvalue < 0 {
-						return ErrInvalidLengthApp
-					}
-					if postStringIndexmapvalue > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
-					iNdEx = postStringIndexmapvalue
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipApp(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if skippy < 0 {
-						return ErrInvalidLengthApp
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.ThirdPartyIds[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

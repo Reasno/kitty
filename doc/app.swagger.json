@@ -1,8 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "A kitty app",
-    "version": "1.0"
+    "title": "商业化中台用户中心",
+    "version": "0.1.0"
   },
   "basePath": "/app",
   "consumes": [
@@ -41,7 +41,7 @@
           }
         ],
         "tags": [
-          "App"
+          "用户信息"
         ]
       }
     },
@@ -72,7 +72,7 @@
           }
         ],
         "tags": [
-          "App"
+          "登录"
         ]
       }
     },
@@ -105,7 +105,7 @@
           }
         ],
         "tags": [
-          "App"
+          "用户信息"
         ]
       }
     },
@@ -134,10 +134,24 @@
             "required": true,
             "type": "string",
             "format": "uint64"
+          },
+          {
+            "name": "wechat",
+            "description": "同时获得微信相关信息.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "taobao",
+            "description": "同时获得淘宝相关信息.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
-          "App"
+          "用户信息"
         ]
       }
     },
@@ -170,13 +184,13 @@
           }
         ],
         "tags": [
-          "App"
+          "登录"
         ]
       }
     },
     "/v1/refresh": {
       "post": {
-        "summary": "JWT Token续期，需要在每次升级系统或每次冷启动前调用，避免jwt中的信息与实际信息不一致",
+        "summary": "JWT Token续期，需要在每次升级系统或每次冷启动前调用，\n避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，\n后续请求务必请将老JWT替换为新JWT。",
         "operationId": "App_Refresh",
         "responses": {
           "200": {
@@ -203,13 +217,13 @@
           }
         ],
         "tags": [
-          "App"
+          "登录"
         ]
       }
     },
     "/v1/unbind": {
       "post": {
-        "summary": "Unbind 针对已登录用户，额外绑定手机或微信登录方式",
+        "summary": "针对已登录用户，取消绑定手机或微信登录方式",
         "operationId": "App_Unbind",
         "responses": {
           "200": {
@@ -236,7 +250,7 @@
           }
         ],
         "tags": [
-          "App"
+          "用户信息"
         ]
       }
     }
@@ -250,15 +264,6 @@
         "ANDROID"
       ],
       "default": "OS_UNKNOWN"
-    },
-    "appv1Gender": {
-      "type": "string",
-      "enum": [
-        "GENDER_UNKNOWN",
-        "GENDER_MALE",
-        "GENDER_FEMALE"
-      ],
-      "default": "GENDER_UNKNOWN"
     },
     "protobufAny": {
       "type": "object",
@@ -306,15 +311,26 @@
           "type": "string"
         },
         "mac": {
-          "type": "string"
+          "type": "string",
+          "title": "MAC 地址"
         },
         "os": {
-          "$ref": "#/definitions/DeviceOS"
+          "$ref": "#/definitions/DeviceOS",
+          "title": "1 苹果，2 安卓"
         },
         "oaid": {
           "type": "string"
         }
       }
+    },
+    "v1Gender": {
+      "type": "string",
+      "enum": [
+        "GENDER_UNKNOWN",
+        "GENDER_MALE",
+        "GENDER_FEMALE"
+      ],
+      "default": "GENDER_UNKNOWN"
     },
     "v1GenericReply": {
       "type": "object",
@@ -328,22 +344,65 @@
         }
       }
     },
+    "v1TaobaoExtra": {
+      "type": "object",
+      "properties": {
+        "userid": {
+          "type": "string"
+        },
+        "openSid": {
+          "type": "string"
+        },
+        "topAccessToken": {
+          "type": "string"
+        },
+        "avatarUrl": {
+          "type": "string"
+        },
+        "havanaSsoToken": {
+          "type": "string"
+        },
+        "nick": {
+          "type": "string"
+        },
+        "openId": {
+          "type": "string"
+        },
+        "topAuthCode": {
+          "type": "string"
+        },
+        "topExpireTime": {
+          "type": "string"
+        }
+      }
+    },
     "v1UserBindRequest": {
       "type": "object",
       "properties": {
         "mobile": {
           "type": "string",
+          "title": "手机号",
           "pattern": "(^$|^[\\d]{11}$)"
         },
         "code": {
-          "type": "string"
+          "type": "string",
+          "title": "手机验证码（配合手机号使用）"
         },
         "wechat": {
-          "type": "string"
+          "type": "string",
+          "title": "微信官方下发的临时code码，非openId"
         },
         "openId": {
           "type": "string",
-          "title": "如果有openid 就直接走openid"
+          "title": "废弃，请使用wechat_extra.openId"
+        },
+        "taobaoExtra": {
+          "$ref": "#/definitions/v1TaobaoExtra",
+          "title": "绑定淘宝"
+        },
+        "wechatExtra": {
+          "$ref": "#/definitions/v1WechatExtra",
+          "title": "如果有openId 就直接走openId，不用再填微信官方下发的临时code码"
         }
       }
     },
@@ -361,16 +420,30 @@
           "type": "string"
         },
         "headImg": {
-          "type": "string"
+          "type": "string",
+          "title": "头像地址"
         },
         "gender": {
-          "$ref": "#/definitions/appv1Gender"
+          "$ref": "#/definitions/v1Gender"
         },
         "birthday": {
           "type": "string"
         },
         "token": {
           "type": "string"
+        },
+        "thirdPartyId": {
+          "type": "string",
+          "title": "第三方ID"
+        },
+        "isNew": {
+          "type": "boolean"
+        },
+        "wechatExtra": {
+          "$ref": "#/definitions/v1WechatExtra"
+        },
+        "taobaoExtra": {
+          "$ref": "#/definitions/v1TaobaoExtra"
         }
       }
     },
@@ -394,19 +467,27 @@
       "properties": {
         "userName": {
           "type": "string",
+          "title": "用户名",
           "maximum": 10,
           "minimum": 2
         },
         "headImg": {
           "type": "string",
+          "title": "头像地址",
           "pattern": "^(|https?://.*)$"
         },
         "gender": {
-          "$ref": "#/definitions/appv1Gender"
+          "$ref": "#/definitions/v1Gender",
+          "title": "性别"
         },
         "birthday": {
           "type": "string",
+          "title": "生日",
           "pattern": "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"
+        },
+        "thirdPartyId": {
+          "type": "string",
+          "title": "第三方ID"
         }
       }
     },
@@ -415,10 +496,12 @@
       "properties": {
         "mobile": {
           "type": "string",
+          "title": "手机号",
           "pattern": "(^$|^[\\d]{11}$)"
         },
         "code": {
-          "type": "string"
+          "type": "string",
+          "title": "手机验证码"
         },
         "wechat": {
           "type": "string",
@@ -429,15 +512,25 @@
         },
         "channel": {
           "type": "string",
+          "title": "渠道"
+        },
+        "versionCode": {
+          "type": "string",
+          "title": "版本号",
           "required": [
             "true"
           ]
         },
-        "versionCode": {
+        "packageName": {
           "type": "string",
+          "title": "包名",
           "required": [
             "true"
           ]
+        },
+        "thirdPartyId": {
+          "type": "string",
+          "title": "第三方ID"
         }
       }
     },
@@ -449,27 +542,81 @@
         },
         "channel": {
           "type": "string",
-          "required": [
-            "true"
-          ]
+          "title": "渠道号"
         },
         "versionCode": {
           "type": "string",
+          "title": "版本号",
           "required": [
             "true"
           ]
         }
       },
-      "title": "UserRefreshRequest Token续期"
+      "title": "Token续期"
     },
     "v1UserUnbindRequest": {
       "type": "object",
       "properties": {
         "mobile": {
-          "type": "boolean"
+          "type": "boolean",
+          "title": "true则解绑手机"
         },
         "wechat": {
-          "type": "boolean"
+          "type": "boolean",
+          "title": "true则解绑微信"
+        },
+        "taobao": {
+          "type": "boolean",
+          "title": "true则解绑淘宝"
+        }
+      }
+    },
+    "v1WechatExtra": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        },
+        "expiresIn": {
+          "type": "string",
+          "format": "int64"
+        },
+        "refreshToken": {
+          "type": "string"
+        },
+        "openId": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "nickName": {
+          "type": "string"
+        },
+        "sex": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "province": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "headimgurl": {
+          "type": "string"
+        },
+        "privilege": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unionid": {
+          "type": "string"
         }
       }
     }

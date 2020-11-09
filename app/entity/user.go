@@ -4,7 +4,8 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"fmt"
-	pb "github.com/Reasno/kitty/proto"
+
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -12,18 +13,22 @@ import (
 // User describes a user
 type User struct {
 	gorm.Model
-	UserName      string `json:"user_name" gorm:"default:游客"`
+	UserName      string         `json:"user_name" gorm:"default:游客"`
 	WechatOpenId  sql.NullString `json:"wechat_openid" gorm:"type:varchar(255);uniqueIndex:wechat_openid_index"`
 	WechatUnionId sql.NullString `json:"wechat_unionid"`
-	HeadImg       string `json:"head_img"`
-	Gender        int    `json:"gender"`
-	Birthday      string `json:"birthday" gorm:"default:2000-01-01"`
+	HeadImg       string         `json:"head_img"`
+	Gender        int            `json:"gender"`
+	Birthday      string         `json:"birthday" gorm:"default:2000-01-01"`
 	Mobile        sql.NullString `json:"mobile" gorm:"type:varchar(255);uniqueIndex:mobile_index"`
-	CommonSUUID string `json:"common_suuid"`
+	CommonSUUID   string         `json:"common_suuid"`
 	Devices       []Device
 	Channel       string `json:"channel"`
 	VersionCode   string `json:"version_code"`
 	InviteCode    string `json:"invite_code"`
+	PackageName   string `gorm:"type:varchar(255);uniqueIndex:mobile_index,priority:1;uniqueIndex:wechat_openid_index,priority:1;uniqueIndex:taobao_openid_index,priority:1"`
+	ThirdPartyId  string
+	TaobaoOpenId  sql.NullString `json:"taobao_openid" gorm:"type:varchar(255);uniqueIndex:taobao_openid_index"`
+	IsNew         bool           `gorm:"-"`
 }
 
 func (user *User) HasDevice(device *Device) bool {
@@ -46,14 +51,21 @@ func (user *User) ToReply() *pb.UserInfoReply {
 		Code:    0,
 		Message: "",
 		Data: &pb.UserInfo{
-			Id:       uint64(user.ID),
-			UserName: user.UserName,
-			Wechat:   user.WechatOpenId.String,
-			HeadImg:  user.HeadImg,
-			Gender:   pb.Gender(user.Gender),
-			Birthday: user.Birthday,
+			Id:           uint64(user.ID),
+			UserName:     user.UserName,
+			Wechat:       user.WechatOpenId.String,
+			HeadImg:      user.HeadImg,
+			Gender:       pb.Gender(user.Gender),
+			Birthday:     user.Birthday,
+			ThirdPartyId: user.ThirdPartyId,
+			IsNew:        user.IsNew,
 		},
 	}
+}
+
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
+	u.IsNew = true
+	return
 }
 
 // Device describes a device.

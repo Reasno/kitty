@@ -2,6 +2,7 @@ package container
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/oklog/run"
 	"google.golang.org/grpc"
 )
 
@@ -9,27 +10,22 @@ type ModuleContainer struct {
 	HttpProviders     []func(router *mux.Router)
 	GrpcProviders     []func(server *grpc.Server)
 	CloserProviders   []func()
-	RunProviders      []RunPair
+	RunProviders      []func(g *run.Group)
 	MigrationProvider []Migrations
 }
 
 func NewModuleContainer() ModuleContainer {
 	return ModuleContainer{
-		HttpProviders:    []func(router *mux.Router){},
-		GrpcProviders:    []func(server *grpc.Server){},
-		CloserProviders:  []func(){},
-		RunProviders:     []RunPair{},
+		HttpProviders:     []func(router *mux.Router){},
+		GrpcProviders:     []func(server *grpc.Server){},
+		CloserProviders:   []func(){},
+		RunProviders:      []func(g *run.Group){},
 		MigrationProvider: []Migrations{},
 	}
 }
 
-type RunPair struct {
-	Loop func() error
-	Exit func(error)
-}
-
 type Migrations struct {
-	Migrate func() error
+	Migrate  func() error
 	Rollback func(flag string) error
 }
 
@@ -46,8 +42,7 @@ type CloserProvider interface {
 }
 
 type RunProvider interface {
-	ProvideRunLoop() error
-	ProvideRunExit(error)
+	ProvideRunGroup(group *run.Group)
 }
 
 type MigrationProvider interface {
@@ -61,7 +56,7 @@ func (h HttpFunc) ProvideHttp(router *mux.Router) {
 	h(router)
 }
 
-func (s *ModuleContainer) Register(app interface{})  {
+func (s *ModuleContainer) Register(app interface{}) {
 	if p, ok := app.(HttpProvider); ok {
 		s.HttpProviders = append(s.HttpProviders, p.ProvideHttp)
 	}
@@ -69,7 +64,10 @@ func (s *ModuleContainer) Register(app interface{})  {
 		s.GrpcProviders = append(s.GrpcProviders, p.ProvideGrpc)
 	}
 	if p, ok := app.(RunProvider); ok {
-		s.RunProviders = append(s.RunProviders, RunPair{p.ProvideRunLoop, p.ProvideRunExit})
+		s.RunProviders = append(s.RunProviders, p.ProvideRunGroup)
+	}
+	if p, ok := app.(CloserProvider); ok {
+		s.CloserProviders = append(s.CloserProviders, p.ProvideCloser)
 	}
 	if p, ok := app.(MigrationProvider); ok {
 		s.MigrationProvider = append(s.MigrationProvider, Migrations{p.ProvideMigration, p.ProvideRollback})

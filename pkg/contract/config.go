@@ -1,10 +1,23 @@
 package contract
 
 type ConfigReader interface {
-	GetString(string) string
-	GetInt(string) int
-	GetStringSlice(string) []string
-	GetBool(string) bool
+	String(string) string
+	Int(string) int
+	Strings(string) []string
+	Bool(string) bool
 	Get(string) interface{}
-	GetFloat64(string) float64
+	Float64(string) float64
+	Cut(string) ConfigReader
+}
+
+type Env interface {
+	IsLocal() bool
+	IsTesting() bool
+	IsDev() bool
+	IsProd() bool
+	String() string
+}
+
+type AppName interface {
+	String() string
 }

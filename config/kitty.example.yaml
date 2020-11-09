@@ -1,5 +1,5 @@
 global:
-  version: 0.1.0
+  version: 0.2.0
   env: local
   http:
     addr: :8080
@@ -9,6 +9,7 @@ global:
     enable: true
     kid: kitty
     key: zxcvb0997zSDvHSD
+  level: debug
 app:
   name: kitty
   redis:

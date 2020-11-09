@@ -3,25 +3,39 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/Reasno/kitty/app/entity"
-	"github.com/go-gormigrate/gormigrate/v2"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	"flag"
 	"testing"
+
+	"github.com/go-gormigrate/gormigrate/v2"
+	"glab.tagtic.cn/ad_gains/kitty/app/entity"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var repo *UserRepo
 var m *gormigrate.Gormigrate
 var db *gorm.DB
 
+var useMysql bool
+
+func init() {
+	flag.BoolVar(&useMysql, "mysql", false, "use local mysql for testing")
+}
+
 func setUp(t *testing.T) {
 	var err error
-	///db, err = gorm.Open(sqlite.Open(":memory:?cache=shared"), &gorm.Config{})
-	db, err = gorm.Open(mysql.Open("root@tcp(127.0.0.1:3306)/kitty?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
+	if !useMysql {
+		db, err = gorm.Open(sqlite.Open(":memory:?cache=shared"), &gorm.Config{})
+	} else {
+		db, err = gorm.Open(mysql.Open("root@tcp(127.0.0.1:3306)/kitty?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
+	}
+
 	if err != nil {
 		t.Fatal("failed to connect database")
 	}
-	m = ProvideMigrator(db)
+	m = ProvideMigrator(db, config.AppName("test"))
 	err = m.Migrate()
 	if err != nil {
 		t.Fatal("failed migration")
@@ -30,14 +44,14 @@ func setUp(t *testing.T) {
 }
 
 func tearDown() {
-	db.Migrator().DropTable("devices", "users", "migrations")
+	db.Migrator().DropTable("devices", "users", "test_migrations")
 }
 
 func TestGetFromWechat(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 	ctx := context.Background()
-	u, err := repo.GetFromWechat(ctx, "foo", &entity.Device{Suuid: "bar"}, entity.User{UserName: "baz"})
+	u, err := repo.GetFromWechat(ctx, "", "foo", &entity.Device{Suuid: "bar"}, entity.User{UserName: "baz"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +67,7 @@ func TestGetFromWechat(t *testing.T) {
 	if u.UserName != "baz" {
 		t.Fatalf("want baz, got %s", u.UserName)
 	}
-	u2, err := repo.GetFromWechat(ctx, "foo", &entity.Device{Suuid: "bar2"}, entity.User{UserName: "baz2"})
+	u2, err := repo.GetFromWechat(ctx, "", "foo", &entity.Device{Suuid: "bar2"}, entity.User{UserName: "baz2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +89,7 @@ func TestGetFromMobile(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 	ctx := context.Background()
-	u, err := repo.GetFromMobile(ctx, "110", &entity.Device{Suuid: "bar"})
+	u, err := repo.GetFromMobile(ctx, "", "110", &entity.Device{Suuid: "bar"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +102,7 @@ func TestGetFromMobile(t *testing.T) {
 	if u.CommonSUUID != "bar" {
 		t.Fatalf("want bar, got %s", u.CommonSUUID)
 	}
-	u2, err := repo.GetFromMobile(ctx, "110", &entity.Device{Suuid: "bar2"})
+	u2, err := repo.GetFromMobile(ctx, "", "110", &entity.Device{Suuid: "bar2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +121,7 @@ func TestGetFromDevice(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 	ctx := context.Background()
-	u, err := repo.GetFromDevice(ctx, "110", &entity.Device{Suuid: "bar"})
+	u, err := repo.GetFromDevice(ctx, "", "110", &entity.Device{Suuid: "bar"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +131,7 @@ func TestGetFromDevice(t *testing.T) {
 	if u.Devices[0].Suuid != "bar" {
 		t.Fatalf("want bar, got %s", u.Devices[0].Suuid)
 	}
-	u2, err := repo.GetFromDevice(ctx, "110", &entity.Device{Suuid: "bar2"})
+	u2, err := repo.GetFromDevice(ctx, "", "110", &entity.Device{Suuid: "bar2"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,6 +163,9 @@ func TestGetSave(t *testing.T) {
 }
 
 func TestUniqueConstraint(t *testing.T) {
+	if !useMysql {
+		t.Skip("unique constraints tests must be run on mysql")
+	}
 	setUp(t)
 	defer tearDown()
 	ctx := context.Background()
@@ -163,7 +180,7 @@ func TestUniqueConstraint(t *testing.T) {
 		Mobile: sql.NullString{"110", true},
 	}
 	err = repo.Save(ctx, &user2)
-	if err == nil {
+	if err != ErrAlreadyBind {
 		t.Fatal(err)
 	}
 	user3 := entity.User{
@@ -177,7 +194,7 @@ func TestUniqueConstraint(t *testing.T) {
 		WechatOpenId: sql.NullString{"110", true},
 	}
 	err = repo.Save(ctx, &user4)
-	if err == nil {
+	if err != ErrAlreadyBind {
 		t.Fatal(err)
 	}
 }

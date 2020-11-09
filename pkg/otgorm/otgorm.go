@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 // AddGormCallbacks adds callbacks for tracing, you should call SetSpanToGorm to make them work
 func AddGormCallbacks(db *gorm.DB, tracer opentracing.Tracer) {
 	callbacks := newCallbacks(tracer)
@@ -20,7 +19,7 @@ func AddGormCallbacks(db *gorm.DB, tracer opentracing.Tracer) {
 	registerCallbacks(db, "row_query", callbacks)
 }
 
-type callbacks struct{
+type callbacks struct {
 	tracer opentracing.Tracer
 }
 

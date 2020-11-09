@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"github.com/go-kit/kit/log/level"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"os"
-	"strings"
 )
 
 var force bool
@@ -27,8 +26,8 @@ var migrateCommand = &cobra.Command{
 		initModules()
 		defer shutdownModules()
 
-		env := strings.ToLower(viper.GetString("global.env"))
-		if env == "prod" || env == "production" {
+		env := config.ProvideEnv(conf)
+		if env.IsProd() {
 			level.Error(logger).Log("err", "migrations and rollback in production requires force flag to be set")
 			os.Exit(1)
 			return

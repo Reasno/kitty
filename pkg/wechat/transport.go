@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Reasno/kitty/pkg/contract"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"io/ioutil"
 	"net/http"
 )
@@ -21,18 +21,18 @@ type Transport struct {
 type WechatConfig struct {
 	WechatAccessTokenUrl string
 	WeChatGetUserInfoUrl string
-	AppId string
-	AppSecret string
-	Client contract.HttpDoer
+	AppId                string
+	AppSecret            string
+	Client               contract.HttpDoer
 }
 
 func NewTransport(conf *WechatConfig) *Transport {
 	return &Transport{
 		wechatAccessTokenUrl: conf.WechatAccessTokenUrl,
 		wechatGetUserInfoUrl: conf.WeChatGetUserInfoUrl,
-		appId: conf.AppId,
-		appSecret: conf.AppSecret,
-		client: conf.Client,
+		appId:                conf.AppId,
+		appSecret:            conf.AppSecret,
+		client:               conf.Client,
 	}
 }
 

@@ -57,6 +57,26 @@ func (m *UserBindRequest) Validate() error {
 
 	// no validation rules for OpenId
 
+	if v, ok := interface{}(m.GetTaobaoExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserBindRequestValidationError{
+				field:  "TaobaoExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetWechatExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserBindRequestValidationError{
+				field:  "WechatExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -116,6 +136,178 @@ var _ interface {
 
 var _UserBindRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{11}$)")
 
+// Validate checks the field values on TaobaoExtra with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *TaobaoExtra) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Userid
+
+	// no validation rules for OpenSid
+
+	// no validation rules for TopAccessToken
+
+	// no validation rules for AvatarUrl
+
+	// no validation rules for HavanaSsoToken
+
+	// no validation rules for Nick
+
+	// no validation rules for OpenId
+
+	// no validation rules for TopAuthCode
+
+	// no validation rules for TopExpireTime
+
+	return nil
+}
+
+// TaobaoExtraValidationError is the validation error returned by
+// TaobaoExtra.Validate if the designated constraints aren't met.
+type TaobaoExtraValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaobaoExtraValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaobaoExtraValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaobaoExtraValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaobaoExtraValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaobaoExtraValidationError) ErrorName() string { return "TaobaoExtraValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TaobaoExtraValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaobaoExtra.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaobaoExtraValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaobaoExtraValidationError{}
+
+// Validate checks the field values on WechatExtra with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *WechatExtra) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for AccessToken
+
+	// no validation rules for ExpiresIn
+
+	// no validation rules for RefreshToken
+
+	// no validation rules for OpenId
+
+	// no validation rules for Scope
+
+	// no validation rules for NickName
+
+	// no validation rules for Sex
+
+	// no validation rules for Province
+
+	// no validation rules for City
+
+	// no validation rules for Country
+
+	// no validation rules for Headimgurl
+
+	// no validation rules for Unionid
+
+	return nil
+}
+
+// WechatExtraValidationError is the validation error returned by
+// WechatExtra.Validate if the designated constraints aren't met.
+type WechatExtraValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WechatExtraValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WechatExtraValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WechatExtraValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WechatExtraValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WechatExtraValidationError) ErrorName() string { return "WechatExtraValidationError" }
+
+// Error satisfies the builtin error interface
+func (e WechatExtraValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWechatExtra.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WechatExtraValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WechatExtraValidationError{}
+
 // Validate checks the field values on UserRefreshRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -134,12 +326,7 @@ func (m *UserRefreshRequest) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetChannel()) < 1 {
-		return UserRefreshRequestValidationError{
-			field:  "Channel",
-			reason: "value length must be at least 1 runes",
-		}
-	}
+	// no validation rules for Channel
 
 	if utf8.RuneCountInString(m.GetVersionCode()) < 1 {
 		return UserRefreshRequestValidationError{
@@ -218,6 +405,8 @@ func (m *UserUnbindRequest) Validate() error {
 	// no validation rules for Mobile
 
 	// no validation rules for Wechat
+
+	// no validation rules for Taobao
 
 	return nil
 }
@@ -307,19 +496,23 @@ func (m *UserLoginRequest) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetChannel()) < 1 {
+	// no validation rules for Channel
+
+	if utf8.RuneCountInString(m.GetVersionCode()) < 4 {
 		return UserLoginRequestValidationError{
-			field:  "Channel",
+			field:  "VersionCode",
+			reason: "value length must be at least 4 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetPackageName()) < 1 {
+		return UserLoginRequestValidationError{
+			field:  "PackageName",
 			reason: "value length must be at least 1 runes",
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetVersionCode()) < 1 {
-		return UserLoginRequestValidationError{
-			field:  "VersionCode",
-			reason: "value length must be at least 1 runes",
-		}
-	}
+	// no validation rules for ThirdPartyId
 
 	return nil
 }
@@ -478,6 +671,30 @@ func (m *UserInfo) Validate() error {
 	// no validation rules for Birthday
 
 	// no validation rules for Token
+
+	// no validation rules for ThirdPartyId
+
+	// no validation rules for IsNew
+
+	if v, ok := interface{}(m.GetWechatExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserInfoValidationError{
+				field:  "WechatExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetTaobaoExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserInfoValidationError{
+				field:  "TaobaoExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
@@ -699,6 +916,10 @@ func (m *UserInfoRequest) Validate() error {
 
 	// no validation rules for Id
 
+	// no validation rules for Wechat
+
+	// no validation rules for Taobao
+
 	return nil
 }
 
@@ -786,6 +1007,8 @@ func (m *UserInfoUpdateRequest) Validate() error {
 			reason: "value does not match regex pattern \"^(|\\\\d{4}-\\\\d{1,2}-\\\\d{1,2})$\"",
 		}
 	}
+
+	// no validation rules for ThirdPartyId
 
 	return nil
 }
@@ -983,101 +1206,3 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GenericReplyValidationError{}
-
-// Validate checks the field values on UserRequest with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
-func (m *UserRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	if utf8.RuneCountInString(m.GetNickName()) > 10 {
-		return UserRequestValidationError{
-			field:  "NickName",
-			reason: "value length must be at most 10 runes",
-		}
-	}
-
-	// no validation rules for RealName
-
-	// no validation rules for RealId
-
-	// no validation rules for Gender
-
-	// no validation rules for Autograph
-
-	// no validation rules for Age
-
-	if utf8.RuneCountInString(m.GetMobile()) != 5 {
-		return UserRequestValidationError{
-			field:  "Mobile",
-			reason: "value length must be 5 runes",
-		}
-
-	}
-
-	// no validation rules for Code
-
-	// no validation rules for WechatOpenId
-
-	// no validation rules for QqOpenId
-
-	// no validation rules for ThirdPartyIds
-
-	return nil
-}
-
-// UserRequestValidationError is the validation error returned by
-// UserRequest.Validate if the designated constraints aren't met.
-type UserRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e UserRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e UserRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e UserRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e UserRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e UserRequestValidationError) ErrorName() string { return "UserRequestValidationError" }
-
-// Error satisfies the builtin error interface
-func (e UserRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sUserRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = UserRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = UserRequestValidationError{}
