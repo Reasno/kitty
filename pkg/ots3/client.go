@@ -3,18 +3,17 @@ package ots3
 import (
 	"context"
 	"encoding/json"
-	"github.com/go-kit/kit/endpoint"
-	httptransport "github.com/go-kit/kit/transport/http"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/go-kit/kit/endpoint"
+	httptransport "github.com/go-kit/kit/transport/http"
 )
 
-func NewClient(conf contract.ConfigReader) *httptransport.Client {
-	var u, _ = url.Parse(conf.String("url"))
-	return httptransport.NewClient("POST", u, encodeClientRequest, decodeClientResponse)
+func NewClient(uri *url.URL) *httptransport.Client {
+	return httptransport.NewClient("POST", uri, encodeClientRequest, decodeClientResponse)
 }
 
 func decodeClientResponse(_ context.Context, response2 *http.Response) (response interface{}, err error) {
