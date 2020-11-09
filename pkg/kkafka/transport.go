@@ -11,7 +11,7 @@ import (
 
 type Transport struct {
 	underlying kafka.RoundTripper
-	tracer opentracing.Tracer
+	tracer     opentracing.Tracer
 }
 
 func NewTransport(underlying kafka.RoundTripper, tracer opentracing.Tracer) *Transport {
@@ -22,7 +22,7 @@ func NewTransport(underlying kafka.RoundTripper, tracer opentracing.Tracer) *Tra
 }
 
 func (t *Transport) RoundTrip(ctx context.Context, addr net.Addr, request kafka.Request) (kafka.Response, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "kafka")
+	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, t.tracer, "kafka")
 	defer span.Finish()
 	span.LogFields(log.String("addr", addr.String()))
 	resp, err := t.underlying.RoundTrip(ctx, addr, request)
