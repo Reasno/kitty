@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	stdtracing "github.com/opentracing/opentracing-go"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
@@ -34,5 +35,12 @@ func (s InputEnrichedAppService) Login(ctx context.Context, in *pb.UserLoginRequ
 	if in.Device.Suuid == "" {
 		in.Device.Suuid = "N/A"
 	}
-	return s.AppServer.Login(ctx, in)
+	span := stdtracing.SpanFromContext(ctx)
+	span.SetTag("package.name", in.PackageName)
+	span.SetTag("suuid", in.Device.Suuid)
+	resp, err := s.AppServer.Login(ctx, in)
+	if err == nil {
+		span.SetTag("user.id", resp.Data.Id)
+	}
+	return resp, err
 }

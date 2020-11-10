@@ -8,7 +8,7 @@ import (
 )
 
 func NewAppService(conf contract.ConfigReader, log log.Logger, ur UserRepository, cr CodeRepository, er ExtraRepository, sender contract.SmsSender, wechat wechat.Wechater, uploader contract.Uploader, fr FileRepository) appService {
-	return appService{conf: conf, log: log, ur: ur, cr: cr, er: er, sender: sender, wechat: wechat, uploader: uploader, fr: fr}
+	return appService{conf: conf, logger: log, ur: ur, cr: cr, er: er, sender: sender, wechat: wechat, uploader: uploader, fr: fr}
 }
 
 type ServerMiddleware func(server pb.AppServer) pb.AppServer

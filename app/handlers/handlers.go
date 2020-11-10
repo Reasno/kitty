@@ -25,7 +25,7 @@ var wechatExtraKey struct{}
 
 type appService struct {
 	conf     contract.ConfigReader
-	log      log.Logger
+	logger   log.Logger
 	ur       UserRepository
 	cr       CodeRepository
 	er       ExtraRepository
@@ -336,23 +336,19 @@ func (s appService) getToken(param *tokenParam) (string, error) {
 
 func (s appService) debug(err error) {
 	if err != nil {
-		level.Debug(s.log).Log("err", err)
+		level.Debug(s.logger).Log("err", err)
 	}
-}
-
-func (s appService) infof(msg string, args ...interface{}) {
-	level.Info(s.log).Log("msg", fmt.Sprintf(msg, args...))
 }
 
 func (s appService) error(err error) {
 	if err != nil {
-		level.Error(s.log).Log("err", err)
+		level.Error(s.logger).Log("err", err)
 	}
 }
 
 func (s appService) warn(err error) {
 	if err != nil {
-		level.Warn(s.log).Log("err", err)
+		level.Warn(s.logger).Log("err", err)
 	}
 }
 func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.WechatExtra, error) {
@@ -415,7 +411,7 @@ func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat s
 	if err != nil {
 		return nil, nil, dbErr(err)
 	}
-	s.infof(msg.WxSuccess, u.ID)
+	level.Info(s.logger).Log("msg", fmt.Sprintf(msg.WxSuccess, u.ID), "suuid", device.Suuid, "userId", u.ID, "packageName", packageName)
 	return u, wxInfo, nil
 }
 
@@ -432,7 +428,7 @@ func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, 
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	s.infof(msg.MobileSuccess, u.ID)
+	level.Info(s.logger).Log("msg", fmt.Sprintf(msg.MobileSuccess, u.ID), "suuid", device.Suuid, "userId", u.ID, "packageName", packageName)
 	return u, nil
 }
 
@@ -441,7 +437,7 @@ func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid st
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	s.infof(msg.DeviceSuccess, u.ID)
+	level.Info(s.logger).Log("msg", fmt.Sprintf(msg.DeviceSuccess, u.ID), "suuid", device.Suuid, "userId", u.ID, "packageName", packageName)
 	return u, nil
 }
 

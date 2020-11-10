@@ -2,6 +2,7 @@ package wechat
 
 import (
 	"context"
+	"fmt"
 
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 )
@@ -24,8 +25,8 @@ func NewWechaterFacade(factory *WechaterFactory) *WechaterFacade {
 	return &WechaterFacade{factory: factory}
 }
 
-
 func (w *WechaterFacade) getRealWechater(ctx context.Context) Wechater {
 	packageName := config.GetTenant(ctx).PackageName
+	fmt.Println(packageName)
 	return w.factory.GetTransport(packageName)
 }
