@@ -540,6 +540,10 @@
         "thirdPartyId": {
           "type": "string",
           "title": "第三方ID"
+        },
+        "inviteCode": {
+          "type": "string",
+          "title": "邀请码"
         }
       }
     },

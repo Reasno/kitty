@@ -208,6 +208,8 @@ message UserLoginRequest {
   ];
   // 第三方ID
   string third_party_id = 8;
+  // 邀请码
+  string invite_code = 9;
 }
 
 message Device {

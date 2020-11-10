@@ -478,6 +478,10 @@ func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 		u.VersionCode = in.VersionCode
 		hasExtra = true
 	}
+	if in.InviteCode != "" && u.InviteCode == "" {
+		u.InviteCode = in.InviteCode
+		hasExtra = true
+	}
 
 	if hasExtra {
 		err = s.ur.Save(ctx, u)
