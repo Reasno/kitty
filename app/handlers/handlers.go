@@ -236,10 +236,10 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	if len(in.Wechat) > 0 {
 		var wechatExtra *pb.WechatExtra
 		wechatExtra, err = s.getWechatInfo(ctx, in.Wechat)
-		ctx = context.WithValue(ctx, wechatExtraKey, in.WechatExtra)
 		if err != nil {
 			return nil, kerr.UnauthorizedErr(err)
 		}
+		ctx = context.WithValue(ctx, wechatExtraKey, wechatExtra)
 		toUpdate = entity.User{
 			WechatOpenId:  ns(wechatExtra.OpenId),
 			WechatUnionId: ns(wechatExtra.Unionid),
@@ -558,7 +558,7 @@ func (s appService) persistTaobaoExtra(ctx context.Context) {
 func (s appService) persistWechatExtra(ctx context.Context) {
 	claim := kittyjwt.GetClaim(ctx)
 	extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra)
-	if !ok {
+	if !ok || extra == nil {
 		return
 	}
 	b, err := extra.Marshal()
