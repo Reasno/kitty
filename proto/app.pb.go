@@ -1463,10 +1463,13 @@ type AppClient interface {
 	// 获取任意用户信息，填0获取本人信息
 	GetInfo(ctx context.Context, in *UserInfoRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
 	// 更新个人信息
+	// 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
 	UpdateInfo(ctx context.Context, in *UserInfoUpdateRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
-	// 用户已登录后，绑定额外的手机号或微信号
+	// 用户已登录后，绑定额外的手机号或微信号。
+	// 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
 	Bind(ctx context.Context, in *UserBindRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
 	// 针对已登录用户，取消绑定手机或微信登录方式
+	// 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
 	Unbind(ctx context.Context, in *UserUnbindRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
 	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，
 	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
@@ -1554,10 +1557,13 @@ type AppServer interface {
 	// 获取任意用户信息，填0获取本人信息
 	GetInfo(context.Context, *UserInfoRequest) (*UserInfoReply, error)
 	// 更新个人信息
+	// 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
 	UpdateInfo(context.Context, *UserInfoUpdateRequest) (*UserInfoReply, error)
-	// 用户已登录后，绑定额外的手机号或微信号
+	// 用户已登录后，绑定额外的手机号或微信号。
+	// 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
 	Bind(context.Context, *UserBindRequest) (*UserInfoReply, error)
 	// 针对已登录用户，取消绑定手机或微信登录方式
+	// 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
 	Unbind(context.Context, *UserUnbindRequest) (*UserInfoReply, error)
 	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，
 	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，

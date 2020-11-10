@@ -14,7 +14,7 @@
   "paths": {
     "/v1/bind": {
       "post": {
-        "summary": "用户已登录后，绑定额外的手机号或微信号",
+        "summary": "用户已登录后，绑定额外的手机号或微信号。\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
         "operationId": "App_Bind",
         "responses": {
           "200": {
@@ -84,7 +84,7 @@
     },
     "/v1/info": {
       "post": {
-        "summary": "更新个人信息",
+        "summary": "更新个人信息\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
         "operationId": "App_UpdateInfo",
         "responses": {
           "200": {
@@ -229,7 +229,7 @@
     },
     "/v1/unbind": {
       "post": {
-        "summary": "针对已登录用户，取消绑定手机或微信登录方式",
+        "summary": "针对已登录用户，取消绑定手机或微信登录方式\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
         "operationId": "App_Unbind",
         "responses": {
           "200": {
