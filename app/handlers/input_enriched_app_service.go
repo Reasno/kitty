@@ -35,6 +35,17 @@ func (s InputEnrichedAppService) Login(ctx context.Context, in *pb.UserLoginRequ
 	if in.Device.Suuid == "" {
 		in.Device.Suuid = "N/A"
 	}
+	ctx = context.WithValue(ctx, config.TenantKey, &config.Tenant{
+		PackageName: in.PackageName,
+		Suuid:       in.Device.Suuid,
+		VersionCode: in.VersionCode,
+		Channel:     in.Channel,
+		Os:          uint8(in.Device.Os),
+		Idfa:        in.Device.Idfa,
+		Oaid:        in.Device.Oaid,
+		Mac:         in.Device.Mac,
+		AndroidId:   in.Device.AndroidId,
+	})
 	span := stdtracing.SpanFromContext(ctx)
 	span.SetTag("package.name", in.PackageName)
 	span.SetTag("suuid", in.Device.Suuid)
