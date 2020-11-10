@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"strings"
 
 	stdtracing "github.com/opentracing/opentracing-go"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
@@ -45,6 +46,7 @@ func (s InputEnrichedAppService) Login(ctx context.Context, in *pb.UserLoginRequ
 		Oaid:        in.Device.Oaid,
 		Mac:         in.Device.Mac,
 		AndroidId:   in.Device.AndroidId,
+		Ip:          getIp(ctx),
 	})
 	span := stdtracing.SpanFromContext(ctx)
 	span.SetTag("package.name", in.PackageName)
@@ -54,4 +56,18 @@ func (s InputEnrichedAppService) Login(ctx context.Context, in *pb.UserLoginRequ
 		span.SetTag("user.id", resp.Data.Id)
 	}
 	return resp, err
+}
+
+func getIp(ctx context.Context) string {
+	if xff, ok := ctx.Value("x-forwarded-for").(string); ok {
+		i := strings.Index(xff, ", ")
+		if i == -1 {
+			i = len(xff)
+		}
+		return xff[:i]
+	}
+	if xrip, ok := ctx.Value("x-real-ip").(string); ok {
+		return xrip
+	}
+	return ""
 }
