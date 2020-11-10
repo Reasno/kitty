@@ -558,7 +558,7 @@ func (s appService) persistTaobaoExtra(ctx context.Context) {
 func (s appService) persistWechatExtra(ctx context.Context) {
 	claim := kittyjwt.GetClaim(ctx)
 	extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra)
-	if !ok || extra == nil {
+	if !ok {
 		return
 	}
 	b, err := extra.Marshal()
