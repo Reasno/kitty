@@ -30,7 +30,7 @@ type appService struct {
 	cr       CodeRepository
 	er       ExtraRepository
 	sender   contract.SmsSender
-	wechat   *wechat.Transport
+	wechat   wechat.Wechater
 	uploader contract.Uploader
 	fr       FileRepository
 }
