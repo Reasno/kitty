@@ -49,8 +49,8 @@ type KoanfAdapter struct {
 }
 
 func (k *KoanfAdapter) Cut(s string) contract.ConfigReader {
-	cut := k.k.Cut(s)
-	cut.Merge(k.k.Cut("global"))
+	cut := k.k.Cut("global")
+	cut.Merge(k.k.Cut(s))
 	return NewKoanfAdapter(cut)
 }
 

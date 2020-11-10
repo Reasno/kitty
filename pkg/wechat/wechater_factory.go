@@ -38,6 +38,7 @@ func (t *WechaterFactory) GetTransportWithConf(name string, conf contract.Config
 	if name == "" {
 		name = "default"
 	}
+
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
