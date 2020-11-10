@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kgrpc"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/log"
@@ -66,8 +68,10 @@ func (a *Module) ProvideCloser() {
 
 func (a *Module) ProvideGrpc(server *grpc.Server) {
 	pb.RegisterAppServer(server, svc.MakeGRPCServer(a.endpoints,
-		grpctransport.ServerBefore(opentracing.GRPCToContext(
-			a.tracer, "app", a.logger),
+		grpctransport.ServerBefore(
+			opentracing.GRPCToContext(a.tracer, "app", a.logger),
+			jwt.GRPCToContext(),
+			kgrpc.IpToContext(),
 		),
 		grpctransport.ServerBefore(jwt.GRPCToContext()),
 	))
@@ -75,9 +79,11 @@ func (a *Module) ProvideGrpc(server *grpc.Server) {
 
 func (a *Module) ProvideHttp(router *mux.Router) {
 	router.PathPrefix("/app/").Handler(http.StripPrefix("/app", svc.MakeHTTPHandler(a.endpoints,
-		httptransport.ServerBefore(opentracing.HTTPToContext(
-			a.tracer, "app", a.logger)),
-		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerBefore(
+			opentracing.HTTPToContext(a.tracer, "app", a.logger),
+			jwt.HTTPToContext(),
+			khttp.IpToContext(),
+		),
 		httptransport.ServerErrorEncoder(kerr.ErrorEncoder),
 	)))
 }

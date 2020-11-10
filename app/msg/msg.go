@@ -8,7 +8,7 @@ const (
 	ErrorUpload          = "无法上传图片"
 	ErrorAlreadyBind     = "已经被其他账号绑定，请先解绑"
 	ErrorTooFrequent     = "请求太频繁了"
-	ErrorMissingOpenid   = "OpenID缺失"
+	ErrorMissingOpenid   = "腾讯服务器验证未通过"
 	ErrorGetCode         = "获取验证码异常"
 	ErrorSendCode        = "生成验证码异常"
 	ErrorDatabaseFailure = "数据库异常"

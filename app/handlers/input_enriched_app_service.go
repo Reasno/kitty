@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"context"
-	"strings"
 
 	stdtracing "github.com/opentracing/opentracing-go"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
@@ -59,15 +59,6 @@ func (s InputEnrichedAppService) Login(ctx context.Context, in *pb.UserLoginRequ
 }
 
 func getIp(ctx context.Context) string {
-	if xff, ok := ctx.Value("x-forwarded-for").(string); ok {
-		i := strings.Index(xff, ", ")
-		if i == -1 {
-			i = len(xff)
-		}
-		return xff[:i]
-	}
-	if xrip, ok := ctx.Value("x-real-ip").(string); ok {
-		return xrip
-	}
-	return ""
+	ip, _ := ctx.Value(contract.IpKey).(string)
+	return ip
 }

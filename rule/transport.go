@@ -3,13 +3,14 @@ package rule
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption) http.Handler {
