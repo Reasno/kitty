@@ -16,7 +16,6 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/sms"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
@@ -30,7 +29,7 @@ type appService struct {
 	ur       UserRepository
 	cr       CodeRepository
 	er       ExtraRepository
-	sender   *sms.SenderFactory
+	sender   contract.SmsSender
 	wechat   *wechat.Transport
 	uploader contract.Uploader
 	fr       FileRepository
@@ -114,8 +113,7 @@ func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.Gen
 	if err != nil {
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorGetCode))
 	}
-	transport := s.sender.GetTransport(in.PackageName)
-	err = transport.Send(ctx, in.Mobile, code)
+	err = s.sender.Send(ctx, in.Mobile, code)
 	if err != nil {
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorSendCode))
 	}
@@ -358,14 +356,14 @@ func (s appService) warn(err error) {
 	}
 }
 func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.WechatExtra, error) {
-	wxRes, err := s.wechat.GetWechatLoginResponse(ctx, wechat)
+	wxRes, err := s.wechat.GetLoginResponse(ctx, wechat)
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}
 	if wxRes.Openid == "" {
 		return nil, errors.New(msg.ErrorMissingOpenid)
 	}
-	wxInfo, err := s.wechat.GetWechatUserInfoResult(ctx, wxRes)
+	wxInfo, err := s.wechat.GetUserInfoResult(ctx, wxRes)
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}

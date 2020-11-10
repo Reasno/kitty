@@ -5,48 +5,39 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/knadh/koanf"
+	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/confmap"
 	"github.com/pkg/errors"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	kconf "glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/rule"
 	"go.etcd.io/etcd/clientv3"
 )
 
 type DynamicConfig struct {
 	repository rule.Repository
+	logger     log.Logger
 }
 
-func (d DynamicConfig) String(s string) string {
-	panic("implement me")
-}
-
-func (d DynamicConfig) Int(s string) int {
-	panic("implement me")
-}
-
-func (d DynamicConfig) Strings(s string) []string {
-	panic("implement me")
-}
-
-func (d DynamicConfig) Bool(s string) bool {
-	panic("implement me")
-}
-
-func (d DynamicConfig) Get(s string) interface{} {
-	panic("implement me")
-}
-
-func (d DynamicConfig) Float64(s string) float64 {
-	panic("implement me")
-}
-
-func (d DynamicConfig) Cut(s string) contract.ConfigReader {
-	panic("implement me")
+func (d *DynamicConfig) Of(ruleName string, payload *rule.Payload) (*kconf.KoanfAdapter, error) {
+	compiled := d.repository.GetCompiled(ruleName)
+	calculated, err := rule.Calculate(compiled, payload, d.logger)
+	if err != nil {
+		return nil, err
+	}
+	c := koanf.New(".")
+	err = c.Load(confmap.Provider(calculated, ""), yaml.Parser())
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot load from map")
+	}
+	adapter := kconf.NewKoanfAdapter(c)
+	return adapter, nil
 }
 
 type Option func(*config)
 
 type config struct {
-	ctx context.Context
+	ctx    context.Context
 	client *clientv3.Client
 	logger log.Logger
 }
@@ -68,7 +59,6 @@ func WithContext(ctx context.Context) Option {
 		c.ctx = ctx
 	}
 }
-
 
 func NewDynamicConfig(ctx context.Context, opt ...Option) (*DynamicConfig, error) {
 	c := config{}
@@ -95,5 +85,5 @@ func NewDynamicConfig(ctx context.Context, opt ...Option) (*DynamicConfig, error
 	go func() {
 		level.Error(c.logger).Log("err", repository.WatchConfigUpdate(ctx))
 	}()
-	return &DynamicConfig{repository: repository}, nil
+	return &DynamicConfig{repository: repository, logger: c.logger}, nil
 }

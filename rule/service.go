@@ -39,7 +39,7 @@ func NewService(logger log.Logger, repo Repository) *service {
 
 func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *Payload) (Data, error) {
 	rules := r.repo.GetCompiled(ruleName)
-	return calculate(rules, payload, r.logger)
+	return Calculate(rules, payload, r.logger)
 }
 
 func (r *service) GetRules(ctx context.Context, ruleName string) ([]byte, error) {

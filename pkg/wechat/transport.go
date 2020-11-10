@@ -36,7 +36,7 @@ func NewTransport(conf *WechatConfig) *Transport {
 	}
 }
 
-func (t *Transport) GetWechatLoginResponse(ctx context.Context, code string) (result *WxLoginResult, err error) {
+func (t *Transport) GetLoginResponse(ctx context.Context, code string) (result *WxLoginResult, err error) {
 	url := fmt.Sprintf(t.wechatAccessTokenUrl, t.appId, t.appSecret, code)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -55,7 +55,7 @@ func (t *Transport) GetWechatLoginResponse(ctx context.Context, code string) (re
 	return result, nil
 }
 
-func (t *Transport) GetWechatUserInfoResult(ctx context.Context, wxLoginResult *WxLoginResult) (*WxUserInfoResult, error) {
+func (t *Transport) GetUserInfoResult(ctx context.Context, wxLoginResult *WxLoginResult) (*WxUserInfoResult, error) {
 	url := fmt.Sprintf(t.wechatGetUserInfoUrl, wxLoginResult.AccessToken, wxLoginResult.Openid)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {

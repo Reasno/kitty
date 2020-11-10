@@ -31,6 +31,10 @@ func (t *SenderFactory) getSmsConfig(conf contract.ConfigReader, name string) *T
 }
 
 func (t *SenderFactory) GetTransport(name string) contract.SmsSender {
+	return t.GetTransportWithConf(name, t.conf)
+}
+
+func (t *SenderFactory) GetTransportWithConf(name string, conf contract.ConfigReader) contract.SmsSender {
 	name = strings.ReplaceAll(name, ".", "_")
 	if name == "" {
 		name = "default"
@@ -42,6 +46,6 @@ func (t *SenderFactory) GetTransport(name string) contract.SmsSender {
 		return tsp
 	}
 	// Currently we only have one kind of sender.
-	t.cache[name] = NewTransport(t.getSmsConfig(t.conf, name))
+	t.cache[name] = NewTransport(t.getSmsConfig(conf, name))
 	return t.cache[name]
 }

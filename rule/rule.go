@@ -162,7 +162,7 @@ func validateRules(reader io.Reader) error {
 	return nil
 }
 
-func calculate(rules []Rule, payload *Payload, logger log.Logger) (Data, error) {
+func Calculate(rules []Rule, payload *Payload, logger log.Logger) (Data, error) {
 	for _, rule := range rules {
 		output, err := expr.Run(rule.program, payload)
 		if err != nil {
