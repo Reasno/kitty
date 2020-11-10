@@ -58,6 +58,7 @@ func (user *User) ToReply() *pb.UserInfoReply {
 			Gender:       pb.Gender(user.Gender),
 			Birthday:     user.Birthday,
 			ThirdPartyId: user.ThirdPartyId,
+			Mobile:       user.Mobile.String,
 			IsNew:        user.IsNew,
 		},
 	}

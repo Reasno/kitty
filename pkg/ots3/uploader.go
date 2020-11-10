@@ -14,6 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
+
 	"io"
 	"net/http"
 )
@@ -87,13 +89,13 @@ func NewManager(accessKey, accessSecret, endpoint, region, bucket string, opts .
 }
 
 func (m *Manager) Upload(ctx context.Context, reader io.Reader) (url string, err error) {
-
+	packageName := kjwt.GetClaim(ctx).PackageName
 	// Create an uploader with the session and default options
 	uploader := s3manager.NewUploader(m.sess)
 
 	result, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Bucket: aws.String(m.bucket),
-		Key:    aws.String(xid.New().String()),
+		Key:    aws.String(packageName + "/" + xid.New().String()),
 		Body:   reader,
 	})
 

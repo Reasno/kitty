@@ -15,7 +15,6 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/sms"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
-	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 var DbSet = wire.NewSet(
@@ -39,7 +38,8 @@ var AppServerSet = wire.NewSet(
 	provideRedis,
 	provideWechatConfig,
 	wechat.NewTransport,
-	sms.NewTransport,
+	sms.NewTransportFactory,
+	sms.NewSenderFacade,
 	repository.NewUserRepo,
 	repository.NewCodeRepo,
 	repository.NewFileRepo,
@@ -47,11 +47,12 @@ var AppServerSet = wire.NewSet(
 	config.ProvideAppName,
 	config.ProvideEnv,
 	handlers.NewAppService,
+	handlers.ProvideAppServer,
 	wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)),
-	wire.Bind(new(contract.SmsSender), new(*sms.Transport)),
 	wire.Bind(new(contract.Keyer), new(otredis.KeyManager)),
 	wire.Bind(new(contract.Uploader), new(*ots3.Manager)),
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
+	wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)),
 	wire.Bind(new(contract.Env), new(config.Env)),
 	wire.Bind(new(contract.AppName), new(config.AppName)),
 	wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)),
@@ -70,9 +71,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 		provideHistogramMetrics,
 		provideEndpointsMiddleware,
 		provideModule,
-		handlers.NewMonitoredAppService,
 		wire.Bind(new(handlers.EventBus), new(*eventBus)),
 		wire.Bind(new(handlers.UserBus), new(*userBus)),
-		wire.Bind(new(pb.AppServer), new(*handlers.MonitoredAppService)),
 	))
 }

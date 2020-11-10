@@ -23,7 +23,7 @@ import (
 var taobaoExtraKey struct{}
 var wechatExtraKey struct{}
 
-type AppService struct {
+type appService struct {
 	conf     contract.ConfigReader
 	log      log.Logger
 	ur       UserRepository
@@ -33,10 +33,6 @@ type AppService struct {
 	wechat   *wechat.Transport
 	uploader contract.Uploader
 	fr       FileRepository
-}
-
-func NewAppService(conf contract.ConfigReader, log log.Logger, ur UserRepository, cr CodeRepository, er ExtraRepository, sender contract.SmsSender, wechat *wechat.Transport, uploader contract.Uploader, fr FileRepository) *AppService {
-	return &AppService{conf: conf, log: log, ur: ur, cr: cr, er: er, sender: sender, wechat: wechat, uploader: uploader, fr: fr}
 }
 
 type tokenParam struct {
@@ -69,7 +65,7 @@ type ExtraRepository interface {
 	Del(ctx context.Context, id uint, name string) error
 }
 
-func (s AppService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
+func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
 	var (
 		u      *entity.User
 		device *entity.Device
@@ -109,7 +105,7 @@ func (s AppService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	return resp, nil
 }
 
-func (s AppService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.GenericReply, error) {
+func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.GenericReply, error) {
 	code, err := s.cr.AddCode(ctx, in.Mobile)
 	if err == repository.ErrTooFrequent {
 		return nil, kerr.ResourceExhaustedErr(err)
@@ -127,7 +123,7 @@ func (s AppService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.Gen
 	return &resp, nil
 }
 
-func (s AppService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
+func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
 	if in.Id == 0 {
 		claim := kittyjwt.GetClaim(ctx)
 		in.Id = claim.UserId
@@ -152,7 +148,7 @@ func (s AppService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	return resp, nil
 }
 
-func (s AppService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
+func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
 	device := &entity.Device{
 		Os:        uint8(in.Device.Os),
@@ -195,7 +191,7 @@ func (s AppService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	return reply, nil
 }
 
-func (s AppService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
+func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
 	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
 		UserName:     in.UserName,
@@ -213,7 +209,7 @@ func (s AppService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 	return resp, nil
 }
 
-func (s AppService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
+func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
 
 	var (
@@ -296,7 +292,7 @@ func (s AppService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	return reply, err
 }
 
-func (s AppService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
+func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
 	user, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
@@ -324,7 +320,7 @@ func (s AppService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	return resp, nil
 }
 
-func (s AppService) getToken(param *tokenParam) (string, error) {
+func (s appService) getToken(param *tokenParam) (string, error) {
 	token := jwt.NewWithClaims(
 		jwt.SigningMethodHS256,
 		kittyjwt.NewClaim(
@@ -338,36 +334,36 @@ func (s AppService) getToken(param *tokenParam) (string, error) {
 	return token.SignedString([]byte(s.conf.String("security.key")))
 }
 
-func (s AppService) debug(err error) {
+func (s appService) debug(err error) {
 	if err != nil {
 		level.Debug(s.log).Log("err", err)
 	}
 }
 
-func (s AppService) infof(msg string, args ...interface{}) {
+func (s appService) infof(msg string, args ...interface{}) {
 	level.Info(s.log).Log("msg", fmt.Sprintf(msg, args...))
 }
 
-func (s AppService) error(err error) {
+func (s appService) error(err error) {
 	if err != nil {
 		level.Error(s.log).Log("err", err)
 	}
 }
 
-func (s AppService) warn(err error) {
+func (s appService) warn(err error) {
 	if err != nil {
 		level.Warn(s.log).Log("err", err)
 	}
 }
-func (s AppService) getWechatInfo(ctx context.Context, wechat string) (*pb.WechatExtra, error) {
-	wxRes, err := s.wechat.GetWechatLoginResponse(ctx, wechat)
+func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.WechatExtra, error) {
+	wxRes, err := s.wechat.GetLoginResponse(ctx, wechat)
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}
 	if wxRes.Openid == "" {
 		return nil, errors.New(msg.ErrorMissingOpenid)
 	}
-	wxInfo, err := s.wechat.GetWechatUserInfoResult(ctx, wxRes)
+	wxInfo, err := s.wechat.GetUserInfoResult(ctx, wxRes)
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorWechatFailure)
 	}
@@ -399,7 +395,7 @@ func (s AppService) getWechatInfo(ctx context.Context, wechat string) (*pb.Wecha
 	return infoPb, nil
 }
 
-func (s AppService) handleWechatLogin(ctx context.Context, packageName, wechat string, device *entity.Device) (*entity.User, *pb.WechatExtra, error) {
+func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat string, device *entity.Device) (*entity.User, *pb.WechatExtra, error) {
 	wxInfo, err := s.getWechatInfo(ctx, wechat)
 	if err != nil {
 		return nil, nil, kerr.UnauthorizedErr(err)
@@ -423,7 +419,7 @@ func (s AppService) handleWechatLogin(ctx context.Context, packageName, wechat s
 	return u, wxInfo, nil
 }
 
-func (s AppService) handleMobileLogin(ctx context.Context, packageName, mobile, code string, device *entity.Device) (*entity.User, error) {
+func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, code string, device *entity.Device) (*entity.User, error) {
 	if len(code) == 0 {
 		return nil, kerr.InvalidArgumentErr(errors.New(msg.InvalidParams))
 	}
@@ -440,7 +436,7 @@ func (s AppService) handleMobileLogin(ctx context.Context, packageName, mobile, 
 	return u, nil
 }
 
-func (s AppService) handleDeviceLogin(ctx context.Context, packageName, suuid string, device *entity.Device) (*entity.User, error) {
+func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid string, device *entity.Device) (*entity.User, error) {
 	u, err := s.ur.GetFromDevice(ctx, packageName, suuid, device)
 	if err != nil {
 		return nil, dbErr(err)
@@ -449,7 +445,7 @@ func (s AppService) handleDeviceLogin(ctx context.Context, packageName, suuid st
 	return u, nil
 }
 
-func (s AppService) loginFrom(ctx context.Context, in *pb.UserLoginRequest, device *entity.Device) (*entity.User, error) {
+func (s appService) loginFrom(ctx context.Context, in *pb.UserLoginRequest, device *entity.Device) (*entity.User, error) {
 
 	if len(in.Mobile) != 0 {
 		return s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
@@ -464,7 +460,7 @@ func (s AppService) loginFrom(ctx context.Context, in *pb.UserLoginRequest, devi
 	return s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
 }
 
-func (s AppService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLoginRequest, u *entity.User) error {
+func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLoginRequest, u *entity.User) error {
 	var (
 		err      error
 		hasExtra bool
@@ -492,7 +488,7 @@ func (s AppService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 	return nil
 }
 
-func (s AppService) verify(ctx context.Context, mobile string, code string) (bool, error) {
+func (s appService) verify(ctx context.Context, mobile string, code string) (bool, error) {
 	result, err := s.cr.CheckCode(ctx, mobile, code)
 	if err != nil {
 		return false, dbErr(err)
@@ -502,7 +498,7 @@ func (s AppService) verify(ctx context.Context, mobile string, code string) (boo
 	return result, nil
 }
 
-func (s AppService) getWechatExtra(ctx context.Context, id uint) *pb.WechatExtra {
+func (s appService) getWechatExtra(ctx context.Context, id uint) *pb.WechatExtra {
 	var extra pb.WechatExtra
 
 	if extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra); ok {
@@ -517,7 +513,7 @@ func (s AppService) getWechatExtra(ctx context.Context, id uint) *pb.WechatExtra
 	return &extra
 }
 
-func (s AppService) getTaobaoExtra(ctx context.Context, id uint) *pb.TaobaoExtra {
+func (s appService) getTaobaoExtra(ctx context.Context, id uint) *pb.TaobaoExtra {
 	var extra pb.TaobaoExtra
 
 	if extra, ok := ctx.Value(taobaoExtraKey).(*pb.TaobaoExtra); ok {
@@ -532,17 +528,21 @@ func (s AppService) getTaobaoExtra(ctx context.Context, id uint) *pb.TaobaoExtra
 	return &extra
 }
 
-func (s AppService) decorateResponse(ctx context.Context, data *pb.UserInfo) {
+func (s appService) decorateResponse(ctx context.Context, data *pb.UserInfo) {
 	data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(data.Id))
 	data.WechatExtra = s.getWechatExtra(ctx, uint(data.Id))
+	// 如果不是用户本人，则隐去手机号部分内容
+	if data.Id != kittyjwt.GetClaim(ctx).UserId {
+		data.Mobile = redact(data.Mobile)
+	}
 }
 
-func (s AppService) persistExtra(ctx context.Context) {
+func (s appService) persistExtra(ctx context.Context) {
 	s.persistTaobaoExtra(ctx)
 	s.persistWechatExtra(ctx)
 }
 
-func (s AppService) persistTaobaoExtra(ctx context.Context) {
+func (s appService) persistTaobaoExtra(ctx context.Context) {
 	claim := kittyjwt.GetClaim(ctx)
 	extra, ok := ctx.Value(taobaoExtraKey).(*pb.TaobaoExtra)
 	if !ok {
@@ -555,7 +555,7 @@ func (s AppService) persistTaobaoExtra(ctx context.Context) {
 	s.warn(err)
 }
 
-func (s AppService) persistWechatExtra(ctx context.Context) {
+func (s appService) persistWechatExtra(ctx context.Context) {
 	claim := kittyjwt.GetClaim(ctx)
 	extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra)
 	if !ok {
@@ -577,4 +577,11 @@ func ns(s string) sql.NullString {
 		String: s,
 		Valid:  true,
 	}
+}
+
+func redact(mobile string) string {
+	if len(mobile) >= 11 {
+		mobile = mobile[:3] + "****" + mobile[7:]
+	}
+	return mobile
 }

@@ -241,6 +241,7 @@ message UserInfo {
   bool is_new = 9 [(gogoproto.jsontag) = "is_new"];
   WechatExtra wechat_extra = 10;
   TaobaoExtra taobao_extra = 11;
+  string mobile = 12;
 }
 
 message UserInfoReply {
@@ -260,6 +261,7 @@ message GetCodeRequest {
     (options.openapiv2_field) = {required: "true", pattern: "\\d{11}"},
     (validate.rules).string = {pattern: "\\d{11}"}
   ];
+  string packageName = 2;
 }
 
 message UserInfoRequest {

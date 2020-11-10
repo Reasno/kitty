@@ -1,28 +1,16 @@
 package config
 
 import (
+	"context"
+
 	"github.com/knadh/koanf"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
-//func ProvideChildConfig(root *viper.Viper, nodes ...string) (*viper.Viper, error) {
-//	var err error
-//	v := viper.New()
-//	for _, n := range nodes {
-//		vSettings, ok := root.AllSettings()[n].(map[string]interface{})
-//		if !ok {
-//			return nil, fmt.Errorf("%s settings not found", n)
-//		}
-//		err = v.MergeConfigMap(vSettings)
-//		if err != nil {
-//			return nil, fmt.Errorf("config not merged: %w", err)
-//		}
-//	}
-//	return v, nil
-//}
-
 type Env string
 type AppName string
+
+var TenantKey = struct{}{}
 
 func (a AppName) String() string {
 	return string(a)
@@ -92,4 +80,26 @@ func (k *KoanfAdapter) Get(s string) interface{} {
 
 func (k *KoanfAdapter) Float64(s string) float64 {
 	return k.k.Float64(s)
+}
+
+type Tenant struct {
+	Channel     string `json:"channel"`
+	VersionCode string `json:"version_code"`
+	Os          uint8  `json:"os"`
+	UserId      uint64 `json:"user_id"`
+	Imei        string `json:"imei"`
+	Idfa        string `json:"idfa"`
+	Oaid        string `json:"oaid"`
+	Suuid       string `json:"suuid"`
+	Mac         string `json:"mac"`
+	AndroidId   string `json:"android_id"`
+	PackageName string `json:"package_name"`
+	Ip          string `json:"ip"`
+}
+
+func GetTenant(ctx context.Context) *Tenant {
+	if c, ok := ctx.Value(TenantKey).(*Tenant); ok {
+		return c
+	}
+	return &Tenant{}
 }

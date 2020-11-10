@@ -696,6 +696,8 @@ func (m *UserInfo) Validate() error {
 		}
 	}
 
+	// no validation rules for Mobile
+
 	return nil
 }
 
@@ -846,6 +848,8 @@ func (m *GetCodeRequest) Validate() error {
 			reason: "value does not match regex pattern \"\\\\d{11}\"",
 		}
 	}
+
+	// no validation rules for PackageName
 
 	return nil
 }
