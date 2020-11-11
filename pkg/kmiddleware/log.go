@@ -13,6 +13,7 @@ import (
 func NewLoggingMiddleware(logger log.Logger, printTrace bool) endpoint.Middleware {
 	return func(endpoint endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			// todo: use ServerFinalizer to log
 			l := klog.WithContext(level.Debug(logger), ctx)
 			defer l.Log("req", request, "response", response)
 			response, err = endpoint(ctx, request)

@@ -11,6 +11,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/container"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	kitty_log "glab.tagtic.cn/ad_gains/kitty/pkg/klog"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
 	"glab.tagtic.cn/ad_gains/kitty/rule"
 )
 
@@ -22,6 +23,7 @@ func initModules() {
 	moduleContainer.Register(module.New(appModuleConfig, logger))
 	ruleModuleConfig := conf.Cut("rule")
 	moduleContainer.Register(rule.New(ruleModuleConfig, logger))
+	moduleContainer.Register(ots3.New(appModuleConfig, logger))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Doc))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.HealthCheck))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Metrics))

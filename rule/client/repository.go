@@ -1,5 +1,4 @@
-//go:generate mockery --name=Repository
-package rule
+package client
 
 import (
 	"bytes"
@@ -11,56 +10,65 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/knadh/koanf"
-	kyaml "github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/rawbytes"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/rule"
 	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
 	"go.etcd.io/etcd/clientv3"
 	"gopkg.in/yaml.v3"
 )
 
+// repository 专门为客户端提供的 repository，不具备自举性，可以只watch需要的规则
 type repository struct {
 	client     *clientv3.Client
 	logger     log.Logger
-	containers map[string]Container
+	containers map[string]rule.Container
 	prefix     string
 	mapping    map[string]string
 	rwLock     sync.RWMutex
 }
 
-type Container struct {
-	RuleSet []Rule
-	DbKey   string
-	Name    string
-}
-
-const CentralConfigPath = "/central-config"
-const OtherConfigPathPrefix = "/monetization"
-
-func NewRepository(client *clientv3.Client, logger log.Logger) (*repository, error) {
+func NewRepository(client *clientv3.Client, logger log.Logger, activeContainers map[string]string) (*repository, error) {
+	var (
+		err   error
+		value []byte
+	)
 
 	var repo = &repository{
 		client:     client,
 		logger:     logger,
-		containers: make(map[string]Container),
+		containers: make(map[string]rule.Container),
 		prefix:     "",
-		mapping:    nil,
+		mapping:    activeContainers,
 		rwLock:     sync.RWMutex{},
 	}
 
-	// 读取配置中心
-	activeContainers, err := repo.readCentralConfig()
-	if err != nil {
-		return nil, err
+	// 填充所有容器
+	for k, v := range activeContainers {
+		repo.containers[k] = rule.Container{DbKey: v, Name: k, RuleSet: []rule.Rule{}}
 	}
 
-	repo.resetActiveContainers(activeContainers)
+	// 依次拉取规则
+	var count = 0
+	for k, v := range repo.containers {
+		count++
+		value, err = repo.getRawRuleSetFromDbKey(context.Background(), v.DbKey)
+		if err != nil {
+			level.Warn(logger).Log("err", errors.Wrap(err, fmt.Sprintf(msg.ErrorInvalidConfig, v.Name)))
+			value = []byte("{}")
+		}
+		v.RuleSet = rule.NewRules(bytes.NewReader(value), logger)
+		repo.containers[k] = v
+	}
+
+	level.Info(logger).Log("msg", fmt.Sprintf("%d rules have been added", count))
+
+	// 自动搜索共同前缀
+	repo.prefix = rule.Prefix(rule.DbKeys(repo.containers))
 
 	return repo, nil
 }
 
-func (r *repository) updateRuleSetByDbKey(dbKey string, rules []Rule) {
+func (r *repository) updateRuleSetByDbKey(dbKey string, rules []rule.Rule) {
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
 	for i, v := range r.containers {
@@ -73,28 +81,15 @@ func (r *repository) updateRuleSetByDbKey(dbKey string, rules []Rule) {
 
 func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 	level.Info(r.logger).Log("msg", "listening to etcd changes: "+strings.Join(r.client.Endpoints(), ","))
-	centerCh := r.client.Watch(ctx, CentralConfigPath)
 	rch := r.client.Watch(ctx, r.prefix, clientv3.WithPrefix())
 	for {
 		select {
-		case cresp := <-centerCh:
-			if cresp.Err() != nil {
-				return cresp.Err()
-			}
-			for _, ev := range cresp.Events {
-				activeContainers, err := r.readCentralConfig()
-				if err != nil {
-					return err
-				}
-				r.resetActiveContainers(activeContainers)
-				level.Info(r.logger).Log("msg", fmt.Sprintf("中心配置已更新 %+v", ev.Kv))
-			}
 		case wresp := <-rch:
 			if wresp.Err() != nil {
 				return wresp.Err()
 			}
 			for _, ev := range wresp.Events {
-				rules := NewRules(bytes.NewReader(ev.Kv.Value), r.logger)
+				rules := rule.NewRules(bytes.NewReader(ev.Kv.Value), r.logger)
 				r.updateRuleSetByDbKey(string(ev.Kv.Key), rules)
 				level.Info(r.logger).Log("msg", fmt.Sprintf("配置已更新 %+v", ev.Kv))
 			}
@@ -102,43 +97,6 @@ func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 			return ctx.Err()
 		}
 	}
-}
-
-func (r *repository) readCentralConfig() (map[string]string, error) {
-
-	b, err := r.getRawRuleSetFromDbKey(context.Background(), CentralConfigPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "Cannot get central config from repository")
-	}
-
-	var centralRules CentralRules
-	c := koanf.New(".")
-	err = c.Load(rawbytes.Provider(b), kyaml.Parser())
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to load central config")
-	}
-
-	err = c.Unmarshal("", &centralRules)
-	if err != nil {
-		return nil, errors.Wrap(err, "Unable to parse central config")
-	}
-
-	var activeContainers = make(map[string]string)
-	for _, v := range centralRules.Rule.List {
-		collect(activeContainers, v.Path, r.prefix)
-		for _, v := range v.Children {
-			collect(activeContainers, v.Path, r.prefix)
-		}
-	}
-	activeContainers["central-config"] = CentralConfigPath
-	return activeContainers, nil
-}
-
-func collect(containers map[string]string, path string, p string) {
-	containers[path[1:]+"-prod"] = p + path + "-prod"
-	containers[path[1:]+"-dev"] = p + path + "-dev"
-	containers[path[1:]+"-testing"] = p + path + "-testing"
-	containers[path[1:]+"-local"] = p + path + "-local"
 }
 
 func (r *repository) GetRaw(ctx context.Context, name string) (value []byte, e error) {
@@ -151,7 +109,6 @@ func (r *repository) GetRaw(ctx context.Context, name string) (value []byte, e e
 
 func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (value []byte, e error) {
 	resp, err := r.client.Get(ctx, dbKey)
-
 	if err != nil {
 		return nil, errors.Wrapf(err, msg.ErrorGetKeyFromETCD, dbKey)
 	}
@@ -184,9 +141,9 @@ func (r *repository) getRev(ctx context.Context, key string) (int64, error) {
 }
 
 func (r *repository) validateAllRules() error {
-	todo := DbKeys(r.containers)
+	todo := rule.DbKeys(r.containers)
 	for _, v := range todo {
-		var tmp []Rule
+		var tmp []rule.Rule
 		value, err := r.getRawRuleSetFromDbKey(context.Background(), v)
 		if err != nil {
 			return errors.Wrapf(err, msg.ErrorInvalidConfig, v)
@@ -216,42 +173,13 @@ func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, err
 	return true, nil
 }
 
-func (r *repository) GetCompiled(ruleName string) []Rule {
+func (r *repository) GetCompiled(ruleName string) []rule.Rule {
 	r.rwLock.RLock()
-	defer r.rwLock.RUnlock()
+	defer r.rwLock.Unlock()
 	if c, ok := r.containers[ruleName]; ok {
 		return c.RuleSet
 	}
-	return []Rule{}
-}
-
-func (r *repository) resetActiveContainers(activeContainers map[string]string) {
-	r.rwLock.Lock()
-	defer r.rwLock.Unlock()
-
-	r.mapping = activeContainers
-
-	// 填充所有容器
-	for k, v := range activeContainers {
-		r.containers[k] = Container{DbKey: v, Name: k, RuleSet: []Rule{}}
-	}
-
-	// 依次拉取规则
-	var count = 0
-	for k, v := range r.containers {
-		count++
-		value, err := r.getRawRuleSetFromDbKey(context.Background(), v.DbKey)
-		if err != nil {
-			level.Warn(r.logger).Log("err", errors.Wrap(err, fmt.Sprintf(msg.ErrorInvalidConfig, v.Name)))
-			value = []byte("{}")
-		}
-		v.RuleSet = NewRules(bytes.NewReader(value), r.logger)
-		r.containers[k] = v
-	}
-	level.Info(r.logger).Log("msg", fmt.Sprintf("%d rules have been added", count))
-
-	// 自动搜索共同前缀
-	r.prefix = OtherConfigPathPrefix
+	return []rule.Rule{}
 }
 
 func getMd5(orig []byte) string {

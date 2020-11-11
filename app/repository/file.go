@@ -2,10 +2,11 @@ package repository
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"io"
 	"net/http"
+
+	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
 type FileRepo struct {

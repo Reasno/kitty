@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/confmap"
@@ -34,17 +33,29 @@ func (d *DynamicConfig) Of(ruleName string, payload *rule.Payload) (*kconf.Koanf
 	return adapter, nil
 }
 
+func (d *DynamicConfig) Watch(ctx context.Context) error {
+	return d.repository.WatchConfigUpdate(ctx)
+}
+
 type Option func(*config)
 
 type config struct {
-	ctx    context.Context
-	client *clientv3.Client
-	logger log.Logger
+	ctx         context.Context
+	client      *clientv3.Client
+	repo        rule.Repository
+	logger      log.Logger
+	listOfRules []string
 }
 
 func WithClient(client *clientv3.Client) Option {
 	return func(c *config) {
 		c.client = client
+	}
+}
+
+func WithRepository(repository rule.Repository) Option {
+	return func(c *config) {
+		c.repo = repository
 	}
 }
 
@@ -60,30 +71,42 @@ func WithContext(ctx context.Context) Option {
 	}
 }
 
+func WithListOfRules(listOfRules []string) Option {
+	return func(c *config) {
+		c.listOfRules = listOfRules
+	}
+}
+
 func NewDynamicConfig(ctx context.Context, opt ...Option) (*DynamicConfig, error) {
 	c := config{}
 	for _, o := range opt {
 		o(&c)
 	}
-	if c.client == nil {
-		client, err := clientv3.New(clientv3.Config{
-			Endpoints: []string{"etcd-1:2379", "etcd-2:2379", "etcd-3:2379"},
-			Context:   ctx,
-		})
-		if err != nil {
-			return nil, errors.Wrap(err, "Failed to connect to ETCD")
-		}
-		c.client = client
-	}
+
 	if c.logger == nil {
 		c.logger = log.NewNopLogger()
 	}
-	repository, err := rule.NewRepository(c.client, c.logger)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to create repository")
+	if c.repo == nil {
+		if c.client == nil {
+			client, err := clientv3.New(clientv3.Config{
+				Endpoints: []string{"etcd-1:2379", "etcd-2:2379", "etcd-3:2379"},
+				Context:   ctx,
+			})
+			if err != nil {
+				return nil, errors.Wrap(err, "Failed to connect to ETCD")
+			}
+			c.client = client
+		}
+		var mp = make(map[string]string)
+		for _, v := range c.listOfRules {
+			mp[v] = rule.OtherConfigPathPrefix + "/" + v
+		}
+		var err error
+		c.repo, err = NewRepository(c.client, c.logger, mp)
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to create repository")
+		}
 	}
-	go func() {
-		level.Error(c.logger).Log("err", repository.WatchConfigUpdate(ctx))
-	}()
-	return &DynamicConfig{repository: repository, logger: c.logger}, nil
+
+	return &DynamicConfig{repository: c.repo, logger: c.logger}, nil
 }
