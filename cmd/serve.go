@@ -12,9 +12,6 @@ import (
 
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/grpc-ecosystem/go-grpc-middleware/logging/kit"
-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
@@ -114,19 +111,13 @@ func getHttpHandler(ln net.Listener, providers ...func(*mux.Router)) http.Handle
 		p(router)
 	}
 	handler = kittyhttp.AddCorsMiddleware()(router)
-	handler = kittyhttp.AddLogMiddleware(level.Debug(logger))(handler)
 	return handler
 }
 
 func getGRPCServer(ln net.Listener, providers ...func(s *grpc.Server)) *grpc.Server {
 	_ = level.Info(logger).Log("transport", "gRPC", "addr", ln.Addr())
 
-	s := grpc.NewServer(
-		grpc_middleware.WithUnaryServerChain(
-			grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
-			kit.UnaryServerInterceptor(level.Debug(logger)),
-		),
-	)
+	s := grpc.NewServer()
 	for _, p := range providers {
 		p(s)
 	}

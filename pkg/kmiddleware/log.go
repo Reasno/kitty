@@ -14,6 +14,7 @@ func NewLoggingMiddleware(logger log.Logger, printTrace bool) endpoint.Middlewar
 	return func(endpoint endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			l := klog.WithContext(level.Debug(logger), ctx)
+			defer l.Log("request", request, "response", response)
 			response, err = endpoint(ctx, request)
 			if err != nil {
 				l.Log("err", err)
