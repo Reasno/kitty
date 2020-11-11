@@ -2,6 +2,8 @@ package rule
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
@@ -9,7 +11,6 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
-	"net/http"
 )
 
 type Module struct {
@@ -48,4 +49,8 @@ func (m *Module) ProvideRunGroup(group *run.Group) {
 	}, func(err error) {
 		cancel()
 	})
+}
+
+func (m *Module) GetRepository() Repository {
+	return m.repository
 }

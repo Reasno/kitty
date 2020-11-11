@@ -22,7 +22,7 @@ import (
 
 // Injectors from wire.go:
 
-func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, func(), error) {
+func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {
 	dialector, err := provideDialector(reader)
 	if err != nil {
 		return nil, nil, err
@@ -53,9 +53,9 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	extraRepo := repository.NewExtraRepo(universalClient, keyManager)
 	client := provideHttpClient(tracer)
 	senderFactory := sms.NewTransportFactory(reader, client)
-	senderFacade := sms.NewSenderFacade(senderFactory)
+	senderFacade := sms.NewSenderFacade(senderFactory, dynConf)
 	wechaterFactory := wechat.NewWechaterFactory(reader, client)
-	wechaterFacade := wechat.NewWechaterFacade(wechaterFactory)
+	wechaterFacade := wechat.NewWechaterFacade(wechaterFactory, dynConf)
 	manager := provideUploadManager(tracer, reader, client)
 	fileRepo := repository.NewFileRepo(manager, client)
 	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, extraRepo, senderFacade, wechaterFacade, manager, fileRepo)

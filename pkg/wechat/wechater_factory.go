@@ -49,3 +49,14 @@ func (t *WechaterFactory) GetTransportWithConf(name string, conf contract.Config
 	t.cache[name] = NewTransport(t.getConfig(conf, name))
 	return t.cache[name]
 }
+
+func (t *WechaterFactory) GetTransportByConf(conf contract.ConfigReader) Wechater {
+	// Currently we only have one kind of sender.
+	return NewTransport(&WechatConfig{
+		WechatAccessTokenUrl: conf.String("wechat.wechatAccessTokenUrl"),
+		WeChatGetUserInfoUrl: conf.String("wechat.wechatGetUserInfoUrl"),
+		AppId:                conf.String("wechat.appId"),
+		AppSecret:            conf.String("wechat.appSecret"),
+		Client:               t.doer,
+	})
+}

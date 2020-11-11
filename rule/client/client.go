@@ -5,10 +5,10 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/knadh/koanf"
-	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/pkg/errors"
 	kconf "glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/rule"
 	"go.etcd.io/etcd/clientv3"
 )
@@ -18,19 +18,35 @@ type DynamicConfig struct {
 	logger     log.Logger
 }
 
-func (d *DynamicConfig) Of(ruleName string, payload *rule.Payload) (*kconf.KoanfAdapter, error) {
-	compiled := d.repository.GetCompiled(ruleName)
-	calculated, err := rule.Calculate(compiled, payload, d.logger)
+type ofRule struct {
+	d        *DynamicConfig
+	ruleName string
+}
+
+func (r *ofRule) Tenant(tenant *kconf.Tenant) (contract.ConfigReader, error) {
+	var pl = rule.FromTenant(tenant)
+	compiled := r.d.repository.GetCompiled(r.ruleName)
+
+	calculated, err := rule.Calculate(compiled, pl, r.d.logger)
 	if err != nil {
 		return nil, err
 	}
+
 	c := koanf.New(".")
-	err = c.Load(confmap.Provider(calculated, ""), yaml.Parser())
+	err = c.Load(confmap.Provider(calculated, ""), nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot load from map")
 	}
+
 	adapter := kconf.NewKoanfAdapter(c)
 	return adapter, nil
+}
+
+func (d *DynamicConfig) WithRule(ruleName string) *ofRule {
+	return &ofRule{
+		ruleName: ruleName,
+		d:        d,
+	}
 }
 
 func (d *DynamicConfig) Watch(ctx context.Context) error {

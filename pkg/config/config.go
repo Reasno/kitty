@@ -103,3 +103,7 @@ func GetTenant(ctx context.Context) *Tenant {
 	}
 	return &Tenant{}
 }
+
+type DynamicConfigReader interface {
+	Tenant(tenant *Tenant) (contract.ConfigReader, error)
+}

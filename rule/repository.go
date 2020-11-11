@@ -25,7 +25,6 @@ type repository struct {
 	logger     log.Logger
 	containers map[string]Container
 	prefix     string
-	mapping    map[string]string
 	rwLock     sync.RWMutex
 }
 
@@ -45,7 +44,6 @@ func NewRepository(client *clientv3.Client, logger log.Logger) (*repository, err
 		logger:     logger,
 		containers: make(map[string]Container),
 		prefix:     "",
-		mapping:    nil,
 		rwLock:     sync.RWMutex{},
 	}
 
@@ -142,11 +140,11 @@ func collect(containers map[string]string, path string, p string) {
 }
 
 func (r *repository) GetRaw(ctx context.Context, name string) (value []byte, e error) {
-	dbKey, ok := r.mapping[name]
+	c, ok := r.containers[name]
 	if !ok {
 		return nil, fmt.Errorf("unknown rule set %s", name)
 	}
-	return r.getRawRuleSetFromDbKey(ctx, dbKey)
+	return r.getRawRuleSetFromDbKey(ctx, c.DbKey)
 }
 
 func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (value []byte, e error) {
@@ -162,11 +160,11 @@ func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (
 }
 
 func (r *repository) SetRaw(ctx context.Context, name string, value string) error {
-	dbKey, ok := r.mapping[name]
+	c, ok := r.containers[name]
 	if !ok {
 		return fmt.Errorf("unknown rule set %s", name)
 	}
-	return r.setRawRuleSetFromDbKey(ctx, dbKey, value)
+	return r.setRawRuleSetFromDbKey(ctx, c.DbKey, value)
 }
 
 func (r *repository) setRawRuleSetFromDbKey(ctx context.Context, dbKey string, value string) error {
@@ -229,11 +227,9 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
 
-	r.mapping = activeContainers
-
 	// 填充所有容器
 	for k, v := range activeContainers {
-		r.containers[k] = Container{DbKey: v, Name: k, RuleSet: []Rule{}}
+		r.containers[k] = Container{DbKey: OtherConfigPathPrefix + v, Name: k, RuleSet: []Rule{}}
 	}
 
 	// 依次拉取规则

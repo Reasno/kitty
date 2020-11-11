@@ -34,8 +34,8 @@ type Module struct {
 	endpoints svc.Endpoints
 }
 
-func New(appModuleConfig contract.ConfigReader, logger log.Logger) *Module {
-	appModule, cleanup, err := injectModule(setUp(appModuleConfig, logger))
+func New(appModuleConfig contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) *Module {
+	appModule, cleanup, err := injectModule(setUp(appModuleConfig, logger, dynConf))
 	if err != nil {
 		panic(err)
 	}
@@ -43,10 +43,10 @@ func New(appModuleConfig contract.ConfigReader, logger log.Logger) *Module {
 	return appModule
 }
 
-func setUp(appModuleConfig contract.ConfigReader, logger log.Logger) (contract.ConfigReader, log.Logger) {
+func setUp(appModuleConfig contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (contract.ConfigReader, log.Logger, config.DynamicConfigReader) {
 	appLogger := log.With(logger, "module", config.ProvideAppName(appModuleConfig).String())
 	appLogger = level.NewFilter(logger, klog.LevelFilter(appModuleConfig.String("level")))
-	return appModuleConfig, appLogger
+	return appModuleConfig, appLogger, dynConf
 }
 
 func (a *Module) ProvideMigration() error {
