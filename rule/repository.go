@@ -128,7 +128,6 @@ func (r *repository) readCentralConfig() (map[string]string, error) {
 			collect(activeContainers, v.Path, r.prefix)
 		}
 	}
-	activeContainers["central-config"] = CentralConfigPath
 	return activeContainers, nil
 }
 
@@ -231,6 +230,7 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 	for k, v := range activeContainers {
 		r.containers[k] = Container{DbKey: OtherConfigPathPrefix + v, Name: k, RuleSet: []Rule{}}
 	}
+	r.containers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: []Rule{}}
 
 	// 依次拉取规则
 	var count = 0
