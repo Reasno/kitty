@@ -3,7 +3,6 @@ package ots3
 import (
 	"context"
 	"fmt"
-	"mime"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -34,8 +33,7 @@ func (s *UploadService) Upload(ctx context.Context, reader io.Reader) (newUrl st
 }
 
 type Request struct {
-	contentType string
-	data        io.Reader
+	data io.Reader
 }
 
 type Response struct {
@@ -49,10 +47,6 @@ type Response struct {
 func MakeUploadEndpoint(uploader contract.Uploader) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*Request)
-		ext, _ := mime.ExtensionsByType(req.contentType)
-		if len(ext) == 0 {
-			ext = []string{""}
-		}
 		resp, err := uploader.Upload(ctx, req.data)
 		if err != nil {
 			return nil, kerr.InternalErr(err)
@@ -81,10 +75,8 @@ func MakeHttpHandler(endpoint endpoint.Endpoint, middleware endpoint.Middleware)
 	return server
 }
 
-func decodeRequest(ctx context.Context, request2 *http.Request) (request interface{}, err error) {
-	var ContentType = http.CanonicalHeaderKey("Content-Type")
+func decodeRequest(_ context.Context, request2 *http.Request) (request interface{}, err error) {
 	return &Request{
-		contentType: request2.Header.Get(ContentType),
-		data:        request2.Body,
+		data: request2.Body,
 	}, nil
 }
