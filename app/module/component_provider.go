@@ -3,6 +3,7 @@ package module
 import (
 	"fmt"
 	"io"
+	"net/url"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -88,8 +89,12 @@ func provideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader,
 		conf.String("s3.bucket"),
 		ots3.WithTracer(tracer),
 		ots3.WithHttpClient(client),
-		ots3.WithLocationFunc(func(location string) (url string) {
-			return fmt.Sprintf(conf.String("s3.cdnUrl"), location)
+		ots3.WithLocationFunc(func(location string) (uri string) {
+			u, err := url.Parse(location)
+			if err != nil {
+				return location
+			}
+			return fmt.Sprintf(conf.String("s3.cdnUrl"), u.Path[1:])
 		}),
 	)
 }
