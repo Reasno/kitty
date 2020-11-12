@@ -284,6 +284,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	})
 	if err != nil {
 		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
+		return nil, err
 	}
 
 	// 组装数据
