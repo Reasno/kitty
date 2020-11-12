@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/go-kit/kit/log"
@@ -27,13 +26,13 @@ func initModules() {
 	ruleModule := rule.New(ruleModuleConfig, logger)
 	moduleContainer.Register(ruleModule)
 
-	dynConf, err := client.NewDynamicConfig(context.Background(), client.WithRepository(ruleModule.GetRepository()))
+	dynConf, err := client.NewRuleEngine(client.WithRepository(ruleModule.GetRepository()))
 	if err != nil {
 		panic(err)
 	}
 
 	appModuleConfig := conf.Cut("app")
-	appModuleDynConfig := dynConf.WithRule(
+	appModuleDynConfig := dynConf.Of(
 		fmt.Sprintf("%s-%s",
 			appModuleConfig.String("name"),
 			appModuleConfig.String("env")),

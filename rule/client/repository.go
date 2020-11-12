@@ -121,9 +121,9 @@ func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, err
 
 func (r *repository) GetCompiled(ruleName string) []rule.Rule {
 	r.rwLock.RLock()
-	defer r.rwLock.Unlock()
+	defer r.rwLock.RUnlock()
 	if c, ok := r.containers[ruleName]; ok {
 		return c.RuleSet
 	}
-	return []rule.Rule{}
+	panic(fmt.Sprintf("unregistered rule %s", ruleName))
 }

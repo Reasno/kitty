@@ -13,6 +13,46 @@
 * 垂直方向：减少非必要的组件间依赖。大部分组件可以独立使用，也可以互相组合。
 * 水平方向：分层架构，核心通用需求与个性化需求分离。
 
+## 约定
+
+为了便利客户端对接，作出以下约定。
+
+### 响应结构：
+
+```json
+{
+  "code": 0,
+  "message": "", 
+  "data": {}
+}
+```
+
+```proto
+message GenericReply {
+  int32 code = 1;
+  string message = 2;
+  google.protobuf.Any data = 3;
+}
+```
+
+#### 状态码 `code`
+
+正确响应时返回 0。非0即为错误响应。0-99为预留通用状态码。100以上为非通用状态码，由各业务线自行定义。
+
+当前预留状态码如下：
+
+```
+
+```
+
+
+```json
+{
+  "code": 0,
+  "message": "", 
+  "data": {}
+}
+```
 ## 组件
 
 ### 用户中心
@@ -137,36 +177,62 @@ rule:
 {"foo": "baz"}
 ```
 
-配置`DSL`可以依照需求去不断扩展，实现灰度下发、地域定向、机型定向等高级功能。目前配置平台DSL只支持真值判断和逻辑判断。
+配置`DSL`可以依照需求去不断扩展，实现灰度下发、地域定向、机型定向等高级功能。当前版本配置平台DSL只支持真值判断(`==`, `!=`)和逻辑判断(`&&`, `||`, `()`)。
 
 #### 客户端消费配置
 
 假设配置平台地址localhost:8080, 消费配置`/foo`（配置平台yaml对应路径）
 
-GET localhost:8080/rule/v1/calculate/foo?package_name=xxx&channel=yyy
+GET http://localhost:8080/rule/v1/calculate/foo?package_name=xxx&channel=yyy&&version_code=zzz
 
 `Querystring` 中的内容主要用于高级配置中的`DSL`进行判断。
 
-完整的可用query配置包括：
+完整的 `Querystring` 字段包括：
 
 ```
-	string "version_code" 版本号
-	string "channel" 渠道
-	uint8  "os" 1为ios，2为安卓
-	uint64 "user_id" 用户id
-	string "imei" IMEI
-	string "idfa" IDFA
-	string "oaid" OAID
-	string "suuid" SUUID地址
-	string "mac" MAC地址
-	string "android_id" 安卓ID
-	string "package_name" 包名
+string "version_code" 版本号
+string "channel" 渠道
+uint8  "os" 1为ios，2为安卓
+uint64 "user_id" 用户id
+string "imei" IMEI
+string "idfa" IDFA
+string "oaid" OAID
+string "suuid" SUUID地址
+string "mac" MAC地址
+string "android_id" 安卓ID
+string "package_name" 包名
 ```
 
 #### 服务端消费配置
 
 异构语言可以使用HTTP方式消费配置，同客户端。
 
+Go语言可以直接使用 `glab.tagtic.cn/ad_gains/kitty/pkg/rule/client`
 
+```go
+package main
 
+import (
+	"context"
+    "fmt"
+
+    "glab.tagtic.cn/ad_gains/kitty/pkg/rule/client"
+    "go.etcd.io/etcd/clientv3"
+)
+
+func main() {
+	etcd, _ := clientv3.New(clientv3.Config{
+		Endpoints: []string{"etcd-1:2379", "etcd-2:2379", "etcd-3:2379"},
+		Context:   context.Background(),
+	})
+	engine, _ := client.NewRuleEngine(
+        client.WithClient(etcd), 
+        client.Rule("kitty-testing"),
+        client.Rule("whatever"), // 使用任何rule必须先在这里注册, 可以注册多个
+    )
+    go engine.Watch(context.Background())
+	reader, _ := engine.Of("kitty-testing").Payload(&rule.Payload{}) // 配合DSL高级配置
+	fmt.Println(reader.String("foo")) //bar
+}
+```
 

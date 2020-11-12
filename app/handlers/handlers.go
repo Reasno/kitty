@@ -92,7 +92,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 
 	// Create jwt token
-	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), in.Device.Suuid, in.Channel, in.VersionCode, u.WechatOpenId.String, in.Mobile, in.PackageName})
+	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), in.Device.Suuid, u.Channel, u.VersionCode, u.WechatOpenId.String, u.Mobile.String, u.PackageName})
 	if err != nil {
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
