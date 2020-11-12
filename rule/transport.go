@@ -61,7 +61,7 @@ func decodePayload(payload *Payload, r *http.Request) (err error) {
 		if err != nil {
 			return errors.Wrapf(err, "cannot read body of http request")
 		}
-		err = json.Unmarshal(buf, &payload)
+		err = json.Unmarshal(buf, payload)
 		if err != nil {
 			return errors.Wrap(err, "cannot json unmarshal")
 		}
