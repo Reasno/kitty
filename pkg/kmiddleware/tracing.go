@@ -22,7 +22,6 @@ func NewTraceMiddleware(tracer stdtracing.Tracer, env string) LabeledMiddleware 
 			claim := kjwt.GetClaim(ctx)
 			if r, ok := request.(pb.UserLoginRequest); ok {
 				claim.Suuid = r.Device.Suuid
-
 			}
 			span.SetTag("env", env)
 			span.SetTag("package.name", claim.PackageName)

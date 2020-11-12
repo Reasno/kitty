@@ -17,7 +17,7 @@ func NewLoggingMiddleware(logger log.Logger, printTrace bool) endpoint.Middlewar
 			defer l.Log("request", request, "response", response)
 			response, err = endpoint(ctx, request)
 			if err != nil {
-				l.Log("err", err)
+				l.Log("err", err.Error())
 				if stacktracer, ok := err.(interface{ StackTrace() errors.StackTrace }); printTrace && ok {
 					fmt.Printf("\n%+v\n\n", stacktracer.StackTrace())
 				}

@@ -98,7 +98,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 
 	// 拼装返回结果
-	var resp = u.ToReply()
+	var resp = toReply(u)
 	resp.Data.Token = tokenString
 	s.decorateResponse(ctx, resp.Data)
 
@@ -135,7 +135,7 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	var resp = u.ToReply()
+	var resp = toReply(u)
 
 	if in.Taobao {
 		resp.Data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(in.Id))
@@ -173,7 +173,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		return nil, dbErr(err)
 	}
 
-	reply := u.ToReply()
+	reply := toReply(u)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(u.ID),
 		u.CommonSUUID,
@@ -204,7 +204,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 
-	var resp = u.ToReply()
+	var resp = toReply(u)
 	s.decorateResponse(ctx, resp.Data)
 	return resp, nil
 }
@@ -272,7 +272,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 获取Token
-	reply := newUser.ToReply()
+	reply := toReply(newUser)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(newUser.ID),
 		newUser.CommonSUUID,
@@ -315,7 +315,7 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 		return nil, dbErr(err)
 	}
 
-	var resp = user.ToReply()
+	var resp = toReply(user)
 	s.decorateResponse(ctx, resp.Data)
 	return resp, nil
 }
@@ -584,4 +584,22 @@ func redact(mobile string) string {
 		mobile = mobile[:3] + "****" + mobile[7:]
 	}
 	return mobile
+}
+
+func toReply(user *entity.User) *pb.UserInfoReply {
+	return &pb.UserInfoReply{
+		Code:    0,
+		Message: "",
+		Data: &pb.UserInfo{
+			Id:           uint64(user.ID),
+			UserName:     user.UserName,
+			Wechat:       user.WechatOpenId.String,
+			HeadImg:      user.HeadImg,
+			Gender:       pb.Gender(user.Gender),
+			Birthday:     user.Birthday,
+			ThirdPartyId: user.ThirdPartyId,
+			Mobile:       user.Mobile.String,
+			IsNew:        user.IsNew,
+		},
+	}
 }

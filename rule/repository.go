@@ -132,10 +132,12 @@ func (r *repository) readCentralConfig() (map[string]string, error) {
 }
 
 func collect(containers map[string]string, path string, p string) {
-	containers[path[1:]+"-prod"] = p + path + "-prod"
-	containers[path[1:]+"-dev"] = p + path + "-dev"
-	containers[path[1:]+"-testing"] = p + path + "-testing"
-	containers[path[1:]+"-local"] = p + path + "-local"
+	if len(path) > 1 {
+		containers[path[1:]+"-prod"] = p + path + "-prod"
+		containers[path[1:]+"-dev"] = p + path + "-dev"
+		containers[path[1:]+"-testing"] = p + path + "-testing"
+		containers[path[1:]+"-local"] = p + path + "-local"
+	}
 }
 
 func (r *repository) GetRaw(ctx context.Context, name string) (value []byte, e error) {

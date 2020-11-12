@@ -13,6 +13,10 @@ option (options.openapiv2_swagger) = {
   info: {
     title: "商业化中台用户中心";
     version: "0.1.0";
+    contact: {
+      name: "谷溪";
+      email: "guxi@infinities.com.cn";
+    };
   };
   base_path: "/app"
   security_definitions: {
@@ -35,6 +39,7 @@ option (options.openapiv2_swagger) = {
   produces: "application/json";
 };
 
+// 用户中心
 service App {
   // 用户从未登录状态注册或登录时调用。如果用户已登录，需要绑定手机号或微信号，请使用bind接口。
   rpc Login(UserLoginRequest) returns (UserInfoReply) {
