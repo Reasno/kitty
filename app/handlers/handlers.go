@@ -518,10 +518,7 @@ func (s appService) getTaobaoExtra(ctx context.Context, id uint) *pb.TaobaoExtra
 func (s appService) decorateResponse(ctx context.Context, data *pb.UserInfo) {
 	data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(data.Id))
 	data.WechatExtra = s.getWechatExtra(ctx, uint(data.Id))
-	// 如果不是用户本人，则隐去手机号部分内容
-	if data.Id != kittyjwt.GetClaim(ctx).UserId {
-		data.Mobile = redact(data.Mobile)
-	}
+	data.Mobile = redact(data.Mobile)
 }
 
 func (s appService) persistExtra(ctx context.Context, id uint64) {
