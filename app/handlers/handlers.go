@@ -96,7 +96,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	var resp = toReply(u)
 	resp.Data.Token = tokenString
 
-	s.persistExtra(ctx)
+	s.persistExtra(ctx, resp.Data.Id)
 	s.decorateResponse(ctx, resp.Data)
 
 	return resp, nil
@@ -284,7 +284,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 组装数据
-	s.persistExtra(ctx)
+	s.persistExtra(ctx, reply.Data.Id)
 	s.decorateResponse(ctx, reply.Data)
 	return reply, err
 }
@@ -524,13 +524,12 @@ func (s appService) decorateResponse(ctx context.Context, data *pb.UserInfo) {
 	}
 }
 
-func (s appService) persistExtra(ctx context.Context) {
-	s.persistTaobaoExtra(ctx)
-	s.persistWechatExtra(ctx)
+func (s appService) persistExtra(ctx context.Context, id uint64) {
+	s.persistTaobaoExtra(ctx, id)
+	s.persistWechatExtra(ctx, id)
 }
 
-func (s appService) persistTaobaoExtra(ctx context.Context) {
-	claim := kittyjwt.GetClaim(ctx)
+func (s appService) persistTaobaoExtra(ctx context.Context, id uint64) {
 	extra, ok := ctx.Value(taobaoExtraKey).(*pb.TaobaoExtra)
 	if !ok {
 		return
@@ -538,12 +537,11 @@ func (s appService) persistTaobaoExtra(ctx context.Context) {
 	b, err := extra.Marshal()
 	s.warn(err)
 
-	err = s.er.Put(ctx, uint(claim.UserId), pb.Extra_TAOBAO_EXTRA.String(), b)
+	err = s.er.Put(ctx, uint(id), pb.Extra_TAOBAO_EXTRA.String(), b)
 	s.warn(err)
 }
 
-func (s appService) persistWechatExtra(ctx context.Context) {
-	claim := kittyjwt.GetClaim(ctx)
+func (s appService) persistWechatExtra(ctx context.Context, id uint64) {
 	extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra)
 	if !ok {
 		return
@@ -551,7 +549,7 @@ func (s appService) persistWechatExtra(ctx context.Context) {
 	b, err := extra.Marshal()
 	s.warn(err)
 
-	err = s.er.Put(ctx, uint(claim.UserId), pb.Extra_WECHAT_EXTRA.String(), b)
+	err = s.er.Put(ctx, uint(id), pb.Extra_WECHAT_EXTRA.String(), b)
 	s.warn(err)
 }
 
