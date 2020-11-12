@@ -32,7 +32,6 @@ type appService struct {
 	sender   contract.SmsSender
 	wechat   wechat.Wechater
 	uploader contract.Uploader
-	fr       FileRepository
 }
 
 type tokenParam struct {
@@ -53,10 +52,6 @@ type UserRepository interface {
 	Update(ctx context.Context, id uint, user entity.User) (newUser *entity.User, err error)
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
 	Save(ctx context.Context, user *entity.User) error
-}
-
-type FileRepository interface {
-	UploadFromUrl(ctx context.Context, oldUrl string) (newUrl string, err error)
 }
 
 type ExtraRepository interface {
@@ -390,12 +385,9 @@ func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat s
 		return nil, nil, kerr.UnauthorizedErr(err)
 	}
 
-	headImg, err := s.fr.UploadFromUrl(ctx, wxInfo.Headimgurl)
-	s.warn(err)
-
 	wechatUser := entity.User{
 		UserName:      wxInfo.NickName,
-		HeadImg:       headImg,
+		HeadImg:       wxInfo.Headimgurl,
 		WechatOpenId:  ns(wxInfo.OpenId),
 		WechatUnionId: ns(wxInfo.Unionid),
 	}

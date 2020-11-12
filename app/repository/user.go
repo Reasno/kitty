@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+
 	"github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
@@ -10,6 +11,7 @@ import (
 )
 
 type UserRepo struct {
+	fr *FileRepo
 	db *gorm.DB
 }
 
@@ -50,23 +52,46 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 	return &u, nil
 }
 
-func NewUserRepo(db *gorm.DB) *UserRepo {
-	return &UserRepo{db}
+func NewUserRepo(db *gorm.DB, fr *FileRepo) *UserRepo {
+	return &UserRepo{fr, db}
 }
 
 func (r *UserRepo) GetFromWechat(ctx context.Context, packageName, wechat string, device *entity.Device, wechatUser entity.User) (*entity.User, error) {
 	var (
 		u entity.User
 	)
+
 	wechatUser.CommonSUUID = device.Suuid
 	wechatUser.PackageName = packageName
 	wechatUser.WechatOpenId = sql.NullString{wechat, true}
-	err := r.db.WithContext(ctx).Where("package_name = ? and wechat_open_id = ?", packageName, wechat).Attrs(wechatUser).FirstOrCreate(&u).Error
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		defer func() {
+			u.AddNewDevice(device)
+			tx.WithContext(ctx).Save(device)
+		}()
+		err := tx.WithContext(ctx).Where(
+			"package_name = ? and wechat_open_id = ?", packageName, wechat,
+		).First(&u).Error
+
+		if err == nil {
+			return nil
+		}
+		if err != gorm.ErrRecordNotFound {
+			return err
+		}
+		if wechatUser.HeadImg != "" {
+			wechatUser.HeadImg, _ = r.fr.UploadFromUrl(ctx, wechatUser.HeadImg)
+		}
+		if err := tx.WithContext(ctx).Create(&wechatUser).Error; err != nil {
+			return err
+		}
+		u = wechatUser
+		return nil
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, emsg)
 	}
-	u.AddNewDevice(device)
-	r.db.WithContext(ctx).Save(device)
 	return &u, nil
 }
 
