@@ -31,6 +31,7 @@ func (e *ExtraRepo) Put(ctx context.Context, id uint, name string, extra []byte)
 		return nil
 	}
 	key := e.km.Key(fmt.Sprintf("%d", id), name)
+	fmt.Println(key)
 	_, err := e.client.Set(ctx, key, extra, e.ttl).Result()
 	return err
 }

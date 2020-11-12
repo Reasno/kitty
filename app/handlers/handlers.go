@@ -100,6 +100,8 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	// 拼装返回结果
 	var resp = toReply(u)
 	resp.Data.Token = tokenString
+
+	s.persistExtra(ctx)
 	s.decorateResponse(ctx, resp.Data)
 
 	return resp, nil
@@ -284,7 +286,6 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	})
 	if err != nil {
 		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
-		return nil, err
 	}
 
 	// 组装数据
@@ -379,15 +380,6 @@ func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.Wecha
 		Headimgurl:   wxInfo.Headimgurl,
 		Privilege:    wxInfo.Privilege,
 		Unionid:      wxInfo.Unionid,
-	}
-	b, err := infoPb.Marshal()
-	if err != nil {
-		s.warn(err)
-	}
-	userId := kittyjwt.GetClaim(ctx).UserId
-	err = s.er.Put(ctx, uint(userId), pb.Extra_WECHAT_EXTRA.String(), b)
-	if err != nil {
-		s.warn(err)
 	}
 	return infoPb, nil
 }
