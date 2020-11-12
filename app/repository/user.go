@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserRepo struct {
@@ -70,7 +71,7 @@ func (r *UserRepo) GetFromWechat(ctx context.Context, packageName, wechat string
 			u.AddNewDevice(device)
 			tx.WithContext(ctx).Save(device)
 		}()
-		err := tx.WithContext(ctx).Where(
+		err := tx.WithContext(ctx).Clauses(clause.Locking{Strength: "UPDATE"}).Where(
 			"package_name = ? and wechat_open_id = ?", packageName, wechat,
 		).First(&u).Error
 
