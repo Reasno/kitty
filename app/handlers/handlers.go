@@ -25,14 +25,13 @@ var wechatExtraKey struct{}
 
 type appService struct {
 	conf     contract.ConfigReader
-	log      log.Logger
+	logger   log.Logger
 	ur       UserRepository
 	cr       CodeRepository
 	er       ExtraRepository
 	sender   contract.SmsSender
-	wechat   *wechat.Transport
+	wechat   wechat.Wechater
 	uploader contract.Uploader
-	fr       FileRepository
 }
 
 type tokenParam struct {
@@ -53,10 +52,6 @@ type UserRepository interface {
 	Update(ctx context.Context, id uint, user entity.User) (newUser *entity.User, err error)
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
 	Save(ctx context.Context, user *entity.User) error
-}
-
-type FileRepository interface {
-	UploadFromUrl(ctx context.Context, oldUrl string) (newUrl string, err error)
 }
 
 type ExtraRepository interface {
@@ -92,14 +87,16 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 
 	// Create jwt token
-	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), in.Device.Suuid, in.Channel, in.VersionCode, u.WechatOpenId.String, in.Mobile, in.PackageName})
+	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), u.CommonSUUID, u.Channel, u.VersionCode, u.WechatOpenId.String, u.Mobile.String, u.PackageName})
 	if err != nil {
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 
 	// 拼装返回结果
-	var resp = u.ToReply()
+	var resp = toReply(u)
 	resp.Data.Token = tokenString
+
+	s.persistExtra(ctx)
 	s.decorateResponse(ctx, resp.Data)
 
 	return resp, nil
@@ -135,7 +132,7 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	var resp = u.ToReply()
+	var resp = toReply(u)
 
 	if in.Taobao {
 		resp.Data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(in.Id))
@@ -173,7 +170,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		return nil, dbErr(err)
 	}
 
-	reply := u.ToReply()
+	reply := toReply(u)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(u.ID),
 		u.CommonSUUID,
@@ -204,7 +201,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 	}
 
-	var resp = u.ToReply()
+	var resp = toReply(u)
 	s.decorateResponse(ctx, resp.Data)
 	return resp, nil
 }
@@ -236,10 +233,10 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	if len(in.Wechat) > 0 {
 		var wechatExtra *pb.WechatExtra
 		wechatExtra, err = s.getWechatInfo(ctx, in.Wechat)
-		ctx = context.WithValue(ctx, wechatExtraKey, in.WechatExtra)
 		if err != nil {
 			return nil, kerr.UnauthorizedErr(err)
 		}
+		ctx = context.WithValue(ctx, wechatExtraKey, wechatExtra)
 		toUpdate = entity.User{
 			WechatOpenId:  ns(wechatExtra.OpenId),
 			WechatUnionId: ns(wechatExtra.Unionid),
@@ -272,7 +269,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 获取Token
-	reply := newUser.ToReply()
+	reply := toReply(newUser)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(newUser.ID),
 		newUser.CommonSUUID,
@@ -315,7 +312,7 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 		return nil, dbErr(err)
 	}
 
-	var resp = user.ToReply()
+	var resp = toReply(user)
 	s.decorateResponse(ctx, resp.Data)
 	return resp, nil
 }
@@ -336,23 +333,19 @@ func (s appService) getToken(param *tokenParam) (string, error) {
 
 func (s appService) debug(err error) {
 	if err != nil {
-		level.Debug(s.log).Log("err", err)
+		level.Debug(s.logger).Log("err", err)
 	}
-}
-
-func (s appService) infof(msg string, args ...interface{}) {
-	level.Info(s.log).Log("msg", fmt.Sprintf(msg, args...))
 }
 
 func (s appService) error(err error) {
 	if err != nil {
-		level.Error(s.log).Log("err", err)
+		level.Error(s.logger).Log("err", err)
 	}
 }
 
 func (s appService) warn(err error) {
 	if err != nil {
-		level.Warn(s.log).Log("err", err)
+		level.Warn(s.logger).Log("err", err)
 	}
 }
 func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.WechatExtra, error) {
@@ -383,15 +376,6 @@ func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.Wecha
 		Privilege:    wxInfo.Privilege,
 		Unionid:      wxInfo.Unionid,
 	}
-	b, err := infoPb.Marshal()
-	if err != nil {
-		s.warn(err)
-	}
-	userId := kittyjwt.GetClaim(ctx).UserId
-	err = s.er.Put(ctx, uint(userId), pb.Extra_WECHAT_EXTRA.String(), b)
-	if err != nil {
-		s.warn(err)
-	}
 	return infoPb, nil
 }
 
@@ -401,12 +385,9 @@ func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat s
 		return nil, nil, kerr.UnauthorizedErr(err)
 	}
 
-	headImg, err := s.fr.UploadFromUrl(ctx, wxInfo.Headimgurl)
-	s.warn(err)
-
 	wechatUser := entity.User{
 		UserName:      wxInfo.NickName,
-		HeadImg:       headImg,
+		HeadImg:       wxInfo.Headimgurl,
 		WechatOpenId:  ns(wxInfo.OpenId),
 		WechatUnionId: ns(wxInfo.Unionid),
 	}
@@ -415,7 +396,7 @@ func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat s
 	if err != nil {
 		return nil, nil, dbErr(err)
 	}
-	s.infof(msg.WxSuccess, u.ID)
+	level.Info(s.logger).Log("msg", fmt.Sprintf(msg.WxSuccess, u.ID), "suuid", device.Suuid, "userId", u.ID, "packageName", packageName)
 	return u, wxInfo, nil
 }
 
@@ -432,7 +413,7 @@ func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, 
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	s.infof(msg.MobileSuccess, u.ID)
+	level.Info(s.logger).Log("msg", fmt.Sprintf(msg.MobileSuccess, u.ID), "suuid", device.Suuid, "userId", u.ID, "packageName", packageName)
 	return u, nil
 }
 
@@ -441,7 +422,7 @@ func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid st
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	s.infof(msg.DeviceSuccess, u.ID)
+	level.Info(s.logger).Log("msg", fmt.Sprintf(msg.DeviceSuccess, u.ID), "suuid", device.Suuid, "userId", u.ID, "packageName", packageName)
 	return u, nil
 }
 
@@ -476,6 +457,10 @@ func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 	}
 	if in.VersionCode != "" && in.VersionCode != u.VersionCode {
 		u.VersionCode = in.VersionCode
+		hasExtra = true
+	}
+	if in.InviteCode != "" && u.InviteCode == "" {
+		u.InviteCode = in.InviteCode
 		hasExtra = true
 	}
 
@@ -584,4 +569,22 @@ func redact(mobile string) string {
 		mobile = mobile[:3] + "****" + mobile[7:]
 	}
 	return mobile
+}
+
+func toReply(user *entity.User) *pb.UserInfoReply {
+	return &pb.UserInfoReply{
+		Code:    0,
+		Message: "",
+		Data: &pb.UserInfo{
+			Id:           uint64(user.ID),
+			UserName:     user.UserName,
+			Wechat:       user.WechatOpenId.String,
+			HeadImg:      user.HeadImg,
+			Gender:       pb.Gender(user.Gender),
+			Birthday:     user.Birthday,
+			ThirdPartyId: user.ThirdPartyId,
+			Mobile:       user.Mobile.String,
+			IsNew:        user.IsNew,
+		},
+	}
 }

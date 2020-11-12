@@ -3,14 +3,18 @@ package rule
 import (
 	"context"
 	"encoding/json"
-	httptransport "github.com/go-kit/kit/transport/http"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
+	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 )
+
+var decoder = schema.NewDecoder()
 
 func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption) http.Handler {
 	serverOptions := []httptransport.ServerOption{
@@ -21,7 +25,7 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 
 	m := mux.NewRouter()
 
-	m.Methods("POST").Path("/v1/calculate/{rule}").Handler(httptransport.NewServer(
+	m.Methods("GET", "POST").Path("/v1/calculate/{rule}").Handler(httptransport.NewServer(
 		endpoints.calculateRulesEndpoints,
 		DecodeCalculateRuleRequest,
 		httptransport.EncodeJSONResponse,
@@ -51,17 +55,30 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 
 	return m
 }
+func decodePayload(payload *Payload, r *http.Request) (err error) {
+	if r.Method == "POST" {
+		buf, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return errors.Wrapf(err, "cannot read body of http request")
+		}
+		err = json.Unmarshal(buf, &payload)
+		if err != nil {
+			return errors.Wrap(err, "cannot json unmarshal")
+		}
+		return nil
+	}
+	err = decoder.Decode(&payload, r.URL.Query())
+	if err != nil {
+		return errors.Wrap(err, "cannot decode payload in query")
+	}
+	return nil
+}
 
 func DecodeCalculateRuleRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	defer r.Body.Close()
 	var payload Payload
-	buf, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot read body of http request")
-	}
-	err = json.Unmarshal(buf, &payload)
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot json unmarshal")
+	if err := decodePayload(&payload, r); err != nil {
+		return nil, err
 	}
 	payload.Ip = realIP(r)
 	params := mux.Vars(r)

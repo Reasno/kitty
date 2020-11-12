@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/log/level"
@@ -33,6 +34,7 @@ var parseCmd = &cobra.Command{
 			fmt.Println("token is NOT valid.")
 		}
 		fmt.Println("token is valid:")
-		fmt.Printf("%+v\n", claim)
+		b, _ := json.Marshal(claim)
+		fmt.Printf("%s\n", string(b))
 	},
 }

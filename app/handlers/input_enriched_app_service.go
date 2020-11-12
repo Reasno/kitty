@@ -3,7 +3,9 @@ package handlers
 import (
 	"context"
 
+	stdtracing "github.com/opentracing/opentracing-go"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
@@ -34,5 +36,29 @@ func (s InputEnrichedAppService) Login(ctx context.Context, in *pb.UserLoginRequ
 	if in.Device.Suuid == "" {
 		in.Device.Suuid = "N/A"
 	}
-	return s.AppServer.Login(ctx, in)
+	ctx = context.WithValue(ctx, config.TenantKey, &config.Tenant{
+		PackageName: in.PackageName,
+		Suuid:       in.Device.Suuid,
+		VersionCode: in.VersionCode,
+		Channel:     in.Channel,
+		Os:          uint8(in.Device.Os),
+		Idfa:        in.Device.Idfa,
+		Oaid:        in.Device.Oaid,
+		Mac:         in.Device.Mac,
+		AndroidId:   in.Device.AndroidId,
+		Ip:          getIp(ctx),
+	})
+	span := stdtracing.SpanFromContext(ctx)
+	span.SetTag("package.name", in.PackageName)
+	span.SetTag("suuid", in.Device.Suuid)
+	resp, err := s.AppServer.Login(ctx, in)
+	if err == nil {
+		span.SetTag("user.id", resp.Data.Id)
+	}
+	return resp, err
+}
+
+func getIp(ctx context.Context) string {
+	ip, _ := ctx.Value(contract.IpKey).(string)
+	return ip
 }

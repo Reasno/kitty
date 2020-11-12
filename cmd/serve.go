@@ -3,18 +3,19 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/go-kit/kit/log/level"
-	"github.com/gorilla/mux"
-	"github.com/oklog/run"
-	"github.com/spf13/cobra"
-	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
-	"google.golang.org/grpc"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-kit/kit/log/level"
+	"github.com/gorilla/mux"
+	"github.com/oklog/run"
+	"github.com/spf13/cobra"
+	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
+	"google.golang.org/grpc"
 )
 
 func init() {

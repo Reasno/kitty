@@ -13,6 +13,10 @@ option (options.openapiv2_swagger) = {
   info: {
     title: "商业化中台用户中心";
     version: "0.1.0";
+    contact: {
+      name: "谷溪";
+      email: "guxi@infinities.com.cn";
+    };
   };
   base_path: "/app"
   security_definitions: {
@@ -35,6 +39,7 @@ option (options.openapiv2_swagger) = {
   produces: "application/json";
 };
 
+// 用户中心
 service App {
   // 用户从未登录状态注册或登录时调用。如果用户已登录，需要绑定手机号或微信号，请使用bind接口。
   rpc Login(UserLoginRequest) returns (UserInfoReply) {
@@ -65,6 +70,7 @@ service App {
     };
   }
   // 更新个人信息
+  // 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
   rpc UpdateInfo (UserInfoUpdateRequest) returns (UserInfoReply) {
     option (options.openapiv2_operation) = {
       tags: "用户信息"
@@ -74,7 +80,8 @@ service App {
       body: "*"
     };
   }
-  // 用户已登录后，绑定额外的手机号或微信号
+  // 用户已登录后，绑定额外的手机号或微信号。
+  // 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
   rpc Bind (UserBindRequest) returns (UserInfoReply) {
     option (options.openapiv2_operation) = {
       tags: "用户信息"
@@ -85,6 +92,7 @@ service App {
     };
   }
   // 针对已登录用户，取消绑定手机或微信登录方式
+  // 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
   rpc Unbind (UserUnbindRequest) returns (UserInfoReply) {
     option (options.openapiv2_operation) = {
       tags: "用户信息"
@@ -208,6 +216,8 @@ message UserLoginRequest {
   ];
   // 第三方ID
   string third_party_id = 8;
+  // 邀请码
+  string invite_code = 9;
 }
 
 message Device {
@@ -225,6 +235,12 @@ message Device {
   // 1 苹果，2 安卓
   OS os = 6;
   string oaid = 7;
+}
+
+enum Gender {
+  GENDER_UNKNOWN = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
 }
 
 message UserInfo {
@@ -250,11 +266,7 @@ message UserInfoReply {
   UserInfo data = 3;
 }
 
-enum Gender {
-  GENDER_UNKNOWN = 0;
-  GENDER_MALE = 1;
-  GENDER_FEMALE = 2;
-}
+
 
 message GetCodeRequest {
   string mobile = 1 [

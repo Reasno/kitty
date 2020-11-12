@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/go-kit/kit/log"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
@@ -11,17 +13,32 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/container"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	kitty_log "glab.tagtic.cn/ad_gains/kitty/pkg/klog"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
 	"glab.tagtic.cn/ad_gains/kitty/rule"
+	"glab.tagtic.cn/ad_gains/kitty/rule/client"
 )
 
 var moduleContainer container.ModuleContainer
 
 func initModules() {
 	moduleContainer = container.NewModuleContainer()
-	appModuleConfig := conf.Cut("app")
-	moduleContainer.Register(module.New(appModuleConfig, logger))
 	ruleModuleConfig := conf.Cut("rule")
-	moduleContainer.Register(rule.New(ruleModuleConfig, logger))
+	ruleModule := rule.New(ruleModuleConfig, logger)
+	moduleContainer.Register(ruleModule)
+
+	dynConf, err := client.NewRuleEngine(client.WithRepository(ruleModule.GetRepository()))
+	if err != nil {
+		panic(err)
+	}
+
+	appModuleConfig := conf.Cut("app")
+	appModuleDynConfig := dynConf.Of(
+		fmt.Sprintf("%s-%s",
+			appModuleConfig.String("name"),
+			appModuleConfig.String("env")),
+	)
+	moduleContainer.Register(module.New(appModuleConfig, logger, appModuleDynConfig))
+	moduleContainer.Register(ots3.New(conf.Cut("global"), logger))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Doc))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.HealthCheck))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Metrics))

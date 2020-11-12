@@ -81,7 +81,7 @@ func newEndpoints(s Service, hist metrics.Histogram, logger log.Logger, appName 
 	l := kmiddleware.NewLoggingMiddleware(logger, env.IsLocal())
 	e := kmiddleware.NewErrorMarshallerMiddleware()
 	mw := func(name string) endpoint.Middleware {
-		return endpoint.Chain(l, e, kmiddleware.NewMetricsMiddleware(hist, appName.String(), name))
+		return endpoint.Chain(e, kmiddleware.NewMetricsMiddleware(hist, appName.String(), name), l)
 	}
 	return Endpoints{
 		calculateRulesEndpoints: mw("CalculateRules")(MakeCalculateRulesEndpoint(s)),

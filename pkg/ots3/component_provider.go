@@ -11,6 +11,7 @@ import (
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	logging "glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 	"io"
+	"net/url"
 )
 
 func provideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
@@ -61,11 +62,15 @@ func provideUploadManager(conf contract.ConfigReader) *Manager {
 	return NewManager(
 		conf.String("s3.accessKey"),
 		conf.String("s3.accessSecret"),
-		conf.String("s3.region"),
 		conf.String("s3.endpoint"),
+		conf.String("s3.region"),
 		conf.String("s3.bucket"),
-		WithLocationFunc(func(location string) (url string) {
-			return fmt.Sprintf(conf.String("s3.cdnUrl"), location)
+		WithLocationFunc(func(location string) (uri string) {
+			u, err := url.Parse(location)
+			if err != nil {
+				return location
+			}
+			return fmt.Sprintf(conf.String("s3.cdnUrl"), u.Path[1:])
 		}),
 	)
 }

@@ -3,15 +3,15 @@ package klog
 import (
 	"context"
 	"fmt"
-	"github.com/go-kit/kit/auth/jwt"
+	"os"
+	"time"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-kit/kit/log/term"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"gorm.io/gorm/logger"
-	"os"
-	"time"
 )
 
 func NewLogger(env contract.Env) (logger log.Logger) {
@@ -48,13 +48,10 @@ func NewLogger(env contract.Env) (logger log.Logger) {
 	return log.With(logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 }
 
-func WithContext(logger log.Logger, context context.Context) log.Logger {
-	claim, ok := context.Value(jwt.JWTClaimsContextKey).(jwt2.Claim)
-	if !ok {
-		claim = jwt2.Claim{}
-	}
-	transport, _ := context.Value("transport").(string)
-	requestUrl, _ := context.Value("request-url").(string)
+func WithContext(logger log.Logger, ctx context.Context) log.Logger {
+	claim := jwt2.GetClaim(ctx)
+	transport, _ := ctx.Value("transport").(string)
+	requestUrl, _ := ctx.Value("request-url").(string)
 
 	return log.With(
 		logger,

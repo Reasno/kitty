@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -44,24 +43,6 @@ func (user *User) AddNewDevice(device *Device) {
 	device.Hash = device.HashCode()
 	device.UserID = user.ID
 	user.Devices = append(user.Devices, *device)
-}
-
-func (user *User) ToReply() *pb.UserInfoReply {
-	return &pb.UserInfoReply{
-		Code:    0,
-		Message: "",
-		Data: &pb.UserInfo{
-			Id:           uint64(user.ID),
-			UserName:     user.UserName,
-			Wechat:       user.WechatOpenId.String,
-			HeadImg:      user.HeadImg,
-			Gender:       pb.Gender(user.Gender),
-			Birthday:     user.Birthday,
-			ThirdPartyId: user.ThirdPartyId,
-			Mobile:       user.Mobile.String,
-			IsNew:        user.IsNew,
-		},
-	}
 }
 
 func (u *User) AfterCreate(tx *gorm.DB) (err error) {

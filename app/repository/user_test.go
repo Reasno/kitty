@@ -40,7 +40,7 @@ func setUp(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed migration")
 	}
-	repo = NewUserRepo(db)
+	repo = NewUserRepo(db, NewFileRepo(nil, nil))
 }
 
 func tearDown() {
@@ -66,6 +66,9 @@ func TestGetFromWechat(t *testing.T) {
 	}
 	if u.UserName != "baz" {
 		t.Fatalf("want baz, got %s", u.UserName)
+	}
+	if !u.IsNew {
+		t.Fatalf("user must be new")
 	}
 	u2, err := repo.GetFromWechat(ctx, "", "foo", &entity.Device{Suuid: "bar2"}, entity.User{UserName: "baz2"})
 	if err != nil {

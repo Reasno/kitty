@@ -9,13 +9,13 @@ import (
 
 type Claim struct {
 	stdjwt.StandardClaims
-	PackageName string
-	UserId      uint64
-	Suuid       string
-	Channel     string
-	VersionCode string
-	Wechat      string
-	Mobile      string
+	PackageName string `json:"PackageName,omitempty"`
+	UserId      uint64 `json:"UserId,omitempty"`
+	Suuid       string `json:"Suuid,omitempty"`
+	Channel     string `json:"Channel,omitempty"`
+	VersionCode string `json:"VersionCode,omitempty"`
+	Wechat      string `json:"Wechat,omitempty"`
+	Mobile      string `json:"Mobile,omitempty"`
 }
 
 func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat, mobile, packageName string, ttl time.Duration) *Claim {

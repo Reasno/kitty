@@ -1,13 +1,15 @@
 package ots3
 
 import (
+	"bytes"
 	"context"
-	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
@@ -63,7 +65,7 @@ func NewManager(accessKey, accessSecret, endpoint, region, bucket string, opts .
 	c := &Config{
 		doer: http.DefaultClient,
 		locationFunc: func(location string) (url string) {
-			return fmt.Sprintf("%s/%s/%s", endpoint, bucket, location)
+			return location
 		},
 	}
 	for _, f := range opts {
@@ -88,15 +90,26 @@ func NewManager(accessKey, accessSecret, endpoint, region, bucket string, opts .
 	return m
 }
 
-func (m *Manager) Upload(ctx context.Context, reader io.Reader) (url string, err error) {
+func (m *Manager) Upload(ctx context.Context, reader io.Reader) (newUrl string, err error) {
 	packageName := kjwt.GetClaim(ctx).PackageName
+	if packageName != "" {
+		packageName = packageName + "/"
+	}
 	// Create an uploader with the session and default options
 	uploader := s3manager.NewUploader(m.sess)
+	var extension = ""
+	var buf = bytes.NewBuffer(nil)
+	var tee = io.TeeReader(reader, buf)
+	mi, err := mimetype.DetectReader(tee)
+	if err == nil {
+		extension = mi.Extension()
+	}
 
+	// Efficiently use the buf for mime type reading and continue from the rest of the body
 	result, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Bucket: aws.String(m.bucket),
-		Key:    aws.String(packageName + "/" + xid.New().String()),
-		Body:   reader,
+		Key:    aws.String(packageName + xid.New().String() + extension),
+		Body:   io.MultiReader(buf, reader),
 	})
 
 	if err != nil {
@@ -130,7 +143,7 @@ func (m *Manager) otHandler() func(*request.Request) {
 		if ctx == nil || !opentracing.IsGlobalTracerRegistered() {
 			sp = tracer.StartSpan(r.Operation.Name)
 		} else {
-			sp, ctx = opentracing.StartSpanFromContext(ctx, r.Operation.Name)
+			sp, ctx = opentracing.StartSpanFromContextWithTracer(ctx, m.tracer, r.Operation.Name)
 			r.SetContext(ctx)
 		}
 		ext.SpanKindRPCClient.Set(sp)

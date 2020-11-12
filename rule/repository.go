@@ -25,7 +25,6 @@ type repository struct {
 	logger     log.Logger
 	containers map[string]Container
 	prefix     string
-	mapping    map[string]string
 	rwLock     sync.RWMutex
 }
 
@@ -45,7 +44,6 @@ func NewRepository(client *clientv3.Client, logger log.Logger) (*repository, err
 		logger:     logger,
 		containers: make(map[string]Container),
 		prefix:     "",
-		mapping:    nil,
 		rwLock:     sync.RWMutex{},
 	}
 
@@ -130,23 +128,24 @@ func (r *repository) readCentralConfig() (map[string]string, error) {
 			collect(activeContainers, v.Path, r.prefix)
 		}
 	}
-	activeContainers["central-config"] = CentralConfigPath
 	return activeContainers, nil
 }
 
 func collect(containers map[string]string, path string, p string) {
-	containers[path[1:]+"-prod"] = p + path + "-prod"
-	containers[path[1:]+"-dev"] = p + path + "-dev"
-	containers[path[1:]+"-testing"] = p + path + "-testing"
-	containers[path[1:]+"-local"] = p + path + "-local"
+	if len(path) > 1 {
+		containers[path[1:]+"-prod"] = p + path + "-prod"
+		containers[path[1:]+"-dev"] = p + path + "-dev"
+		containers[path[1:]+"-testing"] = p + path + "-testing"
+		containers[path[1:]+"-local"] = p + path + "-local"
+	}
 }
 
 func (r *repository) GetRaw(ctx context.Context, name string) (value []byte, e error) {
-	dbKey, ok := r.mapping[name]
+	c, ok := r.containers[name]
 	if !ok {
 		return nil, fmt.Errorf("unknown rule set %s", name)
 	}
-	return r.getRawRuleSetFromDbKey(ctx, dbKey)
+	return r.getRawRuleSetFromDbKey(ctx, c.DbKey)
 }
 
 func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (value []byte, e error) {
@@ -162,11 +161,11 @@ func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (
 }
 
 func (r *repository) SetRaw(ctx context.Context, name string, value string) error {
-	dbKey, ok := r.mapping[name]
+	c, ok := r.containers[name]
 	if !ok {
 		return fmt.Errorf("unknown rule set %s", name)
 	}
-	return r.setRawRuleSetFromDbKey(ctx, dbKey, value)
+	return r.setRawRuleSetFromDbKey(ctx, c.DbKey, value)
 }
 
 func (r *repository) setRawRuleSetFromDbKey(ctx context.Context, dbKey string, value string) error {
@@ -184,7 +183,7 @@ func (r *repository) getRev(ctx context.Context, key string) (int64, error) {
 }
 
 func (r *repository) validateAllRules() error {
-	todo := dbKeys(r.containers)
+	todo := DbKeys(r.containers)
 	for _, v := range todo {
 		var tmp []Rule
 		value, err := r.getRawRuleSetFromDbKey(context.Background(), v)
@@ -229,12 +228,11 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
 
-	r.mapping = activeContainers
-
 	// 填充所有容器
 	for k, v := range activeContainers {
-		r.containers[k] = Container{DbKey: v, Name: k, RuleSet: []Rule{}}
+		r.containers[k] = Container{DbKey: OtherConfigPathPrefix + v, Name: k, RuleSet: []Rule{}}
 	}
+	r.containers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: []Rule{}}
 
 	// 依次拉取规则
 	var count = 0

@@ -7,6 +7,7 @@ package ots3
 
 import (
 	"github.com/go-kit/kit/log"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"net/url"
 )
@@ -20,7 +21,9 @@ func injectModule(conf contract.ConfigReader, logger log.Logger) *Module {
 		s3:     manager,
 	}
 	endpoint := MakeUploadEndpoint(uploadService)
-	handler := MakeHttpHandler(endpoint)
+	env := config.ProvideEnv(conf)
+	middleware := Middleware(logger, env)
+	handler := MakeHttpHandler(endpoint, middleware)
 	module := &Module{
 		handler: handler,
 	}

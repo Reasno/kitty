@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-//TrimPrefix removes the longest common prefix from all provided strings
+//TrimPrefix removes the longest common Prefix from all provided strings
 func TrimPrefix(strs []string) {
-	p := prefix(strs)
+	p := Prefix(strs)
 	if p == "" {
 		return
 	}
@@ -16,9 +16,9 @@ func TrimPrefix(strs []string) {
 	}
 }
 
-//TrimSuffix removes the longest common suffix from all provided strings
+//TrimSuffix removes the longest common Suffix from all provided strings
 func TrimSuffix(strs []string) {
-	p := suffix(strs)
+	p := Suffix(strs)
 	if p == "" {
 		return
 	}
@@ -27,13 +27,13 @@ func TrimSuffix(strs []string) {
 	}
 }
 
-//prefix returns the longest common prefix of the provided strings
-func prefix(strs []string) string {
+//Prefix returns the longest common Prefix of the provided strings
+func Prefix(strs []string) string {
 	return longestCommonXfix(strs, true)
 }
 
-//Suffix returns the longest common suffix of the provided strings
-func suffix(strs []string) string {
+//Suffix returns the longest common Suffix of the provided strings
+func Suffix(strs []string) string {
 	return longestCommonXfix(strs, false)
 }
 
@@ -62,7 +62,7 @@ func longestCommonXfix(strs []string, pre bool) string {
 		}
 		//compare letters
 		if pre {
-			//prefix, iterate left to right
+			//Prefix, iterate left to right
 			for i := 0; i < maxl; i++ {
 				if xfix[i] != str[i] {
 					xfix = xfix[:i]
@@ -73,7 +73,7 @@ func longestCommonXfix(strs []string, pre bool) string {
 				}
 			}
 		} else {
-			//suffix, iternate right to left
+			//Suffix, iternate right to left
 			for i := 0; i < maxl; i++ {
 				xi := xfixl - i - 1
 				si := strl - i - 1
@@ -90,7 +90,7 @@ func longestCommonXfix(strs []string, pre bool) string {
 	return xfix
 }
 
-func dbKeys(m map[string]Container) []string {
+func DbKeys(m map[string]Container) []string {
 	var out []string
 	for _, v := range m {
 		out = append(out, v.DbKey)

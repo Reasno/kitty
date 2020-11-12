@@ -3,12 +3,15 @@ package ots3
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kmiddleware"
+
 	"io"
 	"net/http"
 )
@@ -18,14 +21,15 @@ type UploadService struct {
 	s3     *Manager
 }
 
-func (s *UploadService) Upload(ctx context.Context, data io.Reader) (url string, err error) {
+func (s *UploadService) Upload(ctx context.Context, reader io.Reader) (newUrl string, err error) {
 	defer func() {
-		if closer, ok := data.(io.ReadCloser); ok {
+		if closer, ok := reader.(io.ReadCloser); ok {
 			closer.Close()
 		}
 	}()
-	defer level.Info(s.logger).Log("msg", fmt.Sprintf("file uploaded to %s", url))
-	return s.s3.Upload(ctx, data)
+	newUrl, err = s.s3.Upload(ctx, reader)
+	level.Info(s.logger).Log("msg", fmt.Sprintf("file uploaded to %s", newUrl))
+	return newUrl, err
 }
 
 type Request struct {
@@ -56,16 +60,22 @@ func MakeUploadEndpoint(uploader contract.Uploader) endpoint.Endpoint {
 	}
 }
 
-func MakeHttpHandler(endpoint endpoint.Endpoint) http.Handler {
+func Middleware(logger log.Logger, env contract.Env) endpoint.Middleware {
+	l := kmiddleware.NewLoggingMiddleware(logger, env.IsLocal())
+	e := kmiddleware.NewErrorMarshallerMiddleware()
+	return endpoint.Chain(e, l)
+}
+
+func MakeHttpHandler(endpoint endpoint.Endpoint, middleware endpoint.Middleware) http.Handler {
 	server := httptransport.NewServer(
-		endpoint,
+		middleware(endpoint),
 		decodeRequest,
 		httptransport.EncodeJSONResponse,
 	)
 	return server
 }
 
-func decodeRequest(ctx context.Context, request2 *http.Request) (request interface{}, err error) {
+func decodeRequest(_ context.Context, request2 *http.Request) (request interface{}, err error) {
 	return &Request{
 		data: request2.Body,
 	}, nil

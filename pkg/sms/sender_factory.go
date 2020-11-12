@@ -49,3 +49,15 @@ func (t *SenderFactory) GetTransportWithConf(name string, conf contract.ConfigRe
 	t.cache[name] = NewTransport(t.getSmsConfig(conf, name))
 	return t.cache[name]
 }
+
+func (t *SenderFactory) GetTransportByConf(conf contract.ConfigReader) contract.SmsSender {
+	// Currently we only have one kind of sender.
+	return NewTransport(&TransportConfig{
+		Tag:        conf.String("sms.tag"),
+		SendUrl:    conf.String("sms.sendUrl"),
+		BalanceUrl: conf.String("sms.balanceUrl"),
+		UserName:   conf.String("sms.username"),
+		Password:   conf.String("sms.password"),
+		Client:     t.doer,
+	})
+}

@@ -2,12 +2,12 @@ package rule
 
 import "testing"
 
-func TestLongestCommonPrefix(t *testing.T)  {
+func TestLongestCommonPrefix(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		input []string
+		input  []string
 		output string
-	} {
+	}{
 		{
 			[]string{"foooooooo", "foo"},
 			"foo",
@@ -28,7 +28,7 @@ func TestLongestCommonPrefix(t *testing.T)  {
 	for _, c := range cases {
 		cc := c
 		t.Run(cc.output, func(t *testing.T) {
-			o := prefix(cc.input)
+			o := Prefix(cc.input)
 			if o != cc.output {
 				t.Fatalf("want %s, got %s", cc.output, o)
 			}

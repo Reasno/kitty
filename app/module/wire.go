@@ -37,7 +37,8 @@ var AppServerSet = wire.NewSet(
 	provideUploadManager,
 	provideRedis,
 	provideWechatConfig,
-	wechat.NewTransport,
+	wechat.NewWechaterFactory,
+	wechat.NewWechaterFacade,
 	sms.NewTransportFactory,
 	sms.NewSenderFacade,
 	repository.NewUserRepo,
@@ -52,16 +53,16 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(contract.Keyer), new(otredis.KeyManager)),
 	wire.Bind(new(contract.Uploader), new(*ots3.Manager)),
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
+	wire.Bind(new(wechat.Wechater), new(*wechat.WechaterFacade)),
 	wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)),
 	wire.Bind(new(contract.Env), new(config.Env)),
 	wire.Bind(new(contract.AppName), new(config.AppName)),
 	wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)),
 	wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)),
-	wire.Bind(new(handlers.FileRepository), new(*repository.FileRepo)),
 	wire.Bind(new(handlers.ExtraRepository), new(*repository.ExtraRepo)),
 )
 
-func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, func(), error) {
+func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {
 	panic(wire.Build(
 		AppServerSet,
 		provideKafkaProducerFactory,

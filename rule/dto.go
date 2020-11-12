@@ -8,41 +8,44 @@ import (
 )
 
 type Payload struct {
-	Channel     string `json:"channel"`
-	VersionCode string `json:"version_code"`
-	Os          uint8  `json:"os"`
-	UserId      uint64 `json:"user_id"`
-	Imei        string `json:"imei"`
-	Idfa        string `json:"idfa"`
-	Oaid        string `json:"oaid"`
-	Suuid       string `json:"suuid"`
-	Mac         string `json:"mac"`
-	AndroidId   string `json:"android_id"`
-	PackageName string `json:"package_name"`
-	Ip          string `json:"ip"`
+	Channel     string `json:"channel" schema:"channel"`
+	VersionCode string `json:"version_code" schema:"version_code"`
+	Os          uint8  `json:"os" schema:"os"`
+	UserId      uint64 `json:"user_id" schema:"user_id"`
+	Imei        string `json:"imei" schema:"imei"`
+	Idfa        string `json:"idfa" schema:"idfa"`
+	Oaid        string `json:"oaid" schema:"oaid"`
+	Suuid       string `json:"suuid" schema:"suuid"`
+	Mac         string `json:"mac" schema:"mac"`
+	AndroidId   string `json:"android_id" schema:"android_id"`
+	PackageName string `json:"package_name" schema:"package_name"`
+	Ip          string `json:"ip" schema:"ip"`
 }
 
-func (p *Payload) FromClaim(claim jwt2.Claim) {
-	p.Channel = claim.Channel
-	p.VersionCode = claim.VersionCode
-	p.Suuid = claim.Suuid
-	p.UserId = claim.UserId
+func FromClaim(claim jwt2.Claim) *Payload {
+	return &Payload{
+		Channel:     claim.Channel,
+		VersionCode: claim.VersionCode,
+		Suuid:       claim.Suuid,
+		UserId:      claim.UserId,
+	}
 }
 
-func (p *Payload) FromTenant(tenant *config.Tenant) {
-	p.Channel = tenant.Channel
-	p.Os = tenant.Os
-	p.UserId = tenant.UserId
-	p.Oaid = tenant.Oaid
-	p.Idfa = tenant.Idfa
-	p.Mac = tenant.Mac
-	p.AndroidId = tenant.AndroidId
-	p.Mac = tenant.Mac
-	p.Channel = tenant.Channel
-	p.VersionCode = tenant.VersionCode
-	p.Suuid = tenant.Suuid
-	p.Imei = tenant.Imei
-	p.Ip = tenant.Ip
+func FromTenant(tenant *config.Tenant) *Payload {
+	return &Payload{
+		Channel:     tenant.Channel,
+		VersionCode: tenant.VersionCode,
+		Os:          tenant.Os,
+		UserId:      tenant.UserId,
+		Imei:        tenant.Imei,
+		Idfa:        tenant.Idfa,
+		Oaid:        tenant.Oaid,
+		Suuid:       tenant.Suuid,
+		Mac:         tenant.Mac,
+		AndroidId:   tenant.AndroidId,
+		PackageName: tenant.PackageName,
+		Ip:          tenant.Ip,
+	}
 }
 
 func (p *Payload) String() string {

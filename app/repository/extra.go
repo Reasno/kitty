@@ -27,12 +27,19 @@ func NewExtraRepo(client redis.Cmdable, keyer contract.Keyer) *ExtraRepo {
 }
 
 func (e *ExtraRepo) Put(ctx context.Context, id uint, name string, extra []byte) error {
+	if id == 0 {
+		return nil
+	}
 	key := e.km.Key(fmt.Sprintf("%d", id), name)
+	fmt.Println(key)
 	_, err := e.client.Set(ctx, key, extra, e.ttl).Result()
 	return err
 }
 
 func (e *ExtraRepo) Get(ctx context.Context, id uint, name string) ([]byte, error) {
+	if id == 0 {
+		return []byte{}, nil
+	}
 	key := e.km.Key(fmt.Sprintf("%d", id), name)
 	b, err := e.client.Get(ctx, key).Result()
 	if err == redis.Nil {
@@ -42,6 +49,9 @@ func (e *ExtraRepo) Get(ctx context.Context, id uint, name string) ([]byte, erro
 }
 
 func (e *ExtraRepo) Del(ctx context.Context, id uint, name string) error {
+	if id == 0 {
+		return nil
+	}
 	key := e.km.Key(fmt.Sprintf("%d", id), name)
 	_, err := e.client.Del(ctx, key).Result()
 	if err == redis.Nil {
