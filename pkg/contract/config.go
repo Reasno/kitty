@@ -1,3 +1,4 @@
+//go:generate mockery --name=ConfigReader
 package contract
 
 type ConfigReader interface {

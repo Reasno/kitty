@@ -1,3 +1,4 @@
+//go:generate mockery --name=Wechater
 package wechat
 
 import (

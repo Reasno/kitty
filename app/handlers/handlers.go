@@ -1,3 +1,7 @@
+//go:generate mockery --name=CodeRepository
+//go:generate mockery --name=UserRepository
+//go:generate mockery --name=ExtraRepository
+
 package handlers
 
 import (
@@ -24,14 +28,13 @@ var taobaoExtraKey struct{}
 var wechatExtraKey struct{}
 
 type appService struct {
-	conf     contract.ConfigReader
-	logger   log.Logger
-	ur       UserRepository
-	cr       CodeRepository
-	er       ExtraRepository
-	sender   contract.SmsSender
-	wechat   wechat.Wechater
-	uploader contract.Uploader
+	conf   contract.ConfigReader
+	logger log.Logger
+	ur     UserRepository
+	cr     CodeRepository
+	er     ExtraRepository
+	sender contract.SmsSender
+	wechat wechat.Wechater
 }
 
 type tokenParam struct {

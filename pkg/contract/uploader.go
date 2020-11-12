@@ -1,3 +1,4 @@
+//go:generate mockery --name=Uploader
 package contract
 
 import (
