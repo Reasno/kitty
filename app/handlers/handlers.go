@@ -81,15 +81,15 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		return nil, errors.WithStack(err)
 	}
 
-	err = s.addChannelAndVersionInfo(ctx, in, u)
-	if err != nil {
-		return nil, errors.WithStack(err)
+	// 再存一些信息
+	if err := s.addChannelAndVersionInfo(ctx, in, u); err != nil {
+		s.warn(err)
 	}
 
 	// Create jwt token
 	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), u.CommonSUUID, u.Channel, u.VersionCode, u.WechatOpenId.String, u.Mobile.String, u.PackageName})
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
+		s.warn(err)
 	}
 
 	// 拼装返回结果
