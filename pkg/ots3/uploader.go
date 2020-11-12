@@ -104,10 +104,12 @@ func (m *Manager) Upload(ctx context.Context, reader io.Reader) (newUrl string, 
 	if err == nil {
 		extension = mi.Extension()
 	}
+
+	// Efficiently use the buf for mime type reading and continue from the rest of the body
 	result, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Bucket: aws.String(m.bucket),
 		Key:    aws.String(packageName + xid.New().String() + extension),
-		Body:   buf,
+		Body:   io.MultiReader(buf, reader),
 	})
 
 	if err != nil {

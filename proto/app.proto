@@ -238,6 +238,11 @@ message Device {
 }
 
 message UserInfo {
+  enum Gender {
+    GENDER_UNKNOWN = 0;
+    GENDER_MALE = 1;
+    GENDER_FEMALE = 2;
+  }
   uint64 id = 1;
   string user_name = 2;
   string wechat = 3;
@@ -260,11 +265,7 @@ message UserInfoReply {
   UserInfo data = 3;
 }
 
-enum Gender {
-  GENDER_UNKNOWN = 0;
-  GENDER_MALE = 1;
-  GENDER_FEMALE = 2;
-}
+
 
 message GetCodeRequest {
   string mobile = 1 [
