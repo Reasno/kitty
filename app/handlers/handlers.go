@@ -76,7 +76,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		Mac:       in.Device.Mac,
 		AndroidId: in.Device.AndroidId,
 	}
-	u, err = s.loginFrom(ctx, in, device)
+	ctx, u, err = s.loginFrom(ctx, in, device)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -426,19 +426,21 @@ func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid st
 	return u, nil
 }
 
-func (s appService) loginFrom(ctx context.Context, in *pb.UserLoginRequest, device *entity.Device) (*entity.User, error) {
+func (s appService) loginFrom(ctx context.Context, in *pb.UserLoginRequest, device *entity.Device) (context.Context, *entity.User, error) {
 
 	if len(in.Mobile) != 0 {
-		return s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
+		u, e := s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
+		return ctx, u, e
 	}
 
 	if len(in.Wechat) != 0 {
 		u, wechatExtra, err := s.handleWechatLogin(ctx, in.PackageName, in.Wechat, device)
 		ctx = context.WithValue(ctx, wechatExtraKey, wechatExtra)
-		return u, err
+		return ctx, u, err
 	}
 
-	return s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
+	u, e := s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
+	return ctx, u, e
 }
 
 func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLoginRequest, u *entity.User) error {
