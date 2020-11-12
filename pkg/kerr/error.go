@@ -86,40 +86,41 @@ func (e ServerError) GRPCStatus() *status.Status {
 
 // StatusCode Implements https status
 func (e ServerError) StatusCode() int {
-	switch e.status.Code() {
-	case codes.OK:
-		return 200
-	case codes.Canceled:
-		return 499
-	case codes.Unknown:
-		return 500
-	case codes.InvalidArgument:
-		return 400
-	case codes.DeadlineExceeded:
-		return 504
-	case codes.NotFound:
-		return 404
-	case codes.AlreadyExists:
-		return 409
-	case codes.PermissionDenied:
-		return 403
-	case codes.ResourceExhausted:
-		return 429
-	case codes.FailedPrecondition:
-		return 400
-	case codes.Aborted:
-		return 409
-	case codes.OutOfRange:
-		return 400
-	case codes.Unimplemented:
-		return 501
-	case codes.DataLoss:
-		return 500
-	case codes.Unauthenticated:
-		return 401
-	default:
-		return 500
-	}
+	return 200
+	//switch e.status.Code() {
+	//case codes.OK:
+	//	return 200
+	//case codes.Canceled:
+	//	return 499
+	//case codes.Unknown:
+	//	return 500
+	//case codes.InvalidArgument:
+	//	return 400
+	//case codes.DeadlineExceeded:
+	//	return 504
+	//case codes.NotFound:
+	//	return 404
+	//case codes.AlreadyExists:
+	//	return 409
+	//case codes.PermissionDenied:
+	//	return 403
+	//case codes.ResourceExhausted:
+	//	return 429
+	//case codes.FailedPrecondition:
+	//	return 400
+	//case codes.Aborted:
+	//	return 409
+	//case codes.OutOfRange:
+	//	return 400
+	//case codes.Unimplemented:
+	//	return 501
+	//case codes.DataLoss:
+	//	return 500
+	//case codes.Unauthenticated:
+	//	return 401
+	//default:
+	//	return 500
+	//}
 }
 
 // Unwrap implements go's standard errors.Unwrap() interface

@@ -269,6 +269,15 @@ rule:
 |   +-- 砸金蛋
 ```
 
+在配置后台，默认每个配置项分为四个环境：
+
+prod ：生产环境配置
+dev ：开发环境配置
+testing: 测试环境配置
+local: 本地环境配置
+
+每个项目可以根据需要自行分配。
+
 创建项目后，每个项目可以在配置平台对应页面进行编辑。
 
 #### 创建基本配置
@@ -318,11 +327,13 @@ rule:
 
 #### 客户端消费配置
 
-假设配置平台地址localhost:8080, 消费配置`/foo`（配置平台yaml对应路径）
+客户端消费配置时，以`GET`请求访问到https://monetization.tagtic.cn/rule/v1/calculate/{key}
 
-GET http://localhost:8080/rule/v1/calculate/foo?package_name=xxx&channel=yyy&&version_code=zzz
+> 消费配置时的键（`key`）为`配置名称-配置环境`。
 
-> 配置平台接口不需要`jwt`,因此可以在启动阶段调用。
+假设配置平台配置地址`/foo`（配置平台yaml对应路径），则从如下路由获取生产（`prod`）配置
+
+GET https://monetization.tagtic.cn/rule/v1/calculate/foo-prod?package_name=xxx&channel=yyy&&version_code=zzz
 
 `Querystring` 中的内容主要用于高级配置中的`DSL`进行判断。
 
@@ -341,6 +352,8 @@ string "mac" MAC地址
 string "android_id" 安卓ID
 string "package_name" 包名
 ```
+
+> 配置平台接口不需要`jwt`,因此可以在启动阶段调用。
 
 #### 服务端消费配置
 

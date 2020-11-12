@@ -76,27 +76,27 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		Mac:       in.Device.Mac,
 		AndroidId: in.Device.AndroidId,
 	}
-	u, err = s.loginFrom(ctx, in, device)
+	ctx, u, err = s.loginFrom(ctx, in, device)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	err = s.addChannelAndVersionInfo(ctx, in, u)
-	if err != nil {
-		return nil, errors.WithStack(err)
+	// 再存一些信息
+	if err := s.addChannelAndVersionInfo(ctx, in, u); err != nil {
+		s.warn(err)
 	}
 
 	// Create jwt token
 	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), u.CommonSUUID, u.Channel, u.VersionCode, u.WechatOpenId.String, u.Mobile.String, u.PackageName})
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
+		s.warn(err)
 	}
 
 	// 拼装返回结果
 	var resp = toReply(u)
 	resp.Data.Token = tokenString
 
-	s.persistExtra(ctx)
+	s.persistExtra(ctx, resp.Data.Id)
 	s.decorateResponse(ctx, resp.Data)
 
 	return resp, nil
@@ -284,7 +284,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 组装数据
-	s.persistExtra(ctx)
+	s.persistExtra(ctx, reply.Data.Id)
 	s.decorateResponse(ctx, reply.Data)
 	return reply, err
 }
@@ -426,19 +426,21 @@ func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid st
 	return u, nil
 }
 
-func (s appService) loginFrom(ctx context.Context, in *pb.UserLoginRequest, device *entity.Device) (*entity.User, error) {
+func (s appService) loginFrom(ctx context.Context, in *pb.UserLoginRequest, device *entity.Device) (context.Context, *entity.User, error) {
 
 	if len(in.Mobile) != 0 {
-		return s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
+		u, e := s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
+		return ctx, u, e
 	}
 
 	if len(in.Wechat) != 0 {
 		u, wechatExtra, err := s.handleWechatLogin(ctx, in.PackageName, in.Wechat, device)
 		ctx = context.WithValue(ctx, wechatExtraKey, wechatExtra)
-		return u, err
+		return ctx, u, err
 	}
 
-	return s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
+	u, e := s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
+	return ctx, u, e
 }
 
 func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLoginRequest, u *entity.User) error {
@@ -516,19 +518,15 @@ func (s appService) getTaobaoExtra(ctx context.Context, id uint) *pb.TaobaoExtra
 func (s appService) decorateResponse(ctx context.Context, data *pb.UserInfo) {
 	data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(data.Id))
 	data.WechatExtra = s.getWechatExtra(ctx, uint(data.Id))
-	// 如果不是用户本人，则隐去手机号部分内容
-	if data.Id != kittyjwt.GetClaim(ctx).UserId {
-		data.Mobile = redact(data.Mobile)
-	}
+	data.Mobile = redact(data.Mobile)
 }
 
-func (s appService) persistExtra(ctx context.Context) {
-	s.persistTaobaoExtra(ctx)
-	s.persistWechatExtra(ctx)
+func (s appService) persistExtra(ctx context.Context, id uint64) {
+	s.persistTaobaoExtra(ctx, id)
+	s.persistWechatExtra(ctx, id)
 }
 
-func (s appService) persistTaobaoExtra(ctx context.Context) {
-	claim := kittyjwt.GetClaim(ctx)
+func (s appService) persistTaobaoExtra(ctx context.Context, id uint64) {
 	extra, ok := ctx.Value(taobaoExtraKey).(*pb.TaobaoExtra)
 	if !ok {
 		return
@@ -536,12 +534,11 @@ func (s appService) persistTaobaoExtra(ctx context.Context) {
 	b, err := extra.Marshal()
 	s.warn(err)
 
-	err = s.er.Put(ctx, uint(claim.UserId), pb.Extra_TAOBAO_EXTRA.String(), b)
+	err = s.er.Put(ctx, uint(id), pb.Extra_TAOBAO_EXTRA.String(), b)
 	s.warn(err)
 }
 
-func (s appService) persistWechatExtra(ctx context.Context) {
-	claim := kittyjwt.GetClaim(ctx)
+func (s appService) persistWechatExtra(ctx context.Context, id uint64) {
 	extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra)
 	if !ok {
 		return
@@ -549,7 +546,7 @@ func (s appService) persistWechatExtra(ctx context.Context) {
 	b, err := extra.Marshal()
 	s.warn(err)
 
-	err = s.er.Put(ctx, uint(claim.UserId), pb.Extra_WECHAT_EXTRA.String(), b)
+	err = s.er.Put(ctx, uint(id), pb.Extra_WECHAT_EXTRA.String(), b)
 	s.warn(err)
 }
 
