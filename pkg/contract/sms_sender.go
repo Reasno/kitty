@@ -1,3 +1,5 @@
+//go:generate mockery --name=SmsSender
+
 package contract
 
 import "context"

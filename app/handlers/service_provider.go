@@ -7,8 +7,8 @@ import (
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
-func NewAppService(conf contract.ConfigReader, log log.Logger, ur UserRepository, cr CodeRepository, er ExtraRepository, sender contract.SmsSender, wechat wechat.Wechater, uploader contract.Uploader) appService {
-	return appService{conf: conf, logger: log, ur: ur, cr: cr, er: er, sender: sender, wechat: wechat, uploader: uploader}
+func NewAppService(conf contract.ConfigReader, log log.Logger, ur UserRepository, cr CodeRepository, er ExtraRepository, sender contract.SmsSender, wechat wechat.Wechater) appService {
+	return appService{conf: conf, logger: log, ur: ur, cr: cr, er: er, sender: sender, wechat: wechat}
 }
 
 type ServerMiddleware func(server pb.AppServer) pb.AppServer

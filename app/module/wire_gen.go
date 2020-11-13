@@ -58,7 +58,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	senderFacade := sms.NewSenderFacade(senderFactory, dynConf)
 	wechaterFactory := wechat.NewWechaterFactory(reader, client)
 	wechaterFacade := wechat.NewWechaterFacade(wechaterFactory, dynConf)
-	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, extraRepo, senderFacade, wechaterFacade, manager)
+	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, extraRepo, senderFacade, wechaterFacade)
 	appServer := handlers.ProvideAppServer(moduleUserBus, moduleEventBus, appService)
 	module := provideModule(db, tracer, logger, moduleOverallMiddleware, appServer, appName)
 	return module, func() {
