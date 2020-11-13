@@ -36,18 +36,6 @@ rule:
         - name: 用户体系
           path: /kitty
           id: user
-        - name: 积分体系
-          path: /score
-          id: score
-    - name: 活动
-      icon: material
-      children:
-        - name: 砸金蛋
-          path: /egg
-          id: egg
-        - name: 惊喜福利砸中你
-          path: /surprise
-          id: surprise
 `)
 	client.Put(context.Background(), OtherConfigPathPrefix+"/kitty-testing", `
 style: basic
@@ -122,5 +110,42 @@ rule:
 		assert.Equal(t, repo.containers[c.name].DbKey, c.dbKey)
 		assert.Equal(t, repo.containers[c.name].Name, c.name)
 		assert.Equal(t, repo.containers[c.name].RuleSet[0].Then["foo"], c.dataFoo)
+	}
+
+	client.Put(context.Background(), CentralConfigPath, `
+style: basic
+rule:
+  list:
+    - name: 商业化平台
+      icon: home2
+      children:
+        - name: 用户体系
+          path: /kitty
+          id: user
+        - name: 积分体系
+          path: /score
+          id: score
+    - name: 活动
+      icon: material
+      children:
+        - name: 砸金蛋
+          path: /egg
+          id: egg
+        - name: 惊喜福利砸中你
+          path: /surprise
+          id: surprise
+`)
+	<-repo.updateChan
+	_, ok := repo.containers["egg-local"]
+	if !ok {
+		t.Fatal("egg should exist")
+	}
+	_, ok = repo.containers["score-local"]
+	if !ok {
+		t.Fatal("score should exist")
+	}
+	_, ok = repo.containers["surprise-local"]
+	if !ok {
+		t.Fatal("surprise should exist")
 	}
 }
