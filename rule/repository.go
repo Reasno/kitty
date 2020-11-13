@@ -228,7 +228,7 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 
 	// 填充所有容器
 	for k, v := range activeContainers {
-		r.containers[k] = Container{DbKey: OtherConfigPathPrefix + v, Name: k, RuleSet: []Rule{}}
+		r.containers[k] = Container{DbKey: v, Name: k, RuleSet: []Rule{}}
 	}
 	r.containers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: []Rule{}}
 
