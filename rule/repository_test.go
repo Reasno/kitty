@@ -51,6 +51,7 @@ rule:
 	if err != nil {
 		t.Fatal(err)
 	}
+	repo.updateChan = make(chan struct{})
 	watchCxt, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go repo.WatchConfigUpdate(watchCxt)

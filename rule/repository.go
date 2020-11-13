@@ -44,7 +44,7 @@ func NewRepository(client *clientv3.Client, logger log.Logger) (*repository, err
 		logger:     logger,
 		containers: make(map[string]Container),
 		rwLock:     sync.RWMutex{},
-		updateChan: make(chan struct{}),
+		updateChan: nil,
 	}
 
 	// 读取配置中心
@@ -87,7 +87,9 @@ func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 				r.resetActiveContainers(activeContainers)
 				level.Info(r.logger).Log("msg", fmt.Sprintf("中心配置已更新 %+v", ev.Kv))
 			}
-			r.updateChan <- struct{}{}
+			if r.updateChan != nil {
+				r.updateChan <- struct{}{}
+			}
 		case wresp := <-rch:
 			if wresp.Err() != nil {
 				return wresp.Err()
@@ -97,7 +99,9 @@ func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 				r.updateRuleSetByDbKey(string(ev.Kv.Key), rules)
 				level.Info(r.logger).Log("msg", fmt.Sprintf("配置已更新 %+v", ev.Kv))
 			}
-			r.updateChan <- struct{}{}
+			if r.updateChan != nil {
+				r.updateChan <- struct{}{}
+			}
 		case <-ctx.Done():
 			return ctx.Err()
 		}
