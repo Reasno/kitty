@@ -8,7 +8,7 @@
       "email": "guxi@infinities.com.cn"
     }
   },
-  "basePath": "/app/v2",
+  "basePath": "/app",
   "consumes": [
     "application/json"
   ],
@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/bind": {
+    "/v1/bind": {
       "post": {
         "summary": "用户已登录后，绑定额外的手机号或微信号。\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
         "operationId": "App_Bind",
@@ -49,7 +49,7 @@
         ]
       }
     },
-    "/code": {
+    "/v1/code": {
       "get": {
         "summary": "获得验证码",
         "operationId": "App_GetCode",
@@ -86,7 +86,7 @@
         ]
       }
     },
-    "/info": {
+    "/v1/info": {
       "post": {
         "summary": "更新个人信息\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
         "operationId": "App_UpdateInfo",
@@ -119,7 +119,7 @@
         ]
       }
     },
-    "/info/{id}": {
+    "/v1/info/{id}": {
       "get": {
         "summary": "获取任意用户信息，填0获取本人信息",
         "operationId": "App_GetInfo",
@@ -165,7 +165,7 @@
         ]
       }
     },
-    "/login": {
+    "/v1/login": {
       "post": {
         "summary": "用户从未登录状态注册或登录时调用。如果用户已登录，需要绑定手机号或微信号，请使用bind接口。",
         "operationId": "App_Login",
@@ -198,7 +198,7 @@
         ]
       }
     },
-    "/refresh": {
+    "/v1/refresh": {
       "post": {
         "summary": "JWT Token续期，需要在每次升级系统或每次冷启动前调用，\n避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，\n后续请求务必请将老JWT替换为新JWT。",
         "operationId": "App_Refresh",
@@ -231,7 +231,7 @@
         ]
       }
     },
-    "/unbind": {
+    "/v1/unbind": {
       "post": {
         "summary": "针对已登录用户，取消绑定手机或微信登录方式\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
         "operationId": "App_Unbind",

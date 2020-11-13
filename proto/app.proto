@@ -18,7 +18,7 @@ option (options.openapiv2_swagger) = {
       email: "guxi@infinities.com.cn";
     };
   };
-  base_path: "/app"
+  base_path: "/app/v2"
   security_definitions: {
     security: {
       key: "JWT",
@@ -47,7 +47,7 @@ service App {
       tags: "登录"
     };
     option (google.api.http) = {
-      post: "/v1/login"
+      post: "/login"
       body: "*"
     };
   }
@@ -57,13 +57,13 @@ service App {
       tags: "登录"
     };
     option (google.api.http) = {
-      get: "/v1/code"
+      get: "/code"
     };
   }
   // 获取任意用户信息，填0获取本人信息
   rpc GetInfo (UserInfoRequest) returns (UserInfoReply) {
     option (google.api.http) = {
-      get: "/v1/info/{id}"
+      get: "/info/{id}"
     };
     option (options.openapiv2_operation) = {
       tags: "用户信息"
@@ -76,7 +76,7 @@ service App {
       tags: "用户信息"
     };
     option (google.api.http) = {
-      post: "/v1/info"
+      post: "/info"
       body: "*"
     };
   }
@@ -87,7 +87,7 @@ service App {
       tags: "用户信息"
     };
     option (google.api.http) = {
-      post: "/v1/bind"
+      post: "/bind"
       body: "*"
     };
   }
@@ -98,7 +98,7 @@ service App {
       tags: "用户信息"
     };
     option (google.api.http) = {
-      post: "/v1/unbind"
+      post: "/unbind"
       body: "*"
     };
   }
@@ -111,7 +111,7 @@ service App {
       tags: "登录"
     };
     option (google.api.http) = {
-      post: "/v1/refresh"
+      post: "/refresh"
       body: "*"
     };
   }

@@ -24,6 +24,122 @@ func getConf() contract.ConfigReader {
 	return conf
 }
 
+func TestAppService_GetCode(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		service appService
+		in      pb.GetCodeRequest
+		out     pb.GenericReply
+	}{
+		{
+			"获取验证码",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					cr.On("AddCode", mock.Anything, mock.Anything).Return("100", nil).Once()
+					return cr
+				})(),
+				sender: (func() contract.SmsSender {
+					m := &mc.SmsSender{}
+					m.On("Send", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, mobile string, content string) error {
+						if mobile != "000" {
+							t.Fatal("wrong number")
+						}
+						if content != "100" {
+							t.Fatal("wrong content")
+						}
+						return nil
+					}).Once()
+					return m
+				})(),
+				wechat: &wm.Wechater{},
+			},
+
+			pb.GetCodeRequest{
+				Mobile: "000",
+			},
+			pb.GenericReply{
+				Code: 0,
+			},
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			out, err := cc.service.GetCode(context.Background(), &cc.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if out.Code != cc.out.Code {
+				t.Fatalf("want %d, got %d", cc.out.Code, out.Code)
+			}
+		})
+	}
+}
+
+func TestAppService_UpdateInfo(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		service appService
+		in      pb.UserInfoUpdateRequest
+		out     pb.UserInfoReply
+	}{
+		{
+			"更新用户信息",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					ur.On("Update", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint, user entity.User) *entity.User {
+						return &entity.User{UserName: user.UserName}
+					}, nil).Once()
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					return cr
+				})(),
+				sender: &mc.SmsSender{},
+				wechat: &wm.Wechater{},
+			},
+
+			pb.UserInfoUpdateRequest{
+				UserName: "bar",
+			},
+			pb.UserInfoReply{
+				Code: 0,
+				Data: &pb.UserInfo{
+					UserName: "bar",
+				},
+			},
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			out, err := cc.service.UpdateInfo(context.Background(), &cc.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if out.Code != cc.out.Code {
+				t.Fatalf("want %d, got %d", cc.out.Code, out.Code)
+			}
+			if out.Data.UserName != cc.out.Data.UserName {
+				t.Fatalf("want %s, got %s", cc.out.Data.UserName, out.Data.UserName)
+			}
+		})
+	}
+}
+
 func TestAppService_GetInfo(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

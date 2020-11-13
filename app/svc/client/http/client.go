@@ -54,7 +54,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 	{
 		LoginZeroEndpoint = httptransport.NewClient(
 			"POST",
-			copyURL(u, "/v1/login"),
+			copyURL(u, "/login"),
 			EncodeHTTPLoginZeroRequest,
 			DecodeHTTPLoginResponse,
 			options...,
@@ -64,7 +64,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 	{
 		GetCodeZeroEndpoint = httptransport.NewClient(
 			"GET",
-			copyURL(u, "/v1/code"),
+			copyURL(u, "/code"),
 			EncodeHTTPGetCodeZeroRequest,
 			DecodeHTTPGetCodeResponse,
 			options...,
@@ -74,7 +74,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 	{
 		GetInfoZeroEndpoint = httptransport.NewClient(
 			"GET",
-			copyURL(u, "/v1/info/"),
+			copyURL(u, "/info/"),
 			EncodeHTTPGetInfoZeroRequest,
 			DecodeHTTPGetInfoResponse,
 			options...,
@@ -84,7 +84,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 	{
 		UpdateInfoZeroEndpoint = httptransport.NewClient(
 			"POST",
-			copyURL(u, "/v1/info"),
+			copyURL(u, "/info"),
 			EncodeHTTPUpdateInfoZeroRequest,
 			DecodeHTTPUpdateInfoResponse,
 			options...,
@@ -94,7 +94,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 	{
 		BindZeroEndpoint = httptransport.NewClient(
 			"POST",
-			copyURL(u, "/v1/bind"),
+			copyURL(u, "/bind"),
 			EncodeHTTPBindZeroRequest,
 			DecodeHTTPBindResponse,
 			options...,
@@ -104,7 +104,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 	{
 		UnbindZeroEndpoint = httptransport.NewClient(
 			"POST",
-			copyURL(u, "/v1/unbind"),
+			copyURL(u, "/unbind"),
 			EncodeHTTPUnbindZeroRequest,
 			DecodeHTTPUnbindResponse,
 			options...,
@@ -114,7 +114,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 	{
 		RefreshZeroEndpoint = httptransport.NewClient(
 			"POST",
-			copyURL(u, "/v1/refresh"),
+			copyURL(u, "/refresh"),
 			EncodeHTTPRefreshZeroRequest,
 			DecodeHTTPRefreshResponse,
 			options...,
@@ -361,7 +361,6 @@ func EncodeHTTPLoginZeroRequest(_ context.Context, r *http.Request, request inte
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"v1",
 		"login",
 	}, "/")
 	u, err := url.Parse(path)
@@ -423,7 +422,6 @@ func EncodeHTTPGetCodeZeroRequest(_ context.Context, r *http.Request, request in
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"v1",
 		"code",
 	}, "/")
 	u, err := url.Parse(path)
@@ -461,7 +459,6 @@ func EncodeHTTPGetInfoZeroRequest(_ context.Context, r *http.Request, request in
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"v1",
 		"info",
 		fmt.Sprint(req.Id),
 	}, "/")
@@ -500,7 +497,6 @@ func EncodeHTTPUpdateInfoZeroRequest(_ context.Context, r *http.Request, request
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"v1",
 		"info",
 	}, "/")
 	u, err := url.Parse(path)
@@ -554,7 +550,6 @@ func EncodeHTTPBindZeroRequest(_ context.Context, r *http.Request, request inter
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"v1",
 		"bind",
 	}, "/")
 	u, err := url.Parse(path)
@@ -610,7 +605,6 @@ func EncodeHTTPUnbindZeroRequest(_ context.Context, r *http.Request, request int
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"v1",
 		"unbind",
 	}, "/")
 	u, err := url.Parse(path)
@@ -660,7 +654,6 @@ func EncodeHTTPRefreshZeroRequest(_ context.Context, r *http.Request, request in
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"v1",
 		"refresh",
 	}, "/")
 	u, err := url.Parse(path)

@@ -78,7 +78,15 @@ func (a *Module) ProvideGrpc(server *grpc.Server) {
 }
 
 func (a *Module) ProvideHttp(router *mux.Router) {
-	router.PathPrefix("/app/").Handler(http.StripPrefix("/app", svc.MakeHTTPHandler(a.endpoints,
+	router.PathPrefix("/app/v1/").Handler(http.StripPrefix("/app/v1", svc.MakeHTTPHandlerV1(a.endpoints,
+		httptransport.ServerBefore(
+			opentracing.HTTPToContext(a.tracer, "app", a.logger),
+			jwt.HTTPToContext(),
+			khttp.IpToContext(),
+		),
+		httptransport.ServerErrorEncoder(kerr.ErrorEncoder),
+	)))
+	router.PathPrefix("/app/v2/").Handler(http.StripPrefix("/app/v2", svc.MakeHTTPHandler(a.endpoints,
 		httptransport.ServerBefore(
 			opentracing.HTTPToContext(a.tracer, "app", a.logger),
 			jwt.HTTPToContext(),
