@@ -2,6 +2,7 @@ package rule
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
@@ -9,7 +10,7 @@ import (
 
 type Payload struct {
 	Channel     string `json:"channel" schema:"channel"`
-	VersionCode string `json:"version_code" schema:"version_code"`
+	VersionCode int    `json:"version_code" schema:"version_code"`
 	Os          uint8  `json:"os" schema:"os"`
 	UserId      uint64 `json:"user_id" schema:"user_id"`
 	Imei        string `json:"imei" schema:"imei"`
@@ -23,18 +24,20 @@ type Payload struct {
 }
 
 func FromClaim(claim jwt2.Claim) *Payload {
+	versionCode, _ := strconv.Atoi(claim.VersionCode)
 	return &Payload{
 		Channel:     claim.Channel,
-		VersionCode: claim.VersionCode,
+		VersionCode: versionCode,
 		Suuid:       claim.Suuid,
 		UserId:      claim.UserId,
 	}
 }
 
 func FromTenant(tenant *config.Tenant) *Payload {
+	versionCode, _ := strconv.Atoi(tenant.VersionCode)
 	return &Payload{
 		Channel:     tenant.Channel,
-		VersionCode: tenant.VersionCode,
+		VersionCode: versionCode,
 		Os:          tenant.Os,
 		UserId:      tenant.UserId,
 		Imei:        tenant.Imei,
