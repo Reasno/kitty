@@ -28,6 +28,8 @@ type User struct {
 	ThirdPartyId  string
 	TaobaoOpenId  sql.NullString `json:"taobao_openid" gorm:"type:varchar(255);uniqueIndex:taobao_openid_index"`
 	IsNew         bool           `gorm:"-"`
+	WechatExtra   []byte         `gorm:"type:blob"`
+	TaobaoExtra   []byte         `gorm:"type:blob"`
 }
 
 func (user *User) HasDevice(device *Device) bool {

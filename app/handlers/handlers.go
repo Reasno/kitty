@@ -24,15 +24,11 @@ import (
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
-var taobaoExtraKey struct{}
-var wechatExtraKey struct{}
-
 type appService struct {
 	conf   contract.ConfigReader
 	logger log.Logger
 	ur     UserRepository
 	cr     CodeRepository
-	er     ExtraRepository
 	sender contract.SmsSender
 	wechat wechat.Wechater
 }
@@ -57,12 +53,6 @@ type UserRepository interface {
 	Save(ctx context.Context, user *entity.User) error
 }
 
-type ExtraRepository interface {
-	Put(ctx context.Context, id uint, name string, extra []byte) error
-	Get(ctx context.Context, id uint, name string) ([]byte, error)
-	Del(ctx context.Context, id uint, name string) error
-}
-
 func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
 	var (
 		u      *entity.User
@@ -79,7 +69,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		Mac:       in.Device.Mac,
 		AndroidId: in.Device.AndroidId,
 	}
-	ctx, u, err = s.loginFrom(ctx, in, device)
+	u, err = s.loginFrom(ctx, in, device)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -98,9 +88,6 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	// 拼装返回结果
 	var resp = toReply(u)
 	resp.Data.Token = tokenString
-
-	s.persistExtra(ctx, resp.Data.Id)
-	s.decorateResponse(ctx, resp.Data)
 
 	return resp, nil
 }
@@ -137,12 +124,12 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	}
 	var resp = toReply(u)
 
-	if in.Taobao {
-		resp.Data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(in.Id))
+	if !in.Taobao {
+		resp.Data.TaobaoExtra = nil
 	}
 
-	if in.Wechat {
-		resp.Data.WechatExtra = s.getWechatExtra(ctx, uint(in.Id))
+	if !in.Wechat {
+		resp.Data.WechatExtra = nil
 	}
 
 	return resp, nil
@@ -187,7 +174,6 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	if err != nil {
 		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
-	s.decorateResponse(ctx, reply.Data)
 	return reply, nil
 }
 
@@ -205,7 +191,6 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 	}
 
 	var resp = toReply(u)
-	s.decorateResponse(ctx, resp.Data)
 	return resp, nil
 }
 
@@ -229,7 +214,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		} else if !ok {
 			return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
 		}
-		toUpdate = entity.User{Mobile: ns(in.Mobile)}
+		toUpdate.Mobile = ns(in.Mobile)
 	}
 
 	// 绑定微信号
@@ -239,27 +224,33 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		if err != nil {
 			return nil, kerr.UnauthorizedErr(err)
 		}
-		ctx = context.WithValue(ctx, wechatExtraKey, wechatExtra)
-		toUpdate = entity.User{
-			WechatOpenId:  ns(wechatExtra.OpenId),
-			WechatUnionId: ns(wechatExtra.Unionid),
+		wechatExtraBytes, err := wechatExtra.Marshal()
+		if err != nil {
+			return nil, kerr.InternalErr(err)
 		}
+		toUpdate.WechatOpenId = ns(wechatExtra.OpenId)
+		toUpdate.WechatUnionId = ns(wechatExtra.Unionid)
+		toUpdate.WechatExtra = wechatExtraBytes
 	}
 
 	// 绑定淘宝openId
 	if in.TaobaoExtra != nil && len(in.TaobaoExtra.OpenId) > 0 {
-		ctx = context.WithValue(ctx, taobaoExtraKey, in.TaobaoExtra)
-		toUpdate = entity.User{
-			TaobaoOpenId: ns(in.TaobaoExtra.OpenId),
+		taobaoExtraBytes, err := in.TaobaoExtra.Marshal()
+		if err != nil {
+			return nil, kerr.InternalErr(err)
 		}
+		toUpdate.TaobaoOpenId = ns(in.TaobaoExtra.OpenId)
+		toUpdate.TaobaoExtra = taobaoExtraBytes
 	}
 
 	// 绑定微信openId
 	if in.WechatExtra != nil && len(in.WechatExtra.OpenId) > 0 {
-		ctx = context.WithValue(ctx, wechatExtraKey, in.WechatExtra)
-		toUpdate = entity.User{
-			WechatOpenId: ns(in.WechatExtra.OpenId),
+		wechatExtraBytes, err := in.WechatExtra.Marshal()
+		if err != nil {
+			return nil, kerr.InternalErr(err)
 		}
+		toUpdate.WechatOpenId = ns(in.WechatExtra.OpenId)
+		toUpdate.WechatExtra = wechatExtraBytes
 	}
 
 	// 更新用户
@@ -286,9 +277,6 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
 	}
 
-	// 组装数据
-	s.persistExtra(ctx, reply.Data.Id)
-	s.decorateResponse(ctx, reply.Data)
 	return reply, err
 }
 
@@ -304,19 +292,18 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	if in.Wechat {
 		user.WechatUnionId = sql.NullString{}
 		user.WechatOpenId = sql.NullString{}
-		s.warn(s.er.Del(ctx, user.ID, pb.Extra_WECHAT_EXTRA.String()))
+		user.WechatExtra = nil
 	}
 	if in.Taobao {
 		user.TaobaoOpenId = sql.NullString{}
-		s.warn(s.er.Del(ctx, user.ID, pb.Extra_TAOBAO_EXTRA.String()))
+		user.TaobaoExtra = nil
 	}
+
 	err = s.ur.Save(ctx, user)
 	if err != nil {
 		return nil, dbErr(err)
 	}
-
 	var resp = toReply(user)
-	s.decorateResponse(ctx, resp.Data)
 	return resp, nil
 }
 
@@ -382,10 +369,14 @@ func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.Wecha
 	return infoPb, nil
 }
 
-func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat string, device *entity.Device) (*entity.User, *pb.WechatExtra, error) {
+func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat string, device *entity.Device) (*entity.User, error) {
 	wxInfo, err := s.getWechatInfo(ctx, wechat)
 	if err != nil {
-		return nil, nil, kerr.UnauthorizedErr(err)
+		return nil, kerr.UnauthorizedErr(err)
+	}
+	extra, err := wxInfo.Marshal()
+	if err != nil {
+		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorWechatLogin))
 	}
 
 	wechatUser := entity.User{
@@ -393,14 +384,15 @@ func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat s
 		HeadImg:       wxInfo.Headimgurl,
 		WechatOpenId:  ns(wxInfo.OpenId),
 		WechatUnionId: ns(wxInfo.Unionid),
+		WechatExtra:   extra,
 	}
 
 	u, err := s.ur.GetFromWechat(ctx, packageName, wxInfo.OpenId, device, wechatUser)
 	if err != nil {
-		return nil, nil, dbErr(err)
+		return nil, dbErr(err)
 	}
 	level.Info(s.logger).Log("msg", fmt.Sprintf(msg.WxSuccess, u.ID), "suuid", device.Suuid, "userId", u.ID, "packageName", packageName)
-	return u, wxInfo, nil
+	return u, nil
 }
 
 func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, code string, device *entity.Device) (*entity.User, error) {
@@ -429,21 +421,17 @@ func (s appService) handleDeviceLogin(ctx context.Context, packageName, suuid st
 	return u, nil
 }
 
-func (s appService) loginFrom(ctx context.Context, in *pb.UserLoginRequest, device *entity.Device) (context.Context, *entity.User, error) {
+func (s appService) loginFrom(ctx context.Context, in *pb.UserLoginRequest, device *entity.Device) (*entity.User, error) {
 
 	if len(in.Mobile) != 0 {
-		u, e := s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
-		return ctx, u, e
+		return s.handleMobileLogin(ctx, in.PackageName, in.Mobile, in.Code, device)
 	}
 
 	if len(in.Wechat) != 0 {
-		u, wechatExtra, err := s.handleWechatLogin(ctx, in.PackageName, in.Wechat, device)
-		ctx = context.WithValue(ctx, wechatExtraKey, wechatExtra)
-		return ctx, u, err
+		return s.handleWechatLogin(ctx, in.PackageName, in.Wechat, device)
 	}
 
-	u, e := s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
-	return ctx, u, e
+	return s.handleDeviceLogin(ctx, in.PackageName, device.Suuid, device)
 }
 
 func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLoginRequest, u *entity.User) error {
@@ -488,71 +476,6 @@ func (s appService) verify(ctx context.Context, mobile string, code string) (boo
 	return result, nil
 }
 
-func (s appService) getWechatExtra(ctx context.Context, id uint) *pb.WechatExtra {
-	var extra pb.WechatExtra
-
-	if extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra); ok {
-		return extra
-	}
-
-	b, err := s.er.Get(ctx, id, pb.Extra_WECHAT_EXTRA.String())
-	s.warn(err)
-	err = extra.Unmarshal(b)
-	s.warn(err)
-
-	return &extra
-}
-
-func (s appService) getTaobaoExtra(ctx context.Context, id uint) *pb.TaobaoExtra {
-	var extra pb.TaobaoExtra
-
-	if extra, ok := ctx.Value(taobaoExtraKey).(*pb.TaobaoExtra); ok {
-		return extra
-	}
-
-	b, err := s.er.Get(ctx, id, pb.Extra_TAOBAO_EXTRA.String())
-	s.warn(err)
-	err = extra.Unmarshal(b)
-	s.warn(err)
-
-	return &extra
-}
-
-func (s appService) decorateResponse(ctx context.Context, data *pb.UserInfo) {
-	data.TaobaoExtra = s.getTaobaoExtra(ctx, uint(data.Id))
-	data.WechatExtra = s.getWechatExtra(ctx, uint(data.Id))
-	data.Mobile = redact(data.Mobile)
-}
-
-func (s appService) persistExtra(ctx context.Context, id uint64) {
-	s.persistTaobaoExtra(ctx, id)
-	s.persistWechatExtra(ctx, id)
-}
-
-func (s appService) persistTaobaoExtra(ctx context.Context, id uint64) {
-	extra, ok := ctx.Value(taobaoExtraKey).(*pb.TaobaoExtra)
-	if !ok {
-		return
-	}
-	b, err := extra.Marshal()
-	s.warn(err)
-
-	err = s.er.Put(ctx, uint(id), pb.Extra_TAOBAO_EXTRA.String(), b)
-	s.warn(err)
-}
-
-func (s appService) persistWechatExtra(ctx context.Context, id uint64) {
-	extra, ok := ctx.Value(wechatExtraKey).(*pb.WechatExtra)
-	if !ok {
-		return
-	}
-	b, err := extra.Marshal()
-	s.warn(err)
-
-	err = s.er.Put(ctx, uint(id), pb.Extra_WECHAT_EXTRA.String(), b)
-	s.warn(err)
-}
-
 func dbErr(err error) kerr.ServerError {
 	return kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
 }
@@ -572,6 +495,10 @@ func redact(mobile string) string {
 }
 
 func toReply(user *entity.User) *pb.UserInfoReply {
+	var wechatExtra pb.WechatExtra
+	_ = wechatExtra.Unmarshal(user.WechatExtra)
+	var taobaoExtra pb.TaobaoExtra
+	_ = taobaoExtra.Unmarshal(user.TaobaoExtra)
 	return &pb.UserInfoReply{
 		Code:    0,
 		Message: "",
@@ -583,8 +510,10 @@ func toReply(user *entity.User) *pb.UserInfoReply {
 			Gender:       pb.Gender(user.Gender),
 			Birthday:     user.Birthday,
 			ThirdPartyId: user.ThirdPartyId,
-			Mobile:       user.Mobile.String,
+			Mobile:       redact(user.Mobile.String),
 			IsNew:        user.IsNew,
+			WechatExtra:  &wechatExtra,
+			TaobaoExtra:  &taobaoExtra,
 		},
 	}
 }

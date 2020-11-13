@@ -112,5 +112,37 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 				return nil
 			},
 		},
+		{
+			ID: "202011130100",
+			Migrate: func(db *gorm.DB) error {
+				type User struct {
+					WechatExtra []byte `gorm:"type:blob"`
+					TaobaoExtra []byte `gorm:"type:blob"`
+				}
+
+				err := db.Migrator().AddColumn(&User{}, "WechatExtra")
+				if err != nil {
+					return err
+				}
+				err = db.Migrator().AddColumn(&User{}, "TaobaoExtra")
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
+			Rollback: func(db *gorm.DB) error {
+				type User struct {
+					WechatExtra []byte `gorm:"type:blob"`
+					TaobaoExtra []byte `gorm:"type:blob"`
+				}
+				err := db.Migrator().DropColumn(&User{}, "TaobaoExtra")
+				if err != nil {
+					return err
+				}
+				return db.Migrator().DropColumn(&User{}, "WechatExtra")
+
+			},
+		},
 	})
 }
