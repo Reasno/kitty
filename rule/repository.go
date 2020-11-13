@@ -24,7 +24,6 @@ type repository struct {
 	client     *clientv3.Client
 	logger     log.Logger
 	containers map[string]Container
-	prefix     string
 	rwLock     sync.RWMutex
 }
 
@@ -43,7 +42,6 @@ func NewRepository(client *clientv3.Client, logger log.Logger) (*repository, err
 		client:     client,
 		logger:     logger,
 		containers: make(map[string]Container),
-		prefix:     OtherConfigPathPrefix,
 		rwLock:     sync.RWMutex{},
 	}
 
@@ -72,7 +70,7 @@ func (r *repository) updateRuleSetByDbKey(dbKey string, rules []Rule) {
 func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 	level.Info(r.logger).Log("msg", "listening to etcd changes: "+strings.Join(r.client.Endpoints(), ","))
 	centerCh := r.client.Watch(ctx, CentralConfigPath)
-	rch := r.client.Watch(ctx, r.prefix, clientv3.WithPrefix())
+	rch := r.client.Watch(ctx, OtherConfigPathPrefix, clientv3.WithPrefix())
 	for {
 		select {
 		case cresp := <-centerCh:
@@ -123,9 +121,9 @@ func (r *repository) readCentralConfig() (map[string]string, error) {
 
 	var activeContainers = make(map[string]string)
 	for _, v := range centralRules.Rule.List {
-		collect(activeContainers, v.Path, r.prefix)
+		collect(activeContainers, v.Path, OtherConfigPathPrefix)
 		for _, v := range v.Children {
-			collect(activeContainers, v.Path, r.prefix)
+			collect(activeContainers, v.Path, OtherConfigPathPrefix)
 		}
 	}
 	return activeContainers, nil
