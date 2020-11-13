@@ -6,7 +6,7 @@ const (
 	ErrorWechatFailure   = "微信服务器通讯异常"
 	ErrorWechatLogin     = "微信登陆失败"
 	ErrorUpload          = "无法上传图片"
-	ErrorAlreadyBind     = "已经被其他账号绑定，请先解绑"
+	ErrorAlreadyBind     = "已经被其他账号绑定"
 	ErrorTooFrequent     = "请求太频繁了"
 	ErrorMissingOpenid   = "腾讯服务器验证未通过"
 	ErrorGetCode         = "获取验证码异常"
