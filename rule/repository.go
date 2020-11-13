@@ -43,7 +43,7 @@ func NewRepository(client *clientv3.Client, logger log.Logger) (*repository, err
 		client:     client,
 		logger:     logger,
 		containers: make(map[string]Container),
-		prefix:     "",
+		prefix:     OtherConfigPathPrefix,
 		rwLock:     sync.RWMutex{},
 	}
 
@@ -247,9 +247,6 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 		r.containers[k] = v
 	}
 	level.Info(r.logger).Log("msg", fmt.Sprintf("%d rules have been added", count))
-
-	// 自动搜索共同前缀
-	r.prefix = OtherConfigPathPrefix
 }
 
 func getMd5(orig []byte) string {

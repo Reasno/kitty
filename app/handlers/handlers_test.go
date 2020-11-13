@@ -13,6 +13,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 	wm "glab.tagtic.cn/ad_gains/kitty/pkg/wechat/mocks"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
+	"gorm.io/gorm"
 )
 
 func getConf() contract.ConfigReader {
@@ -21,6 +22,123 @@ func getConf() contract.ConfigReader {
 	conf.On("String", "security.kid").Return("foo", nil)
 	conf.On("String", "security.key").Return("foo", nil)
 	return conf
+}
+
+func TestAppService_GetInfo(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		service appService
+		in      pb.UserInfoRequest
+		out     pb.UserInfoReply
+	}{
+		{
+			"获取用户信息",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					ur.On("Get", mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint) *entity.User {
+						return &entity.User{Mobile: ns("123"), PackageName: "foo", Model: gorm.Model{ID: id}, UserName: "foo"}
+					}, nil).Once()
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					return cr
+				})(),
+				sender: &mc.SmsSender{},
+				wechat: &wm.Wechater{},
+			},
+
+			pb.UserInfoRequest{
+				Id: 1,
+			},
+			pb.UserInfoReply{
+				Code: 0,
+				Data: &pb.UserInfo{
+					Id:       1,
+					UserName: "foo",
+				},
+			},
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			out, err := cc.service.GetInfo(context.Background(), &cc.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if out.Code != cc.out.Code {
+				t.Fatalf("want %d, got %d", cc.out.Code, out.Code)
+			}
+			if out.Data.Id != cc.out.Data.Id {
+				t.Fatalf("want %d, got %d", cc.out.Data.Id, out.Data.Id)
+			}
+			if out.Data.UserName != cc.out.Data.UserName {
+				t.Fatalf("want %s, got %s", cc.out.Data.UserName, out.Data.UserName)
+			}
+		})
+	}
+}
+
+func TestAppService_Refresh(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		service appService
+		in      pb.UserRefreshRequest
+		out     pb.UserInfoReply
+	}{
+		{
+			"刷新token",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					ur.On("Get", mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint) *entity.User {
+						return &entity.User{Mobile: ns("123"), PackageName: "foo"}
+					}, nil).Once()
+					ur.On("Save", mock.Anything, mock.Anything).Return(nil).Once()
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					cr.On("CheckCode", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+					cr.On("DeleteCode", mock.Anything, mock.Anything).Return(nil)
+					return cr
+				})(),
+				sender: &mc.SmsSender{},
+				wechat: &wm.Wechater{},
+			},
+
+			pb.UserRefreshRequest{
+				Device:      &pb.Device{},
+				VersionCode: "100",
+			},
+			pb.UserInfoReply{
+				Code: 0,
+			},
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			out, err := cc.service.Refresh(context.Background(), &cc.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if out.Code != cc.out.Code {
+				t.Fatalf("want %d, got %d", cc.out.Code, out.Code)
+			}
+			if out.Data.Token == "" {
+				t.Fatal("missing jwt token")
+			}
+		})
+	}
 }
 
 func TestLogin(t *testing.T) {

@@ -48,6 +48,9 @@ func tearDown() {
 }
 
 func TestGetFromWechat(t *testing.T) {
+	if !useMysql {
+		t.Skip("GetFromWechat tests must be run on mysql")
+	}
 	setUp(t)
 	defer tearDown()
 	ctx := context.Background()

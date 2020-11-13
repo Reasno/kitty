@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"flag"
-	"fmt"
 	"testing"
 
 	"glab.tagtic.cn/ad_gains/kitty/rule"
@@ -21,12 +20,16 @@ func TestClient(t *testing.T) {
 		t.Skip("test dynamic config requires etcd")
 	}
 	client, err := clientv3.New(clientv3.Config{
-		Endpoints: []string{"etcd-1:2379", "etcd-2:2379", "etcd-3:2379"},
-		Context:   context.Background(),
+		Endpoints: []string{"localhost:2379"},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
+	client.Put(context.Background(), rule.OtherConfigPathPrefix+"/kitty-testing", `
+style: basic
+rule:
+  foo: bar
+`)
 	dynConf, err := NewRuleEngine(WithClient(client), Rule("kitty-testing"))
 	if err != nil {
 		t.Fatal(err)
@@ -35,5 +38,7 @@ func TestClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(reader.Get("foo"))
+	if reader.String("foo") != "bar" {
+		t.Fatalf("want %s, got %s", "foo", reader.String("foo"))
+	}
 }
