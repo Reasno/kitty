@@ -17,15 +17,15 @@ import (
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
 	"go.etcd.io/etcd/clientv3"
-	"gopkg.in/yaml.v3"
 )
 
 type repository struct {
-	client     *clientv3.Client
-	logger     log.Logger
-	containers map[string]Container
-	rwLock     sync.RWMutex
-	updateChan chan struct{}
+	client         *clientv3.Client
+	logger         log.Logger
+	containers     map[string]Container
+	rwLock         sync.RWMutex
+	updateChan     chan struct{}
+	watchReadyChan chan struct{}
 }
 
 type Container struct {
@@ -73,6 +73,11 @@ func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 	level.Info(r.logger).Log("msg", "listening to etcd changes: "+strings.Join(r.client.Endpoints(), ","))
 	centerCh := r.client.Watch(ctx, CentralConfigPath)
 	rch := r.client.Watch(ctx, OtherConfigPathPrefix, clientv3.WithPrefix())
+
+	if r.watchReadyChan != nil {
+		r.watchReadyChan <- struct{}{}
+	}
+
 	for {
 		select {
 		case cresp := <-centerCh:
@@ -180,34 +185,34 @@ func (r *repository) setRawRuleSetFromDbKey(ctx context.Context, dbKey string, v
 }
 
 // getRev 返回目标值的版本号
-func (r *repository) getRev(ctx context.Context, key string) (int64, error) {
-	resp, err := r.client.Get(ctx, key)
-	if err != nil {
-		return 0, err
-	}
-	return resp.Header.Revision, nil
-}
+//func (r *repository) getRev(ctx context.Context, key string) (int64, error) {
+//	resp, err := r.client.Get(ctx, key)
+//	if err != nil {
+//		return 0, err
+//	}
+//	return resp.Header.Revision, nil
+//}
 
-func (r *repository) validateAllRules() error {
-	todo := DbKeys(r.containers)
-	for _, v := range todo {
-		var tmp []Rule
-		value, err := r.getRawRuleSetFromDbKey(context.Background(), v)
-		if err != nil {
-			return errors.Wrapf(err, msg.ErrorInvalidConfig, v)
-		}
-		err = yaml.Unmarshal(value, &tmp)
-		if err != nil {
-			return errors.Wrapf(err, msg.ErrorInvalidConfig, v)
-		}
-		for i := range tmp {
-			if err := tmp[i].Compile(); err != nil {
-				return errors.Wrapf(err, msg.ErrorInvalidConfig, tmp[i].If)
-			}
-		}
-	}
-	return nil
-}
+//func (r *repository) validateAllRules() error {
+//	todo := DbKeys(r.containers)
+//	for _, v := range todo {
+//		var tmp []Rule
+//		value, err := r.getRawRuleSetFromDbKey(context.Background(), v)
+//		if err != nil {
+//			return errors.Wrapf(err, msg.ErrorInvalidConfig, v)
+//		}
+//		err = yaml.Unmarshal(value, &tmp)
+//		if err != nil {
+//			return errors.Wrapf(err, msg.ErrorInvalidConfig, v)
+//		}
+//		for i := range tmp {
+//			if err := tmp[i].Compile(); err != nil {
+//				return errors.Wrapf(err, msg.ErrorInvalidConfig, tmp[i].If)
+//			}
+//		}
+//	}
+//	return nil
+//}
 
 // IsNewest 传入的内容是否和ETCD中的最新版本一致
 func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, error) {
@@ -234,11 +239,13 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
 
-	// 填充所有容器
+	// 更新容器
+	newContainers := make(map[string]Container, len(activeContainers)+1)
 	for k, v := range activeContainers {
-		r.containers[k] = Container{DbKey: v, Name: k, RuleSet: []Rule{}}
+		newContainers[k] = Container{DbKey: v, Name: k, RuleSet: []Rule{}}
 	}
-	r.containers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: []Rule{}}
+	newContainers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: []Rule{}}
+	r.containers = newContainers
 
 	// 依次拉取规则
 	var count = 0

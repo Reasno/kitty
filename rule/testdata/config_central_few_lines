@@ -1,0 +1,9 @@
+style: basic
+rule:
+  list:
+    - name: 商业化平台
+      icon: home2
+      children:
+        - name: 用户体系
+          path: /kitty
+          id: user

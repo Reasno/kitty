@@ -3,11 +3,11 @@ package rule
 import (
 	"context"
 	"flag"
-	"testing"
-
 	"github.com/go-kit/kit/log"
 	"github.com/magiconair/properties/assert"
 	"go.etcd.io/etcd/clientv3"
+	"io/ioutil"
+	"testing"
 )
 
 var useEtcd bool
@@ -16,42 +16,40 @@ func init() {
 	flag.BoolVar(&useEtcd, "etcd", false, "use local mysql for testing")
 }
 
+func readFiles(name string) string {
+	byt, _ := ioutil.ReadFile("testdata/" + name)
+	return string(byt)
+}
+
 func TestRepository_WatchConfigUpdate(t *testing.T) {
 	if !useEtcd {
 		t.Skip("test dynamic config requires etcd")
 	}
+	var (
+		foobar                 = readFiles("foobar")
+		foobaz                 = readFiles("foobaz")
+		fooqux                 = readFiles("fooqux")
+		configCentralManyLines = readFiles("config_central_many_lines")
+		configCentralFewLines  = readFiles("config_central_few_lines")
+	)
 	client, err := clientv3.New(clientv3.Config{
 		Endpoints: []string{"localhost:2379"},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.Put(context.Background(), CentralConfigPath, `
-style: basic
-rule:
-  list:
-    - name: 商业化平台
-      icon: home2
-      children:
-        - name: 用户体系
-          path: /kitty
-          id: user
-`)
-	client.Put(context.Background(), OtherConfigPathPrefix+"/kitty-testing", `
-style: basic
-rule:
-  foo: bar
-`)
-	client.Put(context.Background(), OtherConfigPathPrefix+"/egg-testing", `
-style: basic
-rule:
-  foo: qux
-`)
+	client.Delete(context.Background(), OtherConfigPathPrefix+"/kitty-testing")
+	client.Delete(context.Background(), OtherConfigPathPrefix+"/egg-testing")
+	client.Delete(context.Background(), CentralConfigPath)
+	client.Put(context.Background(), CentralConfigPath, configCentralFewLines)
+	client.Put(context.Background(), OtherConfigPathPrefix+"/kitty-testing", foobar)
+	client.Put(context.Background(), OtherConfigPathPrefix+"/egg-testing", fooqux)
 	repo, err := NewRepository(client, log.NewNopLogger())
 	if err != nil {
 		t.Fatal(err)
 	}
 	repo.updateChan = make(chan struct{})
+	repo.watchReadyChan = make(chan struct{})
 	watchCxt, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go repo.WatchConfigUpdate(watchCxt)
@@ -73,26 +71,26 @@ rule:
 			OtherConfigPathPrefix + "/kitty-testing",
 			"bar",
 		},
+		{
+			"egg-testing",
+			OtherConfigPathPrefix + "/egg-testing",
+			"n/a",
+		},
 	}
 	for _, c := range cases {
-		assert.Equal(t, repo.containers[c.name].DbKey, c.dbKey)
-		assert.Equal(t, repo.containers[c.name].Name, c.name)
-		assert.Equal(t, repo.containers[c.name].RuleSet[0].Then["foo"], c.dataFoo)
+		if _, ok := repo.containers[c.name]; ok {
+			assert.Equal(t, repo.containers[c.name].DbKey, c.dbKey)
+			assert.Equal(t, repo.containers[c.name].Name, c.name)
+			assert.Equal(t, repo.containers[c.name].RuleSet[0].Then["foo"], c.dataFoo)
+			continue
+		}
+		assert.Equal(t, c.dataFoo, "n/a")
 	}
 
-	_, err = client.Delete(context.Background(), "/monetization/kitty-testing")
-	if err != nil {
-		t.Fatal(err)
-	}
+	// 等待watch准备就绪后再继续测试
+	<-repo.watchReadyChan
 
-	_, err = client.Put(context.Background(), "/monetization/kitty-testing", `
-style: basic
-rule:
-  foo: baz`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	client.Put(context.Background(), OtherConfigPathPrefix+"/kitty-testing", foobaz)
 	<-repo.updateChan
 
 	cases = caseList{
@@ -106,6 +104,69 @@ rule:
 			OtherConfigPathPrefix + "/kitty-testing",
 			"baz",
 		},
+		{
+			"egg-testing",
+			OtherConfigPathPrefix + "/egg-testing",
+			"n/a",
+		},
+	}
+	for _, c := range cases {
+		if _, ok := repo.containers[c.name]; ok {
+			assert.Equal(t, repo.containers[c.name].DbKey, c.dbKey)
+			assert.Equal(t, repo.containers[c.name].Name, c.name)
+			assert.Equal(t, repo.containers[c.name].RuleSet[0].Then["foo"], c.dataFoo)
+			continue
+		}
+		assert.Equal(t, c.dataFoo, "n/a")
+	}
+
+	client.Put(context.Background(), CentralConfigPath, configCentralManyLines)
+	<-repo.updateChan
+	cases = caseList{
+		{
+			"central-config",
+			CentralConfigPath,
+			nil,
+		},
+		{
+			"kitty-testing",
+			OtherConfigPathPrefix + "/kitty-testing",
+			"baz",
+		},
+		{
+			"egg-testing",
+			OtherConfigPathPrefix + "/egg-testing",
+			"qux",
+		},
+	}
+	for _, c := range cases {
+		if _, ok := repo.containers[c.name]; ok {
+			assert.Equal(t, repo.containers[c.name].DbKey, c.dbKey)
+			assert.Equal(t, repo.containers[c.name].Name, c.name)
+			assert.Equal(t, repo.containers[c.name].RuleSet[0].Then["foo"], c.dataFoo)
+			continue
+		}
+		assert.Equal(t, c.dataFoo, "n/a")
+	}
+
+	client.Put(context.Background(), OtherConfigPathPrefix+"/egg-testing", foobar)
+	<-repo.updateChan
+	cases = caseList{
+		{
+			"central-config",
+			CentralConfigPath,
+			nil,
+		},
+		{
+			"kitty-testing",
+			OtherConfigPathPrefix + "/kitty-testing",
+			"baz",
+		},
+		{
+			"egg-testing",
+			OtherConfigPathPrefix + "/egg-testing",
+			"bar",
+		},
 	}
 	for _, c := range cases {
 		assert.Equal(t, repo.containers[c.name].DbKey, c.dbKey)
@@ -113,40 +174,165 @@ rule:
 		assert.Equal(t, repo.containers[c.name].RuleSet[0].Then["foo"], c.dataFoo)
 	}
 
-	client.Put(context.Background(), CentralConfigPath, `
-style: basic
-rule:
-  list:
-    - name: 商业化平台
-      icon: home2
-      children:
-        - name: 用户体系
-          path: /kitty
-          id: user
-        - name: 积分体系
-          path: /score
-          id: score
-    - name: 活动
-      icon: material
-      children:
-        - name: 砸金蛋
-          path: /egg
-          id: egg
-        - name: 惊喜福利砸中你
-          path: /surprise
-          id: surprise
-`)
+	client.Put(context.Background(), CentralConfigPath, configCentralFewLines)
 	<-repo.updateChan
-	_, ok := repo.containers["egg-local"]
-	if !ok {
-		t.Fatal("egg should exist")
+
+	cases = caseList{
+		{
+			"central-config",
+			CentralConfigPath,
+			nil,
+		},
+		{
+			"kitty-testing",
+			OtherConfigPathPrefix + "/kitty-testing",
+			"baz",
+		},
+		{
+			"egg-testing",
+			OtherConfigPathPrefix + "/egg-testing",
+			"n/a",
+		},
 	}
-	_, ok = repo.containers["score-local"]
-	if !ok {
-		t.Fatal("score should exist")
+	for _, c := range cases {
+		if _, ok := repo.containers[c.name]; ok {
+			assert.Equal(t, repo.containers[c.name].DbKey, c.dbKey)
+			assert.Equal(t, repo.containers[c.name].Name, c.name)
+			assert.Equal(t, repo.containers[c.name].RuleSet[0].Then["foo"], c.dataFoo)
+			continue
+		}
+		assert.Equal(t, c.dataFoo, "n/a")
 	}
-	_, ok = repo.containers["surprise-local"]
-	if !ok {
-		t.Fatal("surprise should exist")
+}
+
+func TestRepository_IsNewest(t *testing.T) {
+	var (
+		foobar = readFiles("foobar")
+		foobaz = readFiles("foobaz")
+	)
+	client, err := clientv3.New(clientv3.Config{
+		Endpoints: []string{"localhost:2379"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Put(context.Background(), OtherConfigPathPrefix+"/kitty-testing", foobar)
+	repo, err := NewRepository(client, log.NewNopLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		data string
+		ok   bool
+	}{
+		{
+			foobar,
+			true,
+		},
+		{
+			foobaz,
+			false,
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run("", func(t *testing.T) {
+			ok, err := repo.IsNewest(context.Background(), OtherConfigPathPrefix+"/kitty-testing", getMd5([]byte(cc.data)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Equal(t, ok, cc.ok)
+		})
+	}
+}
+
+func TestRepository_GetRaw(t *testing.T) {
+	var (
+		foobar                = readFiles("foobar")
+		foobaz                = readFiles("foobaz")
+		configCentralFewLines = readFiles("config_central_few_lines")
+	)
+	client, err := clientv3.New(clientv3.Config{
+		Endpoints: []string{"localhost:2379"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Put(context.Background(), OtherConfigPathPrefix+"/kitty-testing", foobar)
+	client.Put(context.Background(), OtherConfigPathPrefix+"/kitty-local", foobaz)
+	client.Put(context.Background(), CentralConfigPath, configCentralFewLines)
+	repo, err := NewRepository(client, log.NewNopLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		key    string
+		data   string
+		hasErr bool
+	}{
+		{
+			"kitty-testing",
+			foobar,
+			false,
+		},
+		{
+			"kitty-local",
+			foobaz,
+			false,
+		},
+		{
+			"whatever",
+			"",
+			true,
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.key, func(t *testing.T) {
+			data, err := repo.GetRaw(context.Background(), cc.key)
+			assert.Equal(t, err != nil, cc.hasErr)
+			assert.Equal(t, string(data), cc.data)
+		})
+	}
+}
+
+func TestRepository_SetRaw(t *testing.T) {
+	var (
+		foobar                = readFiles("foobar")
+		configCentralFewLines = readFiles("config_central_few_lines")
+	)
+	client, err := clientv3.New(clientv3.Config{
+		Endpoints: []string{"localhost:2379"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Put(context.Background(), CentralConfigPath, configCentralFewLines)
+	repo, err := NewRepository(client, log.NewNopLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		key    string
+		data   string
+		hasErr bool
+	}{
+		{
+			"kitty-testing",
+			foobar,
+			false,
+		},
+		{
+			"whatever",
+			"",
+			true,
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.key, func(t *testing.T) {
+			err := repo.SetRaw(context.Background(), cc.key, cc.data)
+			assert.Equal(t, err != nil, cc.hasErr)
+		})
 	}
 }
