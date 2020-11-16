@@ -136,7 +136,7 @@ message UserBindRequest {
 }
 
 message TaobaoExtra {
-  string userid = 1;
+  string user_id = 1;
   string open_sid = 2;
   string top_access_token = 3;
   string avatar_url = 4;
@@ -149,7 +149,7 @@ message TaobaoExtra {
 
 message WechatExtra {
   string access_token = 1;
-  int64 expiresIn = 2;
+  int64 expires_in = 2;
   string refresh_token = 3;
   string open_id = 4;
   string scope = 5;
@@ -176,8 +176,9 @@ message UserRefreshRequest {
   string channel = 5;
   // 版本号
   string version_code = 6 [
-    (options.openapiv2_field) = {required: "true"},
-    (validate.rules).string.min_len = 1
+    (options.openapiv2_field) = {required: "true", pattern: "^[\\d]+$"},
+    (validate.rules).string.min_len = 4,
+    (validate.rules).string.pattern = "^[\\d]+$"
   ];
 }
 
@@ -206,8 +207,9 @@ message UserLoginRequest {
   string channel = 5;
   // 版本号
   string version_code = 6 [
-    (options.openapiv2_field) = {required: "true"},
-    (validate.rules).string.min_len = 4
+    (options.openapiv2_field) = {required: "true", pattern: "^[\\d]+$"},
+    (validate.rules).string.min_len = 4,
+    (validate.rules).string.pattern = "^[\\d]+$"
   ];
   // 包名
   string package_name = 7 [

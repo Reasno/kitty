@@ -123,7 +123,7 @@ rule:
 	}
 }
 
-func TestPreflight(t *testing.T) {
+func TestService_Preflight(t *testing.T) {
 	repo := &mocks.Repository{}
 	ser := NewService(log.NewNopLogger(), repo)
 

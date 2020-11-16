@@ -278,7 +278,7 @@
     "protobufAny": {
       "type": "object",
       "properties": {
-        "typeUrl": {
+        "type_url": {
           "type": "string"
         },
         "value": {
@@ -314,7 +314,7 @@
         "idfa": {
           "type": "string"
         },
-        "androidId": {
+        "android_id": {
           "type": "string"
         },
         "suuid": {
@@ -357,31 +357,31 @@
     "v1TaobaoExtra": {
       "type": "object",
       "properties": {
-        "userid": {
+        "user_id": {
           "type": "string"
         },
-        "openSid": {
+        "open_sid": {
           "type": "string"
         },
-        "topAccessToken": {
+        "top_access_token": {
           "type": "string"
         },
-        "avatarUrl": {
+        "avatar_url": {
           "type": "string"
         },
-        "havanaSsoToken": {
+        "havana_sso_token": {
           "type": "string"
         },
         "nick": {
           "type": "string"
         },
-        "openId": {
+        "open_id": {
           "type": "string"
         },
-        "topAuthCode": {
+        "top_auth_code": {
           "type": "string"
         },
-        "topExpireTime": {
+        "top_expire_time": {
           "type": "string"
         }
       }
@@ -406,11 +406,11 @@
           "type": "string",
           "title": "废弃，请使用wechat_extra.openId"
         },
-        "taobaoExtra": {
+        "taobao_extra": {
           "$ref": "#/definitions/v1TaobaoExtra",
           "title": "绑定淘宝"
         },
-        "wechatExtra": {
+        "wechat_extra": {
           "$ref": "#/definitions/v1WechatExtra",
           "title": "如果有openId 就直接走openId，不用再填微信官方下发的临时code码"
         }
@@ -423,13 +423,13 @@
           "type": "string",
           "format": "uint64"
         },
-        "userName": {
+        "user_name": {
           "type": "string"
         },
         "wechat": {
           "type": "string"
         },
-        "headImg": {
+        "head_img": {
           "type": "string",
           "title": "头像地址"
         },
@@ -442,17 +442,17 @@
         "token": {
           "type": "string"
         },
-        "thirdPartyId": {
+        "third_party_id": {
           "type": "string",
           "title": "第三方ID"
         },
-        "isNew": {
+        "is_new": {
           "type": "boolean"
         },
-        "wechatExtra": {
+        "wechat_extra": {
           "$ref": "#/definitions/v1WechatExtra"
         },
-        "taobaoExtra": {
+        "taobao_extra": {
           "$ref": "#/definitions/v1TaobaoExtra"
         },
         "mobile": {
@@ -478,13 +478,13 @@
     "v1UserInfoUpdateRequest": {
       "type": "object",
       "properties": {
-        "userName": {
+        "user_name": {
           "type": "string",
           "title": "用户名",
           "maximum": 10,
           "minimum": 2
         },
-        "headImg": {
+        "head_img": {
           "type": "string",
           "title": "头像地址",
           "pattern": "^(|https?://.*)$"
@@ -498,7 +498,7 @@
           "title": "生日",
           "pattern": "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"
         },
-        "thirdPartyId": {
+        "third_party_id": {
           "type": "string",
           "title": "第三方ID"
         }
@@ -527,25 +527,26 @@
           "type": "string",
           "title": "渠道"
         },
-        "versionCode": {
+        "version_code": {
           "type": "string",
           "title": "版本号",
+          "pattern": "^[\\d]+$",
           "required": [
             "true"
           ]
         },
-        "packageName": {
+        "package_name": {
           "type": "string",
           "title": "包名",
           "required": [
             "true"
           ]
         },
-        "thirdPartyId": {
+        "third_party_id": {
           "type": "string",
           "title": "第三方ID"
         },
-        "inviteCode": {
+        "invite_code": {
           "type": "string",
           "title": "邀请码"
         }
@@ -561,9 +562,10 @@
           "type": "string",
           "title": "渠道号"
         },
-        "versionCode": {
+        "version_code": {
           "type": "string",
           "title": "版本号",
+          "pattern": "^[\\d]+$",
           "required": [
             "true"
           ]
@@ -591,23 +593,23 @@
     "v1WechatExtra": {
       "type": "object",
       "properties": {
-        "accessToken": {
+        "access_token": {
           "type": "string"
         },
-        "expiresIn": {
+        "expires_in": {
           "type": "string",
           "format": "int64"
         },
-        "refreshToken": {
+        "refresh_token": {
           "type": "string"
         },
-        "openId": {
+        "open_id": {
           "type": "string"
         },
         "scope": {
           "type": "string"
         },
-        "nickName": {
+        "nick_name": {
           "type": "string"
         },
         "sex": {

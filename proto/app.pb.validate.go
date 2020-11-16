@@ -144,7 +144,7 @@ func (m *TaobaoExtra) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Userid
+	// no validation rules for UserId
 
 	// no validation rules for OpenSid
 
@@ -328,10 +328,17 @@ func (m *UserRefreshRequest) Validate() error {
 
 	// no validation rules for Channel
 
-	if utf8.RuneCountInString(m.GetVersionCode()) < 1 {
+	if utf8.RuneCountInString(m.GetVersionCode()) < 4 {
 		return UserRefreshRequestValidationError{
 			field:  "VersionCode",
-			reason: "value length must be at least 1 runes",
+			reason: "value length must be at least 4 runes",
+		}
+	}
+
+	if !_UserRefreshRequest_VersionCode_Pattern.MatchString(m.GetVersionCode()) {
+		return UserRefreshRequestValidationError{
+			field:  "VersionCode",
+			reason: "value does not match regex pattern \"^[\\\\d]+$\"",
 		}
 	}
 
@@ -393,6 +400,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserRefreshRequestValidationError{}
+
+var _UserRefreshRequest_VersionCode_Pattern = regexp.MustCompile("^[\\d]+$")
 
 // Validate checks the field values on UserUnbindRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -505,6 +514,13 @@ func (m *UserLoginRequest) Validate() error {
 		}
 	}
 
+	if !_UserLoginRequest_VersionCode_Pattern.MatchString(m.GetVersionCode()) {
+		return UserLoginRequestValidationError{
+			field:  "VersionCode",
+			reason: "value does not match regex pattern \"^[\\\\d]+$\"",
+		}
+	}
+
 	if utf8.RuneCountInString(m.GetPackageName()) < 1 {
 		return UserLoginRequestValidationError{
 			field:  "PackageName",
@@ -574,6 +590,8 @@ var _ interface {
 } = UserLoginRequestValidationError{}
 
 var _UserLoginRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{11}$)")
+
+var _UserLoginRequest_VersionCode_Pattern = regexp.MustCompile("^[\\d]+$")
 
 // Validate checks the field values on Device with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.

@@ -1,4 +1,4 @@
-//go:generate tr proto/app.proto
+//go:generate trs proto/app.proto
 package main
 
 import (

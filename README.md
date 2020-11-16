@@ -17,6 +17,11 @@
 
 为了便利客户端对接，作出以下约定。
 
+### 命名规则
+
+* http 传输中的字段，无论在 path、query、还是 json body 中出现，全部以小写蛇形方式命名。如 `user_id`, `package_name` 等。
+* grpc 传输中的字段，按照 google protobuf 标准命名。
+
 ### 响应结构：
 
 ```json
@@ -388,4 +393,27 @@ func main() {
 	fmt.Println(reader.String("foo")) //bar
 }
 ```
+
+## 图片上传平台
+
+通用图片上传接口，解决头像上传等通用问题。
+
+### 地址
+
+POST：https://monetization.tagtic.cn/upload
+
+Body体为图片内容，上传服务会存储图片并返回CDN的URL。为了避免滥用，需要携带[JWT信息](#用户中心)。返回格式如下：
+
+```json
+{
+  "code": 0,
+  "data": {
+    "url": "http://xxxx.xxx.com/xxxx.png"
+  }
+}
+```
+
+### TODO
+
+可以利用thumbor服务，提供定制化的缩略图。
 
