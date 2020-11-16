@@ -1,12 +1,15 @@
-package rule
+package module
 
 import (
 	"context"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"github.com/go-kit/kit/metrics/prometheus"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/rule/repository"
+	"glab.tagtic.cn/ad_gains/kitty/rule/service"
 	"go.etcd.io/etcd/clientv3"
 )
 
@@ -19,8 +22,8 @@ func provideEtcdClient(conf contract.ConfigReader) (*clientv3.Client, func(), er
 	return client, cancel, err
 }
 
-func provideRepository(client *clientv3.Client, logger log.Logger) (*repository, error) {
-	return NewRepository(client, logger)
+func provideRepository(client *clientv3.Client, logger log.Logger) (service.Repository, error) {
+	return repository.NewRepository(client, logger)
 }
 
 func provideHistogramMetrics(appName contract.AppName, env contract.Env) metrics.Histogram {
@@ -33,7 +36,7 @@ func provideHistogramMetrics(appName contract.AppName, env contract.Env) metrics
 	return his
 }
 
-func provideModule(repository Repository, endpoints Endpoints) *Module {
+func provideModule(repository service.Repository, endpoints Endpoints) *Module {
 	// TODO: add middleware
 	return &Module{
 		repository: repository,

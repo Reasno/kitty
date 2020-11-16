@@ -1,4 +1,4 @@
-package rule
+package entity
 
 import (
 	"fmt"
@@ -13,12 +13,13 @@ import (
 	kyaml "github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/rawbytes"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
 )
 
 type Rule struct {
-	If      string `yaml:"if"`
-	Then    Data   `yaml:"then"`
+	If      string   `yaml:"if"`
+	Then    dto.Data `yaml:"then"`
 	program *vm.Program
 }
 
@@ -63,7 +64,7 @@ func (e *ErrInvalidRules) Error() string {
 // 而这个结构在序列化json时会出错。
 // 通过这个函数，把map[interface{}]interface{}用递归转为
 // map[string]interface{}
-func convert(i interface{}) Data {
+func convert(i interface{}) dto.Data {
 	switch x := i.(type) {
 	case map[interface{}]interface{}:
 		m2 := map[string]interface{}{}
@@ -76,7 +77,7 @@ func convert(i interface{}) Data {
 			x[i] = convert(v)
 		}
 	}
-	return i.(Data)
+	return i.(dto.Data)
 }
 
 func NewRules(reader io.Reader, logger log.Logger) []Rule {
@@ -124,11 +125,11 @@ func NewRules(reader io.Reader, logger log.Logger) []Rule {
 
 func (r *Rule) Compile() error {
 	var err error
-	r.program, err = expr.Compile(r.If, expr.Env(&Payload{}))
+	r.program, err = expr.Compile(r.If, expr.Env(&dto.Payload{}))
 	return err
 }
 
-func validateRules(reader io.Reader) error {
+func ValidateRules(reader io.Reader) error {
 	var tmp []Rule
 
 	value, err := ioutil.ReadAll(reader)
@@ -162,7 +163,7 @@ func validateRules(reader io.Reader) error {
 	return nil
 }
 
-func Calculate(rules []Rule, payload *Payload, logger log.Logger) (Data, error) {
+func Calculate(rules []Rule, payload *dto.Payload, logger log.Logger) (dto.Data, error) {
 	for _, rule := range rules {
 		output, err := expr.Run(rule.program, payload)
 		if err != nil {
@@ -179,5 +180,5 @@ func Calculate(rules []Rule, payload *Payload, logger log.Logger) (Data, error) 
 		level.Debug(logger).Log("msg", "positive: "+rule.If)
 		return rule.Then, nil
 	}
-	return Data{}, nil
+	return dto.Data{}, nil
 }

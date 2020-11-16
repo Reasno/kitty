@@ -1,5 +1,4 @@
-//go:generate mockery --name=Repository
-package rule
+package repository
 
 import (
 	"bytes"
@@ -15,6 +14,7 @@ import (
 	kyaml "github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/rawbytes"
 	"github.com/pkg/errors"
+	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
 	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
 	"go.etcd.io/etcd/clientv3"
 )
@@ -29,7 +29,7 @@ type repository struct {
 }
 
 type Container struct {
-	RuleSet []Rule
+	RuleSet []entity.Rule
 	DbKey   string
 	Name    string
 }
@@ -58,7 +58,7 @@ func NewRepository(client *clientv3.Client, logger log.Logger) (*repository, err
 	return repo, nil
 }
 
-func (r *repository) updateRuleSetByDbKey(dbKey string, rules []Rule) {
+func (r *repository) updateRuleSetByDbKey(dbKey string, rules []entity.Rule) {
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
 	for i, v := range r.containers {
@@ -100,7 +100,7 @@ func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 				return wresp.Err()
 			}
 			for _, ev := range wresp.Events {
-				rules := NewRules(bytes.NewReader(ev.Kv.Value), r.logger)
+				rules := entity.NewRules(bytes.NewReader(ev.Kv.Value), r.logger)
 				r.updateRuleSetByDbKey(string(ev.Kv.Key), rules)
 				level.Info(r.logger).Log("msg", fmt.Sprintf("配置已更新 %+v", ev.Kv))
 			}
@@ -120,7 +120,7 @@ func (r *repository) readCentralConfig() (map[string]string, error) {
 		return nil, errors.Wrap(err, "Cannot get central config from repository")
 	}
 
-	var centralRules CentralRules
+	var centralRules entity.CentralRules
 	c := koanf.New(".")
 	err = c.Load(rawbytes.Provider(b), kyaml.Parser())
 	if err != nil {
@@ -226,13 +226,13 @@ func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, err
 	return true, nil
 }
 
-func (r *repository) GetCompiled(ruleName string) []Rule {
+func (r *repository) GetCompiled(ruleName string) []entity.Rule {
 	r.rwLock.RLock()
 	defer r.rwLock.RUnlock()
 	if c, ok := r.containers[ruleName]; ok {
 		return c.RuleSet
 	}
-	return []Rule{}
+	return []entity.Rule{}
 }
 
 func (r *repository) resetActiveContainers(activeContainers map[string]string) {
@@ -242,9 +242,9 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 	// 更新容器
 	newContainers := make(map[string]Container, len(activeContainers)+1)
 	for k, v := range activeContainers {
-		newContainers[k] = Container{DbKey: v, Name: k, RuleSet: []Rule{}}
+		newContainers[k] = Container{DbKey: v, Name: k, RuleSet: []entity.Rule{}}
 	}
-	newContainers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: []Rule{}}
+	newContainers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: []entity.Rule{}}
 	r.containers = newContainers
 
 	// 依次拉取规则
@@ -256,7 +256,7 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 			level.Warn(r.logger).Log("err", errors.Wrap(err, fmt.Sprintf(msg.ErrorInvalidConfig, v.Name)))
 			value = []byte("{}")
 		}
-		v.RuleSet = NewRules(bytes.NewReader(value), r.logger)
+		v.RuleSet = entity.NewRules(bytes.NewReader(value), r.logger)
 		r.containers[k] = v
 	}
 	level.Info(r.logger).Log("msg", fmt.Sprintf("%d rules have been added", count))

@@ -10,8 +10,10 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
-	"glab.tagtic.cn/ad_gains/kitty/rule"
+	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
+	"glab.tagtic.cn/ad_gains/kitty/rule/module"
 	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
+	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
 	"go.etcd.io/etcd/clientv3"
 )
 
@@ -19,7 +21,7 @@ import (
 type repository struct {
 	client     *clientv3.Client
 	logger     log.Logger
-	containers map[string]rule.Container
+	containers map[string]repository2.Container
 	prefix     string
 	rwLock     sync.RWMutex
 }
@@ -33,14 +35,14 @@ func NewRepository(client *clientv3.Client, logger log.Logger, activeContainers 
 	var repo = &repository{
 		client:     client,
 		logger:     logger,
-		containers: make(map[string]rule.Container),
+		containers: make(map[string]repository2.Container),
 		prefix:     "",
 		rwLock:     sync.RWMutex{},
 	}
 
 	// 填充所有容器
 	for k, v := range activeContainers {
-		repo.containers[k] = rule.Container{DbKey: v, Name: k, RuleSet: []rule.Rule{}}
+		repo.containers[k] = repository2.Container{DbKey: v, Name: k, RuleSet: []entity.Rule{}}
 	}
 
 	// 依次拉取规则
@@ -52,19 +54,19 @@ func NewRepository(client *clientv3.Client, logger log.Logger, activeContainers 
 			level.Warn(logger).Log("err", errors.Wrap(err, fmt.Sprintf(msg.ErrorInvalidConfig, v.Name)))
 			value = []byte("{}")
 		}
-		v.RuleSet = rule.NewRules(bytes.NewReader(value), logger)
+		v.RuleSet = entity.NewRules(bytes.NewReader(value), logger)
 		repo.containers[k] = v
 	}
 
 	level.Info(logger).Log("msg", fmt.Sprintf("%d rules have been added", count))
 
 	// 自动搜索共同前缀
-	repo.prefix = rule.Prefix(rule.DbKeys(repo.containers))
+	repo.prefix = module.Prefix(module.DbKeys(repo.containers))
 
 	return repo, nil
 }
 
-func (r *repository) updateRuleSetByDbKey(dbKey string, rules []rule.Rule) {
+func (r *repository) updateRuleSetByDbKey(dbKey string, rules []entity.Rule) {
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
 	for i, v := range r.containers {
@@ -85,7 +87,7 @@ func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 				return wresp.Err()
 			}
 			for _, ev := range wresp.Events {
-				rules := rule.NewRules(bytes.NewReader(ev.Kv.Value), r.logger)
+				rules := entity.NewRules(bytes.NewReader(ev.Kv.Value), r.logger)
 				r.updateRuleSetByDbKey(string(ev.Kv.Key), rules)
 				level.Info(r.logger).Log("msg", fmt.Sprintf("配置已更新 %+v", ev.Kv))
 			}
@@ -119,7 +121,7 @@ func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, err
 	panic("not implemented")
 }
 
-func (r *repository) GetCompiled(ruleName string) []rule.Rule {
+func (r *repository) GetCompiled(ruleName string) []entity.Rule {
 	r.rwLock.RLock()
 	defer r.rwLock.RUnlock()
 	if c, ok := r.containers[ruleName]; ok {

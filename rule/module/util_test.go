@@ -1,4 +1,4 @@
-package rule
+package module
 
 import "testing"
 

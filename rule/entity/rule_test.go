@@ -1,10 +1,11 @@
-package rule
+package entity
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/go-kit/kit/log"
+	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 )
 
 func TestNewRules(t *testing.T) {
@@ -20,7 +21,7 @@ rule:
 		[]Rule{
 			{
 				If: "true",
-				Then: Data{
+				Then: dto.Data{
 					"foo": "bar",
 				},
 			},
@@ -37,7 +38,7 @@ rule:
 			[]Rule{
 				{
 					If: "true",
-					Then: Data{
+					Then: dto.Data{
 						"foo": "bar",
 					},
 				},

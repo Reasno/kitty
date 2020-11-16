@@ -1,4 +1,6 @@
-package rule
+//go:generate mockery --name=Repository
+
+package service
 
 import (
 	"bytes"
@@ -8,20 +10,22 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
+	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
+	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
 	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
 )
 
 var ErrDataHasChanged = errors.New(msg.ErrorRulesHasChanged)
 
 type Service interface {
-	CalculateRules(ctx context.Context, ruleName string, payload *Payload) (Data, error)
+	CalculateRules(ctx context.Context, ruleName string, payload *dto.Payload) (dto.Data, error)
 	GetRules(ctx context.Context, ruleName string) ([]byte, error)
 	UpdateRules(ctx context.Context, ruleName string, content []byte, dryRun bool) error
 	Preflight(ctx context.Context, ruleName string, hash string) error
 }
 
 type Repository interface {
-	GetCompiled(ruleName string) []Rule
+	GetCompiled(ruleName string) []entity.Rule
 	GetRaw(ctx context.Context, key string) (value []byte, e error)
 	SetRaw(ctx context.Context, key string, value string) error
 	IsNewest(ctx context.Context, key, value string) (bool, error)
@@ -37,9 +41,9 @@ func NewService(logger log.Logger, repo Repository) *service {
 	return &service{logger: logger, repo: repo}
 }
 
-func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *Payload) (Data, error) {
+func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *dto.Payload) (dto.Data, error) {
 	rules := r.repo.GetCompiled(ruleName)
-	return Calculate(rules, payload, r.logger)
+	return entity.Calculate(rules, payload, r.logger)
 }
 
 func (r *service) GetRules(ctx context.Context, ruleName string) ([]byte, error) {
@@ -55,8 +59,8 @@ func (r *service) UpdateRules(ctx context.Context, ruleName string, content []by
 	)
 	reader := bytes.NewReader(content)
 	tee = io.TeeReader(reader, &buf)
-	err = validateRules(tee)
-	var invalid *ErrInvalidRules
+	err = entity.ValidateRules(tee)
+	var invalid *entity.ErrInvalidRules
 	if errors.As(err, &invalid) {
 		return kerr.InvalidArgumentErr(invalid)
 	}

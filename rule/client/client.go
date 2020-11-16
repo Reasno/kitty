@@ -9,12 +9,15 @@ import (
 	"github.com/pkg/errors"
 	kconf "glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
-	"glab.tagtic.cn/ad_gains/kitty/rule"
+	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
+	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
+	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
+	"glab.tagtic.cn/ad_gains/kitty/rule/service"
 	"go.etcd.io/etcd/clientv3"
 )
 
 type RuleEngine struct {
-	repository rule.Repository
+	repository service.Repository
 	logger     log.Logger
 }
 
@@ -24,14 +27,14 @@ type ofRule struct {
 }
 
 func (r *ofRule) Tenant(tenant *kconf.Tenant) (contract.ConfigReader, error) {
-	var pl = rule.FromTenant(tenant)
+	var pl = dto.FromTenant(tenant)
 	return r.Payload(pl)
 }
 
-func (r *ofRule) Payload(pl *rule.Payload) (contract.ConfigReader, error) {
+func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 	compiled := r.d.repository.GetCompiled(r.ruleName)
 
-	calculated, err := rule.Calculate(compiled, pl, r.d.logger)
+	calculated, err := entity.Calculate(compiled, pl, r.d.logger)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +65,7 @@ type Option func(*config)
 type config struct {
 	ctx         context.Context
 	client      *clientv3.Client
-	repo        rule.Repository
+	repo        service.Repository
 	logger      log.Logger
 	listOfRules []string
 }
@@ -73,7 +76,7 @@ func WithClient(client *clientv3.Client) Option {
 	}
 }
 
-func WithRepository(repository rule.Repository) Option {
+func WithRepository(repository service.Repository) Option {
 	return func(c *config) {
 		c.repo = repository
 	}
@@ -126,7 +129,7 @@ func NewRuleEngine(opt ...Option) (*RuleEngine, error) {
 		}
 		var mp = make(map[string]string)
 		for _, v := range c.listOfRules {
-			mp[v] = rule.OtherConfigPathPrefix + "/" + v
+			mp[v] = repository2.OtherConfigPathPrefix + "/" + v
 		}
 		var err error
 		c.repo, err = NewRepository(c.client, c.logger, mp)

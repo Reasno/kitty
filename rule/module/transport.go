@@ -1,4 +1,4 @@
-package rule
+package module
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/schema"
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
+	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 )
 
 var decoder = schema.NewDecoder()
@@ -55,7 +56,7 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 
 	return m
 }
-func decodePayload(payload *Payload, r *http.Request) (err error) {
+func decodePayload(payload *dto.Payload, r *http.Request) (err error) {
 	if r.Method == "POST" {
 		buf, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -76,7 +77,7 @@ func decodePayload(payload *Payload, r *http.Request) (err error) {
 
 func DecodeCalculateRuleRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	defer r.Body.Close()
-	var payload Payload
+	var payload dto.Payload
 	if err := decodePayload(&payload, r); err != nil {
 		return nil, err
 	}

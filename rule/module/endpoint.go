@@ -1,21 +1,25 @@
-package rule
+package module
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kmiddleware"
+	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
+	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
+	"glab.tagtic.cn/ad_gains/kitty/rule/service"
 )
 
 type GenericResponse struct {
-	Code    uint32 `json:"code"`
-	Message string `json:"message,omitempty"`
-	Data    Data   `json:"data,omitempty"`
+	Code    uint32   `json:"code"`
+	Message string   `json:"message,omitempty"`
+	Data    dto.Data `json:"data,omitempty"`
 }
 
 func (g GenericResponse) String() string {
@@ -36,7 +40,7 @@ func (s StringResponse) String() string {
 
 type calculateRulesRequest struct {
 	ruleName string
-	payload  *Payload
+	payload  *dto.Payload
 }
 
 func (c calculateRulesRequest) String() string {
@@ -77,7 +81,7 @@ type Endpoints struct {
 	preflightEndpoint       endpoint.Endpoint
 }
 
-func newEndpoints(s Service, hist metrics.Histogram, logger log.Logger, appName contract.AppName, env contract.Env) Endpoints {
+func newEndpoints(s service.Service, hist metrics.Histogram, logger log.Logger, appName contract.AppName, env contract.Env) Endpoints {
 	l := kmiddleware.NewLoggingMiddleware(logger, env.IsLocal())
 	e := kmiddleware.NewErrorMarshallerMiddleware()
 	mw := func(name string) endpoint.Middleware {
@@ -91,7 +95,7 @@ func newEndpoints(s Service, hist metrics.Histogram, logger log.Logger, appName 
 	}
 }
 
-func MakeCalculateRulesEndpoint(s Service) endpoint.Endpoint {
+func MakeCalculateRulesEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*calculateRulesRequest)
 		v, err := s.CalculateRules(ctx, req.ruleName, req.payload)
@@ -102,7 +106,7 @@ func MakeCalculateRulesEndpoint(s Service) endpoint.Endpoint {
 	}
 }
 
-func MakeGetRulesEndpoint(s Service) endpoint.Endpoint {
+func MakeGetRulesEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*getRulesRequest)
 		v, err := s.GetRules(ctx, req.ruleName)
@@ -113,11 +117,11 @@ func MakeGetRulesEndpoint(s Service) endpoint.Endpoint {
 	}
 }
 
-func MakeUpdateRulesEndpoint(s Service) endpoint.Endpoint {
+func MakeUpdateRulesEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*updateRulesRequest)
 		err = s.UpdateRules(ctx, req.ruleName, req.data, req.dryRun)
-		var invalid *ErrInvalidRules
+		var invalid *entity.ErrInvalidRules
 		if errors.As(err, &invalid) {
 			return GenericResponse{Message: invalid.Error(), Code: 3}, nil
 		}
@@ -128,7 +132,7 @@ func MakeUpdateRulesEndpoint(s Service) endpoint.Endpoint {
 	}
 }
 
-func MakePreflightEndpoint(s Service) endpoint.Endpoint {
+func MakePreflightEndpoint(s service.Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*preflightRequest)
 		err = s.Preflight(ctx, req.ruleName, req.hash)

@@ -369,6 +369,7 @@ import (
     "fmt"
 
     "glab.tagtic.cn/ad_gains/kitty/pkg/rule/client"
+    "glab.tagtic.cn/ad_gains/kitty/pkg/rule/dto"
     "go.etcd.io/etcd/clientv3"
 )
 
@@ -383,7 +384,7 @@ func main() {
         client.Rule("whatever"), // 使用任何rule必须先在这里注册, 可以注册多个
     )
     go engine.Watch(context.Background())
-	reader, _ := engine.Of("kitty-testing").Payload(&rule.Payload{}) // 配合DSL高级配置
+	reader, _ := engine.Of("kitty-testing").Payload(&dto.Payload{}) // 配合DSL高级配置
 	fmt.Println(reader.String("foo")) //bar
 }
 ```

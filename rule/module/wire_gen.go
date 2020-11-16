@@ -3,13 +3,14 @@
 //go:generate wire
 //+build !wireinject
 
-package rule
+package module
 
 import (
 	"github.com/go-kit/kit/log"
 	"github.com/google/wire"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/rule/service"
 )
 
 // Injectors from wire.go:
@@ -19,20 +20,17 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	if err != nil {
 		return nil, nil, err
 	}
-	ruleRepository, err := provideRepository(client, logger)
+	repository, err := provideRepository(client, logger)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	ruleService := &service{
-		logger: logger,
-		repo:   ruleRepository,
-	}
+	serviceService := service.ProvideService(logger, repository)
 	appName := config.ProvideAppName(reader)
 	env := config.ProvideEnv(reader)
 	histogram := provideHistogramMetrics(appName, env)
-	endpoints := newEndpoints(ruleService, histogram, logger, appName, env)
-	module := provideModule(ruleRepository, endpoints)
+	endpoints := newEndpoints(serviceService, histogram, logger, appName, env)
+	module := provideModule(repository, endpoints)
 	return module, func() {
 		cleanup()
 	}, nil
@@ -42,5 +40,5 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 
 var serviceSet = wire.NewSet(
 	provideEtcdClient,
-	provideRepository, wire.Bind(new(Repository), new(*repository)), wire.Bind(new(Service), new(*service)), wire.Struct(new(service), "*"),
+	provideRepository, service.ProvideService,
 )

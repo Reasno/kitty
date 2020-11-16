@@ -1,8 +1,10 @@
-package rule
+package module
 
 import (
 	"net/http"
 	"strings"
+
+	"glab.tagtic.cn/ad_gains/kitty/rule/repository"
 )
 
 //TrimPrefix removes the longest common Prefix from all provided strings
@@ -90,7 +92,7 @@ func longestCommonXfix(strs []string, pre bool) string {
 	return xfix
 }
 
-func DbKeys(m map[string]Container) []string {
+func DbKeys(m map[string]repository.Container) []string {
 	var out []string
 	for _, v := range m {
 		out = append(out, v.DbKey)

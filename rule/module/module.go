@@ -1,4 +1,4 @@
-package rule
+package module
 
 import (
 	"context"
@@ -11,10 +11,11 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
+	"glab.tagtic.cn/ad_gains/kitty/rule/service"
 )
 
 type Module struct {
-	repository Repository
+	repository service.Repository
 	endpoints  Endpoints
 	close      func()
 }
@@ -51,6 +52,6 @@ func (m *Module) ProvideRunGroup(group *run.Group) {
 	})
 }
 
-func (m *Module) GetRepository() Repository {
+func (m *Module) GetRepository() service.Repository {
 	return m.repository
 }

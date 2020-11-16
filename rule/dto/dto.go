@@ -1,4 +1,4 @@
-package rule
+package dto
 
 import (
 	"encoding/json"

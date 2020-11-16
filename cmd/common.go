@@ -14,8 +14,8 @@ import (
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	kitty_log "glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
-	"glab.tagtic.cn/ad_gains/kitty/rule"
 	"glab.tagtic.cn/ad_gains/kitty/rule/client"
+	module2 "glab.tagtic.cn/ad_gains/kitty/rule/module"
 )
 
 var moduleContainer container.ModuleContainer
@@ -23,7 +23,7 @@ var moduleContainer container.ModuleContainer
 func initModules() {
 	moduleContainer = container.NewModuleContainer()
 	ruleModuleConfig := conf.Cut("rule")
-	ruleModule := rule.New(ruleModuleConfig, logger)
+	ruleModule := module2.New(ruleModuleConfig, logger)
 	moduleContainer.Register(ruleModule)
 
 	dynConf, err := client.NewRuleEngine(client.WithRepository(ruleModule.GetRepository()))

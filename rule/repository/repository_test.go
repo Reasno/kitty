@@ -1,13 +1,14 @@
-package rule
+package repository
 
 import (
 	"context"
 	"flag"
-	"github.com/go-kit/kit/log"
-	"github.com/magiconair/properties/assert"
-	"go.etcd.io/etcd/clientv3"
 	"io/ioutil"
 	"testing"
+
+	"github.com/go-kit/kit/log"
+	"github.com/stretchr/testify/assert"
+	"go.etcd.io/etcd/clientv3"
 )
 
 var useEtcd bool

@@ -1,20 +1,19 @@
 //+build wireinject
 
-package rule
+package module
 
 import (
 	"github.com/go-kit/kit/log"
 	"github.com/google/wire"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/rule/service"
 )
 
 var serviceSet = wire.NewSet(
 	provideEtcdClient,
 	provideRepository,
-	wire.Bind(new(Repository), new(*repository)),
-	wire.Bind(new(Service), new(*service)),
-	wire.Struct(new(service), "*"),
+	service.ProvideService,
 )
 
 func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, func(), error) {
