@@ -10,7 +10,6 @@ replace (
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.0 // indirect
-	github.com/Reasno/tr v0.5.0 // indirect
 	github.com/antonmedv/expr v1.8.9
 	github.com/aws/aws-sdk-go v1.29.5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible

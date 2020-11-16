@@ -22,7 +22,8 @@ func injectModule(conf contract.ConfigReader, logger log.Logger) *Module {
 	}
 	endpoint := MakeUploadEndpoint(uploadService)
 	env := config.ProvideEnv(conf)
-	middleware := Middleware(logger, env)
+	securityConfig := provideSecurityConfig(conf)
+	middleware := Middleware(logger, env, securityConfig)
 	handler := MakeHttpHandler(endpoint, middleware)
 	module := &Module{
 		handler: handler,

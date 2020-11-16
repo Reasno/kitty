@@ -60,10 +60,19 @@ func MakeUploadEndpoint(uploader contract.Uploader) endpoint.Endpoint {
 	}
 }
 
-func Middleware(logger log.Logger, env contract.Env) endpoint.Middleware {
+func Middleware(logger log.Logger, env contract.Env, config *kmiddleware.SecurityConfig) endpoint.Middleware {
 	l := kmiddleware.NewLoggingMiddleware(logger, env.IsLocal())
 	e := kmiddleware.NewErrorMarshallerMiddleware()
-	return endpoint.Chain(e, l)
+	a := kmiddleware.NewAuthenticationMiddleware(config)
+	return endpoint.Chain(e, l, a)
+}
+
+func provideSecurityConfig(conf contract.ConfigReader) *kmiddleware.SecurityConfig {
+	return &kmiddleware.SecurityConfig{
+		Enable: conf.Bool("security.enable"),
+		JwtKey: conf.String("security.key"),
+		JwtId:  conf.String("security.kid"),
+	}
 }
 
 func MakeHttpHandler(endpoint endpoint.Endpoint, middleware endpoint.Middleware) http.Handler {
