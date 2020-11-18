@@ -36,6 +36,287 @@ var (
 // define the regex for a UUID once up-front
 var _app_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on UserInviteRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UserInviteRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// UserInviteRequestValidationError is the validation error returned by
+// UserInviteRequest.Validate if the designated constraints aren't met.
+type UserInviteRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInviteRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInviteRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInviteRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInviteRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInviteRequestValidationError) ErrorName() string {
+	return "UserInviteRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserInviteRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInviteRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInviteRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInviteRequestValidationError{}
+
+// Validate checks the field values on UserInviteReply with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UserInviteReply) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Msg
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserInviteReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UserInviteReplyValidationError is the validation error returned by
+// UserInviteReply.Validate if the designated constraints aren't met.
+type UserInviteReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInviteReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInviteReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInviteReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInviteReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInviteReplyValidationError) ErrorName() string { return "UserInviteReplyValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserInviteReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInviteReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInviteReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInviteReplyValidationError{}
+
+// Validate checks the field values on UrlData with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *UrlData) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Url
+
+	return nil
+}
+
+// UrlDataValidationError is the validation error returned by UrlData.Validate
+// if the designated constraints aren't met.
+type UrlDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UrlDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UrlDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UrlDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UrlDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UrlDataValidationError) ErrorName() string { return "UrlDataValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UrlDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUrlData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UrlDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UrlDataValidationError{}
+
+// Validate checks the field values on AddInvitationRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *AddInvitationRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for InviteCode
+
+	return nil
+}
+
+// AddInvitationRequestValidationError is the validation error returned by
+// AddInvitationRequest.Validate if the designated constraints aren't met.
+type AddInvitationRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AddInvitationRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AddInvitationRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AddInvitationRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AddInvitationRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AddInvitationRequestValidationError) ErrorName() string {
+	return "AddInvitationRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e AddInvitationRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAddInvitationRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AddInvitationRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AddInvitationRequestValidationError{}
+
 // Validate checks the field values on UserBindRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -797,6 +1078,8 @@ func (m *UserInfoReply) Validate() error {
 		}
 	}
 
+	// no validation rules for Msg
+
 	return nil
 }
 
@@ -1173,6 +1456,8 @@ func (m *GenericReply) Validate() error {
 	// no validation rules for Code
 
 	// no validation rules for Message
+
+	// no validation rules for Msg
 
 	return nil
 }

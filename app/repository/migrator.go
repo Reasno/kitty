@@ -144,5 +144,40 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 
 			},
 		},
+		{
+			ID: "202011180100",
+			Migrate: func(db *gorm.DB) error {
+				type User struct {
+					gorm.Model
+				}
+				type OrientationStep struct {
+					gorm.Model
+					RelationID    uint
+					Name          string
+					StepCompleted bool
+				}
+				type Relation struct {
+					gorm.Model
+					MasterID             uint
+					ApprenticeID         uint
+					Master               User `gorm:"foreignKey:MasterID"`
+					Apprentice           User `gorm:"foreignKey:ApprenticeID"`
+					Depth                int
+					OrientationCompleted bool
+					OrientationSteps     []OrientationStep
+					RewardClaimed        bool
+				}
+
+				return db.AutoMigrate(
+					&OrientationStep{},
+					&Relation{},
+				)
+			},
+			Rollback: func(db *gorm.DB) error {
+				type Relation struct{}
+				type OrientationStep struct{}
+				return db.Migrator().DropTable(&Relation{}, &OrientationStep{})
+			},
+		},
 	})
 }

@@ -516,3 +516,13 @@ func toReply(user *entity.User) *pb.UserInfoReply {
 		},
 	}
 }
+
+func (s appService) Invite(ctx context.Context, in *pb.UserInviteRequest) (*pb.UserInviteReply, error) {
+	var resp pb.UserInviteReply
+	return &resp, nil
+}
+
+func (s appService) AddInvitationCode(ctx context.Context, in *pb.AddInvitationRequest) (*pb.GenericReply, error) {
+	var resp pb.GenericReply
+	return &resp, nil
+}

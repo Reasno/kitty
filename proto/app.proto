@@ -37,6 +37,10 @@ option (options.openapiv2_swagger) = {
   }
   consumes: "application/json";
   produces: "application/json";
+  external_docs: {
+    description: "商业化中台文档"
+    url: "http://monetization-docs.xg.tagtic.cn/#/"
+  }
 };
 
 // 用户中心
@@ -115,6 +119,43 @@ service App {
       body: "*"
     };
   }
+
+  rpc Invite (UserInviteRequest) returns (UserInviteReply) {
+    option (options.openapiv2_operation) = {
+      tags: "分享"
+    };
+    option (google.api.http) = {
+      post: "/share"
+      body: "*"
+    };
+  }
+
+  rpc AddInvitationCode (AddInvitationRequest) returns (GenericReply) {
+    option (options.openapiv2_operation) = {
+      tags: "用户信息"
+    };
+    option (google.api.http) = {
+      post: "/invitation"
+      body: "*"
+    };
+  }
+}
+
+message UserInviteRequest {
+}
+
+message UserInviteReply {
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  string msg = 3;
+  UrlData data = 4;
+}
+
+message UrlData {
+  string url = 1;
+}
+
+message AddInvitationRequest {
+  string invite_code = 1;
 }
 
 message UserBindRequest {
@@ -264,10 +305,11 @@ message UserInfo {
 
 message UserInfoReply {
   int32 code = 1 [(gogoproto.jsontag) = "code"];
+  // deprecated
   string message = 2;
   UserInfo data = 3;
+  string msg = 4;
 }
-
 
 
 message GetCodeRequest {
@@ -315,6 +357,8 @@ message EmptyRequest {
 
 message GenericReply {
   int32 code = 1 [(gogoproto.jsontag) = "code"];
+  // deprecated
   string message = 2;
+  string msg = 3;
 }
 

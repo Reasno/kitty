@@ -64,12 +64,14 @@ type ServerError struct {
 type jsonRep struct {
 	Code    uint32      `json:"code"`
 	Message string      `json:"message"`
+	Msg     string      `json:"msg"`
 	Details interface{} `json:"details"`
 }
 
 func (e ServerError) MarshalJSON() ([]byte, error) {
 	r := jsonRep{
 		e.customCode,
+		e.status.Message(),
 		e.status.Message(),
 		e.status.Details(),
 	}
