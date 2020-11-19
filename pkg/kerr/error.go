@@ -3,16 +3,17 @@ package kerr
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"strings"
+
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"net/http"
-	"strings"
 )
 
-func err(code codes.Code, e error) ServerError {
-	return ServerError{e, status.New(code, redact(e)), uint32(code)}
+func err(code codes.Code, e error, msg string) ServerError {
+	return ServerError{e, status.New(code, msg), uint32(code)}
 }
 
 func UnknownErr(e error) ServerError {
@@ -23,32 +24,32 @@ func UnknownErr(e error) ServerError {
 	return ServerError{e, s, uint32(s.Code())}
 }
 
-func InvalidArgumentErr(e error) ServerError {
-	return err(codes.InvalidArgument, e)
+func InvalidArgumentErr(e error, msg string) ServerError {
+	return err(codes.InvalidArgument, e, msg)
 }
 
-func NotFoundErr(e error) ServerError {
-	return err(codes.NotFound, e)
+func NotFoundErr(e error, msg string) ServerError {
+	return err(codes.NotFound, e, msg)
 }
 
-func InternalErr(e error) ServerError {
-	return err(codes.Internal, e)
+func InternalErr(e error, msg string) ServerError {
+	return err(codes.Internal, e, msg)
 }
 
-func UnauthorizedErr(e error) ServerError {
-	return err(codes.Unauthenticated, e)
+func UnauthenticatedErr(e error, msg string) ServerError {
+	return err(codes.Unauthenticated, e, msg)
 }
 
-func ResourceExhaustedErr(e error) ServerError {
-	return err(codes.ResourceExhausted, e)
+func ResourceExhaustedErr(e error, msg string) ServerError {
+	return err(codes.ResourceExhausted, e, msg)
 }
 
-func FailedPreconditionErr(e error) ServerError {
-	return err(codes.FailedPrecondition, e)
+func FailedPreconditionErr(e error, msg string) ServerError {
+	return err(codes.FailedPrecondition, e, msg)
 }
 
-func CustomErr(code uint32, e error) ServerError {
-	return ServerError{e, status.New(codes.Internal, redact(e)), code}
+func CustomErr(code uint32, e error, msg string) ServerError {
+	return ServerError{e, status.New(codes.Internal, msg), code}
 }
 
 func redact(err error) string {

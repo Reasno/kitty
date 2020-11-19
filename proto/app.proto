@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package app.v1;
+package app.v2;
 
 import "google/api/annotations.proto";
 import "protoc-gen-validate/validate/validate.proto";
@@ -12,7 +12,7 @@ option go_package = "kitty";
 option (options.openapiv2_swagger) = {
   info: {
     title: "商业化中台用户中心";
-    version: "0.1.0";
+    version: "2.0.0";
     contact: {
       name: "谷溪";
       email: "guxi@infinities.com.cn";
@@ -119,44 +119,8 @@ service App {
       body: "*"
     };
   }
-
-  rpc Invite (UserInviteRequest) returns (UserInviteReply) {
-    option (options.openapiv2_operation) = {
-      tags: "分享"
-    };
-    option (google.api.http) = {
-      post: "/share"
-      body: "*"
-    };
-  }
-
-  rpc AddInvitationCode (AddInvitationRequest) returns (GenericReply) {
-    option (options.openapiv2_operation) = {
-      tags: "用户信息"
-    };
-    option (google.api.http) = {
-      post: "/invitation"
-      body: "*"
-    };
-  }
 }
 
-message UserInviteRequest {
-}
-
-message UserInviteReply {
-  int32 code = 1 [(gogoproto.jsontag) = "code"];
-  string msg = 3;
-  UrlData data = 4;
-}
-
-message UrlData {
-  string url = 1;
-}
-
-message AddInvitationRequest {
-  string invite_code = 1;
-}
 
 message UserBindRequest {
   // 手机号

@@ -49,7 +49,7 @@ func MakeUploadEndpoint(uploader contract.Uploader) endpoint.Endpoint {
 		req := request.(*Request)
 		resp, err := uploader.Upload(ctx, req.data)
 		if err != nil {
-			return nil, kerr.InternalErr(err)
+			return nil, kerr.InternalErr(err, "上传失败")
 		}
 		return &Response{
 			Code: 0,

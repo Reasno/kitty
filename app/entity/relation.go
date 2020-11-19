@@ -12,8 +12,8 @@ var ErrOrientationHasNotBeenCompleted = errors.New(msg.OrientationHasNotBeenComp
 
 type Relation struct {
 	gorm.Model
-	MasterID             uint
-	ApprenticeID         uint
+	MasterID             uint `gorm:"index"`
+	ApprenticeID         uint `gorm:"index"`
 	Master               User
 	Apprentice           User
 	Depth                int
@@ -64,7 +64,7 @@ func (r *Relation) ClaimReward() error {
 
 type OrientationStep struct {
 	gorm.Model
-	RelationID    uint
+	RelationID    uint `gorm:"index"`
 	Name          string
 	StepCompleted bool
 }

@@ -5,6 +5,7 @@ package service
 import (
 	"bytes"
 	"context"
+	"io"
 	"reflect"
 	"testing"
 
@@ -106,6 +107,9 @@ func TestService_UpdateRules(t *testing.T) {
 	repo := &mocks.Repository{}
 	ser := NewService(log.NewNopLogger(), repo)
 	repo.On("SetRaw", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	repo.On("ValidateRules", mock.Anything, mock.Anything).Return(func(ruleName string, reader io.Reader) error {
+		return entity.ValidateRules(reader)
+	})
 	err := ser.UpdateRules(context.Background(), "foo", []byte("invalid"), false)
 	if err == nil {
 		t.Fatal("err should not be null")

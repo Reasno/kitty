@@ -18,24 +18,32 @@ import (
 )
 
 var DbSet = wire.NewSet(
-	provideDialector,
-	provideGormConfig,
-	provideGormDB,
+	ProvideDialector,
+	ProvideGormConfig,
+	ProvideGormDB,
 )
 
 var OpenTracingSet = wire.NewSet(
-	provideJaegerLogAdapter,
-	provideOpentracing,
+	ProvideJaegerLogAdapter,
+	ProvideOpentracing,
+)
+
+var NameAndEnvSet = wire.NewSet(
+	config.ProvideAppName,
+	config.ProvideEnv,
+	wire.Bind(new(contract.Env), new(config.Env)),
+	wire.Bind(new(contract.AppName), new(config.AppName)),
 )
 
 var AppServerSet = wire.NewSet(
 	provideSmsConfig,
 	DbSet,
 	OpenTracingSet,
+	NameAndEnvSet,
 	provideKeyManager,
-	provideHttpClient,
-	provideUploadManager,
-	provideRedis,
+	ProvideHttpClient,
+	ProvideUploadManager,
+	ProvideRedis,
 	provideWechatConfig,
 	wechat.NewWechaterFactory,
 	wechat.NewWechaterFacade,
@@ -45,8 +53,6 @@ var AppServerSet = wire.NewSet(
 	repository.NewCodeRepo,
 	repository.NewFileRepo,
 	repository.NewExtraRepo,
-	config.ProvideAppName,
-	config.ProvideEnv,
 	handlers.NewAppService,
 	handlers.ProvideAppServer,
 	wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)),
@@ -55,8 +61,6 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
 	wire.Bind(new(wechat.Wechater), new(*wechat.WechaterFacade)),
 	wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)),
-	wire.Bind(new(contract.Env), new(config.Env)),
-	wire.Bind(new(contract.AppName), new(config.AppName)),
 	wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)),
 	wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)),
 )
@@ -67,8 +71,8 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 		provideKafkaProducerFactory,
 		provideUserBus,
 		provideEventBus,
-		provideSecurityConfig,
-		provideHistogramMetrics,
+		ProvideSecurityConfig,
+		ProvideHistogramMetrics,
 		provideEndpointsMiddleware,
 		provideModule,
 		wire.Bind(new(handlers.EventBus), new(*eventBus)),

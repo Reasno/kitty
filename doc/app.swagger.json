@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "商业化中台用户中心",
-    "version": "0.1.0",
+    "version": "2.0.0",
     "contact": {
       "name": "谷溪",
       "email": "guxi@infinities.com.cn"
@@ -24,7 +24,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -34,7 +34,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserBindRequest"
+              "$ref": "#/definitions/v2UserBindRequest"
             }
           }
         ],
@@ -51,7 +51,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GenericReply"
+              "$ref": "#/definitions/v2GenericReply"
             }
           }
         },
@@ -82,7 +82,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -92,7 +92,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserInfoUpdateRequest"
+              "$ref": "#/definitions/v2UserInfoUpdateRequest"
             }
           }
         ],
@@ -109,7 +109,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -141,32 +141,6 @@
         ]
       }
     },
-    "/invitation": {
-      "post": {
-        "operationId": "App_AddInvitationCode",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GenericReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1AddInvitationRequest"
-            }
-          }
-        ],
-        "tags": [
-          "用户信息"
-        ]
-      }
-    },
     "/login": {
       "post": {
         "summary": "用户从未登录状态注册或登录时调用。如果用户已登录，需要绑定手机号或微信号，请使用bind接口。",
@@ -175,7 +149,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -185,7 +159,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserLoginRequest"
+              "$ref": "#/definitions/v2UserLoginRequest"
             }
           }
         ],
@@ -202,7 +176,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -212,38 +186,12 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserRefreshRequest"
+              "$ref": "#/definitions/v2UserRefreshRequest"
             }
           }
         ],
         "tags": [
           "登录"
-        ]
-      }
-    },
-    "/share": {
-      "post": {
-        "operationId": "App_Invite",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UserInviteReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1UserInviteRequest"
-            }
-          }
-        ],
-        "tags": [
-          "分享"
         ]
       }
     },
@@ -255,7 +203,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -265,7 +213,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserUnbindRequest"
+              "$ref": "#/definitions/v2UserUnbindRequest"
             }
           }
         ],
@@ -285,15 +233,7 @@
       ],
       "default": "OS_UNKNOWN"
     },
-    "v1AddInvitationRequest": {
-      "type": "object",
-      "properties": {
-        "invite_code": {
-          "type": "string"
-        }
-      }
-    },
-    "v1Device": {
+    "v2Device": {
       "type": "object",
       "properties": {
         "imei": {
@@ -321,7 +261,7 @@
         }
       }
     },
-    "v1Gender": {
+    "v2Gender": {
       "type": "string",
       "enum": [
         "GENDER_UNKNOWN",
@@ -330,7 +270,7 @@
       ],
       "default": "GENDER_UNKNOWN"
     },
-    "v1GenericReply": {
+    "v2GenericReply": {
       "type": "object",
       "properties": {
         "code": {
@@ -346,7 +286,7 @@
         }
       }
     },
-    "v1TaobaoExtra": {
+    "v2TaobaoExtra": {
       "type": "object",
       "properties": {
         "user_id": {
@@ -378,15 +318,7 @@
         }
       }
     },
-    "v1UrlData": {
-      "type": "object",
-      "properties": {
-        "url": {
-          "type": "string"
-        }
-      }
-    },
-    "v1UserBindRequest": {
+    "v2UserBindRequest": {
       "type": "object",
       "properties": {
         "mobile": {
@@ -407,16 +339,16 @@
           "title": "废弃，请使用wechat_extra.openId"
         },
         "taobao_extra": {
-          "$ref": "#/definitions/v1TaobaoExtra",
+          "$ref": "#/definitions/v2TaobaoExtra",
           "title": "绑定淘宝"
         },
         "wechat_extra": {
-          "$ref": "#/definitions/v1WechatExtra",
+          "$ref": "#/definitions/v2WechatExtra",
           "title": "如果有openId 就直接走openId，不用再填微信官方下发的临时code码"
         }
       }
     },
-    "v1UserInfo": {
+    "v2UserInfo": {
       "type": "object",
       "properties": {
         "id": {
@@ -434,7 +366,7 @@
           "title": "头像地址"
         },
         "gender": {
-          "$ref": "#/definitions/v1Gender"
+          "$ref": "#/definitions/v2Gender"
         },
         "birthday": {
           "type": "string"
@@ -450,17 +382,17 @@
           "type": "boolean"
         },
         "wechat_extra": {
-          "$ref": "#/definitions/v1WechatExtra"
+          "$ref": "#/definitions/v2WechatExtra"
         },
         "taobao_extra": {
-          "$ref": "#/definitions/v1TaobaoExtra"
+          "$ref": "#/definitions/v2TaobaoExtra"
         },
         "mobile": {
           "type": "string"
         }
       }
     },
-    "v1UserInfoReply": {
+    "v2UserInfoReply": {
       "type": "object",
       "properties": {
         "code": {
@@ -472,14 +404,14 @@
           "title": "deprecated"
         },
         "data": {
-          "$ref": "#/definitions/v1UserInfo"
+          "$ref": "#/definitions/v2UserInfo"
         },
         "msg": {
           "type": "string"
         }
       }
     },
-    "v1UserInfoUpdateRequest": {
+    "v2UserInfoUpdateRequest": {
       "type": "object",
       "properties": {
         "user_name": {
@@ -494,7 +426,7 @@
           "pattern": "^(|https?://.*)$"
         },
         "gender": {
-          "$ref": "#/definitions/v1Gender",
+          "$ref": "#/definitions/v2Gender",
           "title": "性别"
         },
         "birthday": {
@@ -508,25 +440,7 @@
         }
       }
     },
-    "v1UserInviteReply": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "msg": {
-          "type": "string"
-        },
-        "data": {
-          "$ref": "#/definitions/v1UrlData"
-        }
-      }
-    },
-    "v1UserInviteRequest": {
-      "type": "object"
-    },
-    "v1UserLoginRequest": {
+    "v2UserLoginRequest": {
       "type": "object",
       "properties": {
         "mobile": {
@@ -543,7 +457,7 @@
           "title": "手机发起微信登录的token，非openid"
         },
         "device": {
-          "$ref": "#/definitions/v1Device"
+          "$ref": "#/definitions/v2Device"
         },
         "channel": {
           "type": "string",
@@ -574,11 +488,11 @@
         }
       }
     },
-    "v1UserRefreshRequest": {
+    "v2UserRefreshRequest": {
       "type": "object",
       "properties": {
         "device": {
-          "$ref": "#/definitions/v1Device"
+          "$ref": "#/definitions/v2Device"
         },
         "channel": {
           "type": "string",
@@ -595,7 +509,7 @@
       },
       "title": "Token续期"
     },
-    "v1UserUnbindRequest": {
+    "v2UserUnbindRequest": {
       "type": "object",
       "properties": {
         "mobile": {
@@ -612,7 +526,7 @@
         }
       }
     },
-    "v1WechatExtra": {
+    "v2WechatExtra": {
       "type": "object",
       "properties": {
         "access_token": {
@@ -675,6 +589,7 @@
     }
   ],
   "externalDocs": {
+    "description": "商业化中台文档",
     "url": "http://monetization-docs.xg.tagtic.cn/#/"
   }
 }

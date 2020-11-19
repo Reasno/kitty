@@ -53,6 +53,31 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 	return &u, nil
 }
 
+func (r *UserRepo) UpdateCallback(ctx context.Context, id uint, f func(user *entity.User) error) (err error) {
+	var u entity.User
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		tx = tx.WithContext(ctx)
+		err := tx.Model(entity.User{}).Where("id = ?", id).First(&u).Error
+		if err != nil {
+			return errors.Wrap(err, emsg)
+		}
+		err = f(&u)
+		if err != nil {
+			return err
+		}
+		err = tx.Save(u).Error
+		if err != nil {
+			if err, ok := err.(*mysql.MySQLError); ok {
+				if err.Number == 1062 {
+					return ErrAlreadyBind
+				}
+			}
+			return errors.Wrap(err, emsg)
+		}
+		return nil
+	})
+}
+
 func NewUserRepo(db *gorm.DB, fr *FileRepo) *UserRepo {
 	return &UserRepo{fr, db}
 }

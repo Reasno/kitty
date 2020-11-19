@@ -8,7 +8,7 @@ import (
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/spf13/cobra"
-	"glab.tagtic.cn/ad_gains/kitty/app/module"
+	app "glab.tagtic.cn/ad_gains/kitty/app/module"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/container"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
@@ -16,6 +16,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
 	"glab.tagtic.cn/ad_gains/kitty/rule/client"
 	module2 "glab.tagtic.cn/ad_gains/kitty/rule/module"
+	share "glab.tagtic.cn/ad_gains/kitty/share/module"
 )
 
 var moduleContainer container.ModuleContainer
@@ -37,7 +38,8 @@ func initModules() {
 			appModuleConfig.String("name"),
 			appModuleConfig.String("env")),
 	)
-	moduleContainer.Register(module.New(appModuleConfig, logger, appModuleDynConfig))
+	moduleContainer.Register(app.New(appModuleConfig, logger, appModuleDynConfig))
+	moduleContainer.Register(share.New(appModuleConfig, logger, appModuleDynConfig))
 	moduleContainer.Register(ots3.New(conf.Cut("global"), logger))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Doc))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.HealthCheck))

@@ -120,37 +120,15 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 			options...,
 		).Endpoint()
 	}
-	var InviteZeroEndpoint endpoint.Endpoint
-	{
-		InviteZeroEndpoint = httptransport.NewClient(
-			"POST",
-			copyURL(u, "/share"),
-			EncodeHTTPInviteZeroRequest,
-			DecodeHTTPInviteResponse,
-			options...,
-		).Endpoint()
-	}
-	var AddInvitationCodeZeroEndpoint endpoint.Endpoint
-	{
-		AddInvitationCodeZeroEndpoint = httptransport.NewClient(
-			"POST",
-			copyURL(u, "/invitation"),
-			EncodeHTTPAddInvitationCodeZeroRequest,
-			DecodeHTTPAddInvitationCodeResponse,
-			options...,
-		).Endpoint()
-	}
 
 	return svc.Endpoints{
-		LoginEndpoint:             LoginZeroEndpoint,
-		GetCodeEndpoint:           GetCodeZeroEndpoint,
-		GetInfoEndpoint:           GetInfoZeroEndpoint,
-		UpdateInfoEndpoint:        UpdateInfoZeroEndpoint,
-		BindEndpoint:              BindZeroEndpoint,
-		UnbindEndpoint:            UnbindZeroEndpoint,
-		RefreshEndpoint:           RefreshZeroEndpoint,
-		InviteEndpoint:            InviteZeroEndpoint,
-		AddInvitationCodeEndpoint: AddInvitationCodeZeroEndpoint,
+		LoginEndpoint:      LoginZeroEndpoint,
+		GetCodeEndpoint:    GetCodeZeroEndpoint,
+		GetInfoEndpoint:    GetInfoZeroEndpoint,
+		UpdateInfoEndpoint: UpdateInfoZeroEndpoint,
+		BindEndpoint:       BindZeroEndpoint,
+		UnbindEndpoint:     UnbindZeroEndpoint,
+		RefreshEndpoint:    RefreshZeroEndpoint,
 	}, nil
 }
 
@@ -359,60 +337,6 @@ func DecodeHTTPRefreshResponse(_ context.Context, r *http.Response) (interface{}
 	}
 
 	var resp pb.UserInfoReply
-	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
-		return nil, errorDecoder(buf)
-	}
-
-	return &resp, nil
-}
-
-// DecodeHTTPInviteResponse is a transport/http.DecodeResponseFunc that decodes
-// a JSON-encoded UserInviteReply response from the HTTP response body.
-// If the response has a non-200 status code, we will interpret that as an
-// error and attempt to decode the specific error message from the response
-// body. Primarily useful in a client.
-func DecodeHTTPInviteResponse(_ context.Context, r *http.Response) (interface{}, error) {
-	defer r.Body.Close()
-	buf, err := ioutil.ReadAll(r.Body)
-	if err == io.EOF {
-		return nil, errors.New("response http body empty")
-	}
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot read http body")
-	}
-
-	if r.StatusCode != http.StatusOK {
-		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
-	}
-
-	var resp pb.UserInviteReply
-	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
-		return nil, errorDecoder(buf)
-	}
-
-	return &resp, nil
-}
-
-// DecodeHTTPAddInvitationCodeResponse is a transport/http.DecodeResponseFunc that decodes
-// a JSON-encoded GenericReply response from the HTTP response body.
-// If the response has a non-200 status code, we will interpret that as an
-// error and attempt to decode the specific error message from the response
-// body. Primarily useful in a client.
-func DecodeHTTPAddInvitationCodeResponse(_ context.Context, r *http.Response) (interface{}, error) {
-	defer r.Body.Close()
-	buf, err := ioutil.ReadAll(r.Body)
-	if err == io.EOF {
-		return nil, errors.New("response http body empty")
-	}
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot read http body")
-	}
-
-	if r.StatusCode != http.StatusOK {
-		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
-	}
-
-	var resp pb.GenericReply
 	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
 		return nil, errorDecoder(buf)
 	}
@@ -754,93 +678,6 @@ func EncodeHTTPRefreshZeroRequest(_ context.Context, r *http.Request, request in
 	toRet.Channel = req.Channel
 
 	toRet.VersionCode = req.VersionCode
-
-	encoder := json.NewEncoder(&buf)
-	encoder.SetEscapeHTML(false)
-	if err := encoder.Encode(toRet); err != nil {
-		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
-	}
-	r.Body = ioutil.NopCloser(&buf)
-	return nil
-}
-
-// EncodeHTTPInviteZeroRequest is a transport/http.EncodeRequestFunc
-// that encodes a invite request into the various portions of
-// the http request (path, query, and body).
-func EncodeHTTPInviteZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
-	strval := ""
-	_ = strval
-	req := request.(*pb.UserInviteRequest)
-	_ = req
-
-	r.Header.Set("transport", "HTTPJSON")
-	r.Header.Set("request-url", r.URL.Path)
-
-	// Set the path parameters
-	path := strings.Join([]string{
-		"",
-		"share",
-	}, "/")
-	u, err := url.Parse(path)
-	if err != nil {
-		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
-	}
-	r.URL.RawPath = u.RawPath
-	r.URL.Path = u.Path
-
-	// Set the query parameters
-	values := r.URL.Query()
-	var tmp []byte
-	_ = tmp
-
-	r.URL.RawQuery = values.Encode()
-	// Set the body parameters
-	var buf bytes.Buffer
-	toRet := request.(*pb.UserInviteRequest)
-	encoder := json.NewEncoder(&buf)
-	encoder.SetEscapeHTML(false)
-	if err := encoder.Encode(toRet); err != nil {
-		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
-	}
-	r.Body = ioutil.NopCloser(&buf)
-	return nil
-}
-
-// EncodeHTTPAddInvitationCodeZeroRequest is a transport/http.EncodeRequestFunc
-// that encodes a addinvitationcode request into the various portions of
-// the http request (path, query, and body).
-func EncodeHTTPAddInvitationCodeZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
-	strval := ""
-	_ = strval
-	req := request.(*pb.AddInvitationRequest)
-	_ = req
-
-	r.Header.Set("transport", "HTTPJSON")
-	r.Header.Set("request-url", r.URL.Path)
-
-	// Set the path parameters
-	path := strings.Join([]string{
-		"",
-		"invitation",
-	}, "/")
-	u, err := url.Parse(path)
-	if err != nil {
-		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
-	}
-	r.URL.RawPath = u.RawPath
-	r.URL.Path = u.Path
-
-	// Set the query parameters
-	values := r.URL.Query()
-	var tmp []byte
-	_ = tmp
-
-	r.URL.RawQuery = values.Encode()
-	// Set the body parameters
-	var buf bytes.Buffer
-	toRet := request.(*pb.AddInvitationRequest)
-
-	toRet.InviteCode = req.InviteCode
 
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)

@@ -152,14 +152,14 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 				}
 				type OrientationStep struct {
 					gorm.Model
-					RelationID    uint
+					RelationID    uint `gorm:"index"`
 					Name          string
 					StepCompleted bool
 				}
 				type Relation struct {
 					gorm.Model
-					MasterID             uint
-					ApprenticeID         uint
+					MasterID             uint `gorm:"index"`
+					ApprenticeID         uint `gorm:"index"`
 					Master               User `gorm:"foreignKey:MasterID"`
 					Apprentice           User `gorm:"foreignKey:ApprenticeID"`
 					Depth                int

@@ -13,8 +13,6 @@ func TestRelationRepo_QueryRelations(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 
-	t.Parallel()
-
 	repo := RelationRepo{db}
 	ctx := context.Background()
 
@@ -77,8 +75,6 @@ func TestRelationRepo_UpdateRelations(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 
-	t.Parallel()
-
 	repo := RelationRepo{db}
 	ctx := context.Background()
 
@@ -106,7 +102,7 @@ func TestRelationRepo_UpdateRelations(t *testing.T) {
 		cc := c
 		t.Run(cc.name, func(t *testing.T) {
 			repo.AddRelations(ctx, entity.NewRelation(&cc.apprentice, &cc.master, nil))
-			repo.UpdateRelations(ctx, &cc.apprentice, &cc.master, func(relations []entity.Relation) error {
+			repo.UpdateRelations(ctx, &cc.apprentice, func(relations []entity.Relation) error {
 				for i, _ := range relations {
 					relations[i].RewardClaimed = cc.claimed
 				}
@@ -122,8 +118,6 @@ func TestRelationRepo_UpdateRelations(t *testing.T) {
 func TestRelationRepo_AddRelations(t *testing.T) {
 	setUp(t)
 	defer tearDown()
-
-	t.Parallel()
 
 	repo := RelationRepo{db}
 	ctx := context.Background()
@@ -215,8 +209,6 @@ func TestRelationRepo_AddRelations(t *testing.T) {
 func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 	setUp(t)
 	defer tearDown()
-
-	t.Parallel()
 
 	repo := RelationRepo{db}
 	ctx := context.Background()

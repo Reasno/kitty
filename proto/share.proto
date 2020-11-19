@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package share.v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-validate/validate/validate.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "gogoproto/gogo.proto";
+import "app.proto";
+
+option go_package = "kitty";
+
+option (options.openapiv2_swagger) = {
+  info: {
+    title: "商业化中台分享中心";
+    version: "0.1.0";
+    contact: {
+      name: "谷溪";
+      email: "guxi@infinities.com.cn";
+    };
+  };
+  base_path: "/share/v1"
+  security_definitions: {
+    security: {
+      key: "JWT",
+      value: {
+        type: TYPE_API_KEY
+        in: IN_HEADER
+        name: "Authorization"
+      }
+    }
+  }
+  security: {
+    security_requirement: {
+      key: "JWT";
+      value: {};
+    }
+  }
+  consumes: "application/json";
+  produces: "application/json";
+  external_docs: {
+    description: "商业化中台文档"
+    url: "http://monetization-docs.xg.tagtic.cn/#/"
+  }
+};
+
+// 分享服务
+service Share {
+  // 获取邀请链接
+  rpc InviteByUrl (ShareEmptyRequest) returns (ShareDataReply) {
+    option (options.openapiv2_operation) = {
+      tags: "分享"
+    };
+    option (google.api.http) = {
+      get: "/url"
+    };
+  }
+
+  // 获取邀请码
+  rpc InviteByToken (ShareEmptyRequest) returns (ShareDataReply) {
+    option (options.openapiv2_operation) = {
+      tags: "分享"
+    };
+    option (google.api.http) = {
+      get: "/code"
+    };
+  }
+
+  // 填写邀请码
+  rpc AddInvitationCode (ShareAddInvitationRequest) returns (ShareGenericReply) {
+    option (options.openapiv2_operation) = {
+      tags: "分享"
+    };
+    option (google.api.http) = {
+      post: "/code"
+      body: "*"
+    };
+  }
+
+  // 获取邀请列表
+  rpc ListFriend (ShareListFriendRequest) returns (ShareListFriendReply) {
+    option (options.openapiv2_operation) = {
+      tags: "分享"
+    };
+    option (google.api.http) = {
+      get: "/list"
+    };
+  }
+
+  // 领取邀请后的奖励
+  rpc ClaimReward (ShareClaimRewardRequest) returns (ShareGenericReply) {
+    option (options.openapiv2_operation) = {
+      tags: "分享"
+    };
+    option (google.api.http) = {
+      post: "/claim"
+      body: "*"
+    };
+  }
+}
+
+message ShareClaimRewardRequest {
+  uint64 apprenticeId = 1;
+}
+
+message ShareClaimRewardReply {
+
+}
+
+message ShareListFriendRequest {
+  int32 depth = 1;
+}
+
+message ShareListFriendReply {
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  string msg = 2;
+  ShareListFriendData data = 3;
+}
+
+message ShareListFriendData {
+  repeated ShareListFriendDataItem items = 1;
+}
+
+enum ClaimStatus {
+  UNKNOWN_CLAIM_STATUS = 0;
+  DONE = 1;
+  READY = 2;
+  NOT_READY = 3;
+}
+
+message ShareListFriendDataItem {
+  uint64 id = 1;
+  string user_name = 2;
+  string head_img = 4;
+  app.v2.Gender gender = 5;
+  map<string, bool> steps = 6;
+  ClaimStatus claim_status = 7;
+  int32 coin = 8;
+  int64 create_at = 9;
+}
+
+message ShareDataReply {
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  string msg = 2;
+  map<string, string> data = 3;
+}
+
+message ShareAddInvitationRequest {
+  string invite_code = 1;
+}
+
+message ShareEmptyRequest {
+}
+
+message ShareGenericReply {
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  string msg = 2;
+}
+

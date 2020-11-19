@@ -5,6 +5,8 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"strings"
 	"sync"
 
@@ -120,22 +122,39 @@ func (r *repository) readCentralConfig() (map[string]string, error) {
 		return nil, errors.Wrap(err, "Cannot get central config from repository")
 	}
 
-	var centralRules entity.CentralRules
+	return readCentralConfigBytes(b)
+}
+
+func readCentralConfigBytes(b []byte) (map[string]string, error) {
+
+	var (
+		err          error
+		centralRules entity.CentralRules
+	)
 	c := koanf.New(".")
 	err = c.Load(rawbytes.Provider(b), kyaml.Parser())
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to load central config")
+		return nil, errors.Wrap(err, "unable to load central config")
 	}
 
 	err = c.Unmarshal("", &centralRules)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to parse central config")
+		return nil, errors.Wrap(err, "unable to parse central config")
+	}
+	if len(centralRules.Rule.List) == 0 {
+		return nil, errors.New("failed to unmarshal central rule")
 	}
 
 	var activeContainers = make(map[string]string)
 	for _, v := range centralRules.Rule.List {
+		if strings.Count(v.Path, "/") >= 2 {
+			return nil, errors.Wrapf(err, "subpath are not allowed: %s", v.Path)
+		}
 		collect(activeContainers, v.Path, OtherConfigPathPrefix)
 		for _, v := range v.Children {
+			if strings.Count(v.Path, "/") >= 2 {
+				return nil, errors.Wrapf(err, "subpath are not allowed: %s", v.Path)
+			}
 			collect(activeContainers, v.Path, OtherConfigPathPrefix)
 		}
 	}
@@ -143,7 +162,7 @@ func (r *repository) readCentralConfig() (map[string]string, error) {
 }
 
 func collect(containers map[string]string, path string, p string) {
-	if len(path) > 1 {
+	if len(path) > 1 && path[0] == '/' {
 		containers[path[1:]+"-prod"] = p + path + "-prod"
 		containers[path[1:]+"-dev"] = p + path + "-dev"
 		containers[path[1:]+"-testing"] = p + path + "-testing"
@@ -193,26 +212,17 @@ func (r *repository) setRawRuleSetFromDbKey(ctx context.Context, dbKey string, v
 //	return resp.Header.Revision, nil
 //}
 
-//func (r *repository) validateAllRules() error {
-//	todo := DbKeys(r.containers)
-//	for _, v := range todo {
-//		var tmp []Rule
-//		value, err := r.getRawRuleSetFromDbKey(context.Background(), v)
-//		if err != nil {
-//			return errors.Wrapf(err, msg.ErrorInvalidConfig, v)
-//		}
-//		err = yaml.Unmarshal(value, &tmp)
-//		if err != nil {
-//			return errors.Wrapf(err, msg.ErrorInvalidConfig, v)
-//		}
-//		for i := range tmp {
-//			if err := tmp[i].Compile(); err != nil {
-//				return errors.Wrapf(err, msg.ErrorInvalidConfig, tmp[i].If)
-//			}
-//		}
-//	}
-//	return nil
-//}
+func (r *repository) ValidateRules(ruleName string, reader io.Reader) error {
+	byt, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return err
+	}
+	if ruleName == CentralConfigPath[1:] {
+		_, err := readCentralConfigBytes(byt)
+		return err
+	}
+	return entity.ValidateRules(reader)
+}
 
 // IsNewest 传入的内容是否和ETCD中的最新版本一致
 func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, error) {

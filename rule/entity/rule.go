@@ -47,11 +47,6 @@ type CentralRules struct {
 	} `yaml:"rule"`
 }
 
-type CentralConfig struct {
-	Style string       `yaml:"style"`
-	Rule  CentralRules `yaml:"rule"`
-}
-
 type ErrInvalidRules struct {
 	detail string
 }

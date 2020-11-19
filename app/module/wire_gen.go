@@ -23,34 +23,34 @@ import (
 // Injectors from wire.go:
 
 func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {
-	dialector, err := provideDialector(reader)
+	dialector, err := ProvideDialector(reader)
 	if err != nil {
 		return nil, nil, err
 	}
-	gormConfig := provideGormConfig(logger, reader)
-	jaegerLogger := provideJaegerLogAdapter(logger)
-	tracer, cleanup, err := provideOpentracing(jaegerLogger, reader)
+	gormConfig := ProvideGormConfig(logger, reader)
+	jaegerLogger := ProvideJaegerLogAdapter(logger)
+	tracer, cleanup, err := ProvideOpentracing(jaegerLogger, reader)
 	if err != nil {
 		return nil, nil, err
 	}
-	db, cleanup2, err := provideGormDB(dialector, gormConfig, tracer)
+	db, cleanup2, err := ProvideGormDB(dialector, gormConfig, tracer)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	securityConfig := provideSecurityConfig(reader)
+	securityConfig := ProvideSecurityConfig(reader)
 	appName := config.ProvideAppName(reader)
 	env := config.ProvideEnv(reader)
-	histogram := provideHistogramMetrics(appName, env)
+	histogram := ProvideHistogramMetrics(appName, env)
 	moduleOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer, env, appName)
 	kafkaProducerFactory, cleanup3 := provideKafkaProducerFactory(reader, logger, tracer)
 	moduleUserBus := provideUserBus(kafkaProducerFactory, reader)
 	moduleEventBus := provideEventBus(kafkaProducerFactory, reader)
-	client := provideHttpClient(tracer)
-	manager := provideUploadManager(tracer, reader, client)
+	client := ProvideHttpClient(tracer)
+	manager := ProvideUploadManager(tracer, reader, client)
 	fileRepo := repository.NewFileRepo(manager, client)
 	userRepo := repository.NewUserRepo(db, fileRepo)
-	universalClient, cleanup4 := provideRedis(logger, reader, tracer)
+	universalClient, cleanup4 := ProvideRedis(logger, reader, tracer)
 	keyManager := provideKeyManager(appName, env)
 	codeRepo := repository.NewCodeRepo(universalClient, keyManager, env)
 	senderFactory := sms.NewTransportFactory(reader, client)
@@ -71,23 +71,26 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 // wire.go:
 
 var DbSet = wire.NewSet(
-	provideDialector,
-	provideGormConfig,
-	provideGormDB,
+	ProvideDialector,
+	ProvideGormConfig,
+	ProvideGormDB,
 )
 
 var OpenTracingSet = wire.NewSet(
-	provideJaegerLogAdapter,
-	provideOpentracing,
+	ProvideJaegerLogAdapter,
+	ProvideOpentracing,
 )
+
+var NameAndEnvSet = wire.NewSet(config.ProvideAppName, config.ProvideEnv, wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)))
 
 var AppServerSet = wire.NewSet(
 	provideSmsConfig,
 	DbSet,
 	OpenTracingSet,
+	NameAndEnvSet,
 	provideKeyManager,
-	provideHttpClient,
-	provideUploadManager,
-	provideRedis,
-	provideWechatConfig, wechat.NewWechaterFactory, wechat.NewWechaterFacade, sms.NewTransportFactory, sms.NewSenderFacade, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, config.ProvideAppName, config.ProvideEnv, handlers.NewAppService, handlers.ProvideAppServer, wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(wechat.Wechater), new(*wechat.WechaterFacade)), wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)), wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)),
+	ProvideHttpClient,
+	ProvideUploadManager,
+	ProvideRedis,
+	provideWechatConfig, wechat.NewWechaterFactory, wechat.NewWechaterFacade, sms.NewTransportFactory, sms.NewSenderFacade, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, handlers.NewAppService, handlers.ProvideAppServer, wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(wechat.Wechater), new(*wechat.WechaterFacade)), wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)),
 )

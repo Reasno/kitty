@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"sync"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -33,13 +34,20 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-func provideHistogramMetrics(appName contract.AppName, env contract.Env) metrics.Histogram {
-	var his metrics.Histogram = prometheus.NewHistogramFrom(stdprometheus.HistogramOpts{
-		Namespace: appName.String(),
-		Subsystem: env.String(),
-		Name:      "request_duration_seconds",
-		Help:      "Total time spent serving requests.",
-	}, []string{"module", "method"})
+var (
+	his         metrics.Histogram
+	initMetrics sync.Once
+)
+
+func ProvideHistogramMetrics(appName contract.AppName, env contract.Env) metrics.Histogram {
+	initMetrics.Do(func() {
+		his = prometheus.NewHistogramFrom(stdprometheus.HistogramOpts{
+			Namespace: appName.String(),
+			Subsystem: env.String(),
+			Name:      "request_duration_seconds",
+			Help:      "Total time spent serving requests.",
+		}, []string{"module", "method"})
+	})
 	return his
 }
 
@@ -47,7 +55,7 @@ func provideKeyManager(appName contract.AppName, env contract.Env) otredis.KeyMa
 	return otredis.NewKeyManager(":", appName.String(), env.String())
 }
 
-func provideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
+func ProvideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
 	return kittyhttp.NewClient(tracer)
 }
 
@@ -80,7 +88,7 @@ func provideKafkaProducerFactory(conf contract.ConfigReader, logger log.Logger, 
 	}
 }
 
-func provideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader, client contract.HttpDoer) *ots3.Manager {
+func ProvideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader, client contract.HttpDoer) *ots3.Manager {
 	return ots3.NewManager(
 		conf.String("s3.accessKey"),
 		conf.String("s3.accessSecret"),
@@ -99,7 +107,7 @@ func provideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader,
 	)
 }
 
-func provideSecurityConfig(conf contract.ConfigReader) *kmiddleware.SecurityConfig {
+func ProvideSecurityConfig(conf contract.ConfigReader) *kmiddleware.SecurityConfig {
 	return &kmiddleware.SecurityConfig{
 		Enable: conf.Bool("security.enable"),
 		JwtKey: conf.String("security.key"),
@@ -128,7 +136,7 @@ func provideSmsConfig(doer contract.HttpDoer, conf contract.ConfigReader) *sms.T
 	}
 }
 
-func provideRedis(logging log.Logger, conf contract.ConfigReader, tracer opentracing.Tracer) (redis.UniversalClient, func()) {
+func ProvideRedis(logging log.Logger, conf contract.ConfigReader, tracer opentracing.Tracer) (redis.UniversalClient, func()) {
 	client := redis.NewUniversalClient(
 		&redis.UniversalOptions{
 			Addrs:    conf.Strings("redis.addrs"),
@@ -145,7 +153,7 @@ func provideRedis(logging log.Logger, conf contract.ConfigReader, tracer opentra
 	}
 }
 
-func provideDialector(conf contract.ConfigReader) (gorm.Dialector, error) {
+func ProvideDialector(conf contract.ConfigReader) (gorm.Dialector, error) {
 	databaseType := conf.String("gorm.database")
 	if databaseType == "mysql" {
 		return mysql.Open(conf.String("gorm.dsn")), nil
@@ -156,7 +164,7 @@ func provideDialector(conf contract.ConfigReader) (gorm.Dialector, error) {
 	return nil, fmt.Errorf("unknow database type %s", databaseType)
 }
 
-func provideGormConfig(l log.Logger, conf contract.ConfigReader) *gorm.Config {
+func ProvideGormConfig(l log.Logger, conf contract.ConfigReader) *gorm.Config {
 	return &gorm.Config{
 		Logger:                                   &logging.GormLogAdapter{l},
 		DisableForeignKeyConstraintWhenMigrating: true,
@@ -166,7 +174,7 @@ func provideGormConfig(l log.Logger, conf contract.ConfigReader) *gorm.Config {
 	}
 }
 
-func provideGormDB(dialector gorm.Dialector, config *gorm.Config, tracer opentracing.Tracer) (*gorm.DB, func(), error) {
+func ProvideGormDB(dialector gorm.Dialector, config *gorm.Config, tracer opentracing.Tracer) (*gorm.DB, func(), error) {
 	db, err := gorm.Open(dialector, config)
 	if err != nil {
 		return nil, nil, err
@@ -179,11 +187,11 @@ func provideGormDB(dialector gorm.Dialector, config *gorm.Config, tracer opentra
 	}, nil
 }
 
-func provideJaegerLogAdapter(l log.Logger) jaeger.Logger {
+func ProvideJaegerLogAdapter(l log.Logger) jaeger.Logger {
 	return &logging.JaegerLogAdapter{Logging: l}
 }
 
-func provideOpentracing(log jaeger.Logger, conf contract.ConfigReader) (opentracing.Tracer, func(), error) {
+func ProvideOpentracing(log jaeger.Logger, conf contract.ConfigReader) (opentracing.Tracer, func(), error) {
 	cfg := jaegercfg.Configuration{
 		ServiceName: conf.String("name"),
 		Sampler: &jaegercfg.SamplerConfig{

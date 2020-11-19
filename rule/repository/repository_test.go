@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/go-kit/kit/log"
@@ -333,6 +334,59 @@ func TestRepository_SetRaw(t *testing.T) {
 		cc := c
 		t.Run(cc.key, func(t *testing.T) {
 			err := repo.SetRaw(context.Background(), cc.key, cc.data)
+			assert.Equal(t, err != nil, cc.hasErr)
+		})
+	}
+}
+
+func TestRepository_ValidateRules(t *testing.T) {
+	var (
+		foobar                = readFiles("foobar")
+		configCentralFewLines = readFiles("config_central_few_lines")
+		configCentralBad      = readFiles("config_central_bad")
+		configCentralSubpath  = readFiles("config_central_subpath")
+	)
+	client, err := clientv3.New(clientv3.Config{
+		Endpoints: []string{"localhost:2379"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo, err := NewRepository(client, log.NewNopLogger())
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		key    string
+		data   string
+		hasErr bool
+	}{
+		{
+			"kitty-testing",
+			foobar,
+			false,
+		},
+		{
+			"central-config",
+			configCentralFewLines,
+			false,
+		},
+		{
+			"central-config",
+			configCentralBad,
+			true,
+		},
+		{
+			"central-config",
+			configCentralSubpath,
+			true,
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.key, func(t *testing.T) {
+			err := repo.ValidateRules(cc.key, strings.NewReader(cc.data))
 			assert.Equal(t, err != nil, cc.hasErr)
 		})
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 
@@ -128,4 +129,8 @@ func (r *repository) GetCompiled(ruleName string) []entity.Rule {
 		return c.RuleSet
 	}
 	panic(fmt.Sprintf("unregistered rule %s", ruleName))
+}
+
+func (r *repository) ValidateRules(ruleName string, reader io.Reader) error {
+	panic("implement me")
 }

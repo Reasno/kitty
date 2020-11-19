@@ -16,6 +16,10 @@ type RelationRepo struct {
 	db *gorm.DB
 }
 
+func NewRelationRepo(db *gorm.DB) *RelationRepo {
+	return &RelationRepo{db: db}
+}
+
 func (r *RelationRepo) QueryRelations(ctx context.Context, condition entity.Relation) ([]entity.Relation, error) {
 	var relations []entity.Relation
 	err := r.db.WithContext(
@@ -29,7 +33,7 @@ func (r *RelationRepo) QueryRelations(ctx context.Context, condition entity.Rela
 	).Where(
 		&condition,
 	).Order(
-		"reward_claimed desc, orientation_completed",
+		"reward_claimed desc, orientation_completed, created_at desc",
 	).Find(&relations).Error
 
 	return relations, err
@@ -116,7 +120,6 @@ func in(user *entity.User, descendant []entity.Relation) bool {
 func (r *RelationRepo) UpdateRelations(
 	ctx context.Context,
 	apprentice *entity.User,
-	master *entity.User,
 	existingRelationCallback func(relations []entity.Relation) error,
 ) error {
 	var (
@@ -128,7 +131,6 @@ func (r *RelationRepo) UpdateRelations(
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		ptx := tx.WithContext(ctx).Preload("Apprentice").Preload("Master").Preload("OrientationSteps")
 		ptx.Where(&entity.Relation{
-			MasterID:     master.ID,
 			ApprenticeID: apprentice.ID,
 		}).Find(&ancestor)
 
@@ -137,7 +139,7 @@ func (r *RelationRepo) UpdateRelations(
 		}
 
 		ptx.Where(&entity.Relation{
-			ApprenticeID: master.ID,
+			ApprenticeID: ancestor.MasterID,
 			Depth:        1,
 		}).Find(&secondaryAncestor)
 

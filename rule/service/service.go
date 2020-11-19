@@ -30,6 +30,7 @@ type Repository interface {
 	SetRaw(ctx context.Context, key string, value string) error
 	IsNewest(ctx context.Context, key, value string) (bool, error)
 	WatchConfigUpdate(ctx context.Context) error
+	ValidateRules(ruleName string, reader io.Reader) error
 }
 
 type service struct {
@@ -59,10 +60,10 @@ func (r *service) UpdateRules(ctx context.Context, ruleName string, content []by
 	)
 	reader := bytes.NewReader(content)
 	tee = io.TeeReader(reader, &buf)
-	err = entity.ValidateRules(tee)
+	err = r.repo.ValidateRules(ruleName, tee)
 	var invalid *entity.ErrInvalidRules
 	if errors.As(err, &invalid) {
-		return kerr.InvalidArgumentErr(invalid)
+		return kerr.InvalidArgumentErr(invalid, msg.ErrorRules)
 	}
 	if err != nil {
 		return err

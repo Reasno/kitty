@@ -24,9 +24,13 @@ func init() {
 func setUp(t *testing.T) {
 	var err error
 	if !useMysql {
-		db, err = gorm.Open(sqlite.Open(":memory:?cache=shared"), &gorm.Config{})
+		db, err = gorm.Open(sqlite.Open(":memory:?cache=shared"), &gorm.Config{
+			DisableForeignKeyConstraintWhenMigrating: true,
+		})
 	} else {
-		db, err = gorm.Open(mysql.Open("root@tcp(127.0.0.1:3306)/kitty?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
+		db, err = gorm.Open(mysql.Open("root@tcp(127.0.0.1:3306)/kitty?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{
+			DisableForeignKeyConstraintWhenMigrating: true,
+		})
 	}
 
 	if err != nil {

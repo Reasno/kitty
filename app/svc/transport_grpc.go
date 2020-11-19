@@ -71,32 +71,18 @@ func MakeGRPCServer(endpoints Endpoints, options ...grpctransport.ServerOption) 
 			EncodeGRPCRefreshResponse,
 			serverOptions...,
 		),
-		invite: grpctransport.NewServer(
-			endpoints.InviteEndpoint,
-			DecodeGRPCInviteRequest,
-			EncodeGRPCInviteResponse,
-			serverOptions...,
-		),
-		addinvitationcode: grpctransport.NewServer(
-			endpoints.AddInvitationCodeEndpoint,
-			DecodeGRPCAddInvitationCodeRequest,
-			EncodeGRPCAddInvitationCodeResponse,
-			serverOptions...,
-		),
 	}
 }
 
 // grpcServer implements the AppServer interface
 type grpcServer struct {
-	login             grpctransport.Handler
-	getcode           grpctransport.Handler
-	getinfo           grpctransport.Handler
-	updateinfo        grpctransport.Handler
-	bind              grpctransport.Handler
-	unbind            grpctransport.Handler
-	refresh           grpctransport.Handler
-	invite            grpctransport.Handler
-	addinvitationcode grpctransport.Handler
+	login      grpctransport.Handler
+	getcode    grpctransport.Handler
+	getinfo    grpctransport.Handler
+	updateinfo grpctransport.Handler
+	bind       grpctransport.Handler
+	unbind     grpctransport.Handler
+	refresh    grpctransport.Handler
 }
 
 // Methods for grpcServer to implement AppServer interface
@@ -157,22 +143,6 @@ func (s *grpcServer) Refresh(ctx context.Context, req *pb.UserRefreshRequest) (*
 	return rep.(*pb.UserInfoReply), nil
 }
 
-func (s *grpcServer) Invite(ctx context.Context, req *pb.UserInviteRequest) (*pb.UserInviteReply, error) {
-	_, rep, err := s.invite.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.UserInviteReply), nil
-}
-
-func (s *grpcServer) AddInvitationCode(ctx context.Context, req *pb.AddInvitationRequest) (*pb.GenericReply, error) {
-	_, rep, err := s.addinvitationcode.ServeGRPC(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.GenericReply), nil
-}
-
 // Server Decode
 
 // DecodeGRPCLoginRequest is a transport/grpc.DecodeRequestFunc that converts a
@@ -224,20 +194,6 @@ func DecodeGRPCRefreshRequest(_ context.Context, grpcReq interface{}) (interface
 	return req, nil
 }
 
-// DecodeGRPCInviteRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC invite request to a user-domain invite request. Primarily useful in a server.
-func DecodeGRPCInviteRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.UserInviteRequest)
-	return req, nil
-}
-
-// DecodeGRPCAddInvitationCodeRequest is a transport/grpc.DecodeRequestFunc that converts a
-// gRPC addinvitationcode request to a user-domain addinvitationcode request. Primarily useful in a server.
-func DecodeGRPCAddInvitationCodeRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.AddInvitationRequest)
-	return req, nil
-}
-
 // Server Encode
 
 // EncodeGRPCLoginResponse is a transport/grpc.EncodeResponseFunc that converts a
@@ -286,20 +242,6 @@ func EncodeGRPCUnbindResponse(_ context.Context, response interface{}) (interfac
 // user-domain refresh response to a gRPC refresh reply. Primarily useful in a server.
 func EncodeGRPCRefreshResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.UserInfoReply)
-	return resp, nil
-}
-
-// EncodeGRPCInviteResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain invite response to a gRPC invite reply. Primarily useful in a server.
-func EncodeGRPCInviteResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.UserInviteReply)
-	return resp, nil
-}
-
-// EncodeGRPCAddInvitationCodeResponse is a transport/grpc.EncodeResponseFunc that converts a
-// user-domain addinvitationcode response to a gRPC addinvitationcode reply. Primarily useful in a server.
-func EncodeGRPCAddInvitationCodeResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.GenericReply)
 	return resp, nil
 }
 
