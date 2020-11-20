@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"gorm.io/gorm"
 )
@@ -29,8 +29,28 @@ type RelationRepository interface {
 	) error
 }
 
+type ShareConfig struct {
+	OrientationEvents []string `yaml:"orientation_events"`
+	Url               string   `yaml:"url"`
+	Reward            struct {
+		Level1 int `yaml:"level1"`
+		Level2 int `yaml:"level2"`
+	} `yaml:"reward"`
+	TaskId string `yaml:"task_id"`
+}
+
+func (s *ShareConfig) reward(depth int) int {
+	if depth == 1 {
+		return s.Reward.Level1
+	}
+	if depth == 2 {
+		return s.Reward.Level2
+	}
+	return 0
+}
+
 type InvitationManager struct {
-	conf        contract.ConfigReader
+	conf        *ShareConfig
 	rr          RelationRepository
 	tokenizer   EncodeDecoder
 	xtaskClient XTaskRequester
@@ -66,7 +86,7 @@ func (im *InvitationManager) AddToken(ctx context.Context, userId uint64, token 
 
 	master := user(masterId)
 	apprentice := user(uint(userId))
-	steps := getSteps(im.conf.Strings("orientation_events"))
+	steps := getSteps(im.conf.OrientationEvents)
 	relation := entity.NewRelation(&apprentice, &master, steps)
 
 	return im.rr.AddRelations(ctx, relation)
@@ -83,18 +103,17 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 				if err := rel.ClaimReward(); err != nil {
 					return err
 				} else {
-					amount := im.conf.Int("reward.level" + strconv.Itoa(rel.Depth))
 					resp, err := im.xtaskClient.Request(ctx, &XTaskRequest{
 						ScoreDesc:  "邀请好友获得奖励",
-						ScoreValue: amount,
-						TaskId:     "666666",
+						ScoreValue: im.conf.reward(rel.Depth),
+						TaskId:     im.conf.TaskId,
 						UniqueId:   xid.New().String(),
 					})
 					if err != nil {
 						return err
 					}
 					if resp.Code != 0 {
-						return errors.New(resp.Msg)
+						return kerr.CustomErr(uint32(resp.Code), ErrFailedXtaskRequest, resp.Msg)
 					}
 					return nil
 				}
@@ -125,10 +144,10 @@ func (im *InvitationManager) ListApprentices(ctx context.Context, masterId uint6
 	if err != nil {
 		return nil, errors.Wrap(err, "error querying relations")
 	}
-	amount := im.conf.Int("reward.level" + strconv.Itoa(depth))
-	for _, rel := range rels {
+	amount := im.conf.reward(depth)
+	for i, _ := range rels {
 		out = append(out, RelationWithRewardAmount{
-			Relation: &rel,
+			Relation: &rels[i],
 			Amount:   amount,
 		})
 	}
@@ -151,8 +170,7 @@ func (im *InvitationManager) GetUrl(ctx context.Context) string {
 	args.Add("invite_code", im.GetToken(ctx))
 	argsStr := args.Encode()
 
-	format := im.conf.String("url")
-	return fmt.Sprintf(format, argsStr)
+	return fmt.Sprintf(im.conf.Url, argsStr)
 }
 
 func getSteps(names []string) []entity.OrientationStep {

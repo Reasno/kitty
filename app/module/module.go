@@ -54,6 +54,11 @@ func (a *Module) ProvideMigration() error {
 	return m.Migrate()
 }
 
+func (a *Module) ProvideSeed() error {
+	s := repository.ProvideSeeder(a.db)
+	return s.Seed()
+}
+
 func (a *Module) ProvideRollback(id string) error {
 	m := repository.ProvideMigrator(a.db, a.appName)
 	if id == "-1" {

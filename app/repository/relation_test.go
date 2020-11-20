@@ -10,6 +10,7 @@ import (
 )
 
 func TestRelationRepo_QueryRelations(t *testing.T) {
+
 	setUp(t)
 	defer tearDown()
 
@@ -202,6 +203,65 @@ func TestRelationRepo_AddRelations(t *testing.T) {
 			err := repo.AddRelations(ctx, entity.NewRelation(&cc.apprentice, &cc.master, nil))
 			fmt.Println(err)
 			assert.Equal(t, cc.ok, err == nil)
+		})
+	}
+}
+
+func TestRelationRepo_AddRelationsWithNumApprentice(t *testing.T) {
+	setUp(t)
+	defer tearDown()
+
+	repo := RelationRepo{db}
+	ctx := context.Background()
+
+	cases := []struct {
+		name          string
+		apprentice    entity.User
+		master        entity.User
+		numApprentice int
+	}{
+		{
+			"1to2",
+			user(1),
+			user(2),
+			1,
+		},
+		{
+			"2to3",
+			user(2),
+			user(3),
+			2,
+		},
+		{
+			"4to5",
+			user(4),
+			user(5),
+			1,
+		},
+		{
+			"3to4",
+			user(3),
+			user(4),
+			2,
+		},
+		{
+			"6to5",
+			user(6),
+			user(5),
+			3,
+		},
+	}
+
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			err := repo.AddRelations(ctx, entity.NewRelation(&cc.apprentice, &cc.master, nil))
+			assert.NoError(t, err)
+			r, err := repo.QueryRelations(ctx, entity.Relation{
+				MasterID: cc.master.ID,
+			})
+			assert.NoError(t, err)
+			assert.Equal(t, cc.numApprentice, len(r), fmt.Sprintf("%+v\n", r))
 		})
 	}
 }

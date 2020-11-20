@@ -1,3 +1,5 @@
+//go:generate mockery --name=InvitationManager
+//go:generate mockery --name=UserRepository
 package handlers
 
 import (
@@ -12,6 +14,8 @@ import (
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	"glab.tagtic.cn/ad_gains/kitty/share/internal"
 )
+
+var ErrReenteringInviteCode = errors.New("不能重复填写邀请码")
 
 type shareService struct {
 	manager InvitationManager
@@ -36,16 +40,21 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 	claim := kittyjwt.GetClaim(ctx)
 
 	err := s.ur.UpdateCallback(ctx, uint(claim.UserId), func(user *entity.User) error {
-		if user.InviteCode == "" {
-			user.InviteCode = in.InviteCode
+		if user.InviteCode != "" {
+			return ErrReenteringInviteCode
 		}
+
 		err := s.manager.AddToken(ctx, claim.UserId, in.InviteCode)
 		if err != nil {
 			return errors.Wrap(err, msg.InvalidInviteCode)
 		}
+		user.InviteCode = in.InviteCode
 		return nil
 	})
 
+	if errors.Is(err, ErrReenteringInviteCode) {
+		return nil, kerr.InvalidArgumentErr(err, msg.ReenteringCode)
+	}
 	if errors.Is(err, repository.ErrRelationArgument) {
 		return nil, kerr.InvalidArgumentErr(err, msg.InvalidInviteTarget)
 	}
@@ -87,30 +96,25 @@ func (s shareService) ClaimReward(ctx context.Context, in *pb.ShareClaimRewardRe
 
 func (s shareService) ListFriend(ctx context.Context, in *pb.ShareListFriendRequest) (*pb.ShareListFriendReply, error) {
 	claim := kittyjwt.GetClaim(ctx)
-	lists, err := s.manager.ListApprentices(ctx, claim.UserId, int(in.Depth))
+	rels, err := s.manager.ListApprentices(ctx, claim.UserId, int(in.Depth))
 	if err != nil {
 		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
 	}
 	var resp pb.ShareListFriendReply
 	resp.Data = new(pb.ShareListFriendData)
-	for i := range lists {
+	for _, rel := range rels {
 		item := &pb.ShareListFriendDataItem{
-			Id:          uint64(lists[i].ApprenticeID),
-			UserName:    lists[i].Apprentice.UserName,
-			HeadImg:     lists[i].Apprentice.HeadImg,
-			Gender:      pb.Gender(lists[i].Apprentice.Gender),
-			ClaimStatus: pb.ClaimStatus_NOT_READY,
-			Coin:        int32(lists[i].Amount),
-			Steps:       make(map[string]bool),
-			CreateAt:    lists[i].CreatedAt.Unix(),
+			Id:       uint64(rel.ApprenticeID),
+			UserName: rel.Apprentice.UserName,
+			HeadImg:  rel.Apprentice.HeadImg,
+			Gender:   pb.Gender(rel.Apprentice.Gender),
+			Coin:     int32(rel.Amount),
+			Steps:    make(map[string]bool),
+			CreateAt: rel.CreatedAt.Unix(),
 		}
-		if lists[i].RewardClaimed {
-			item.ClaimStatus = pb.ClaimStatus_DONE
-		}
-		if lists[i].OrientationCompleted {
-			item.ClaimStatus = pb.ClaimStatus_NOT_READY
-		}
-		for _, step := range lists[i].OrientationSteps {
+		item.ClaimStatus = status(&rel)
+
+		for _, step := range rel.OrientationSteps {
 			item.Steps[step.Name] = step.StepCompleted
 		}
 		resp.Data.Items = append(resp.Data.Items, item)
@@ -118,20 +122,34 @@ func (s shareService) ListFriend(ctx context.Context, in *pb.ShareListFriendRequ
 	return &resp, nil
 }
 
-func (s shareService) InviteByUrl(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataReply, error) {
+func status(item *internal.RelationWithRewardAmount) pb.ClaimStatus {
+	if item.RewardClaimed {
+		return pb.ClaimStatus_DONE
+	}
+	if item.OrientationCompleted {
+		return pb.ClaimStatus_READY
+	}
+	return pb.ClaimStatus_NOT_READY
+}
+
+func (s shareService) InviteByUrl(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataUrlReply, error) {
 	url := s.manager.GetUrl(ctx)
-	var resp = pb.ShareDataReply{
+	var resp = pb.ShareDataUrlReply{
 		Code: 0,
-		Data: map[string]string{"invite_url": url},
+		Data: &pb.ShareDataUrlReply_Url{
+			Url: url,
+		},
 	}
 	return &resp, nil
 }
 
-func (s shareService) InviteByToken(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataReply, error) {
+func (s shareService) InviteByToken(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataTokenReply, error) {
 	code := s.manager.GetToken(ctx)
-	var resp = pb.ShareDataReply{
+	var resp = pb.ShareDataTokenReply{
 		Code: 0,
-		Data: map[string]string{"invite_code": code},
+		Data: &pb.ShareDataTokenReply_Code{
+			Code: code,
+		},
 	}
 	return &resp, nil
 }

@@ -72,7 +72,7 @@ func (r *RelationRepo) AddRelations(
 			Depth:        1,
 		}).First(&secondaryAncestor)
 
-		tx.WithContext(ctx).Select("apprentice_id").Where(&entity.Relation{
+		tx.WithContext(ctx).Select("apprentice_id", "depth").Where(&entity.Relation{
 			MasterID: candidate.ApprenticeID,
 		}).Find(&descendants)
 
@@ -85,11 +85,19 @@ func (r *RelationRepo) AddRelations(
 		if secondaryAncestor.ID != 0 {
 			grandMaster = &secondaryAncestor.Master
 			grandMaster.ID = secondaryAncestor.MasterID
-			newRelations = append(newRelations, *entity.NewRelation(&candidate.Apprentice, grandMaster, candidate.OrientationSteps))
+			newRelations = append(newRelations, *entity.NewIndirectRelation(&candidate.Apprentice, grandMaster, candidate.OrientationSteps))
 		}
 
 		if circleDetected(&candidate.Master, grandMaster, descendants) {
 			return ErrRelationCircled
+		}
+
+		for _, descendant := range descendants {
+			if descendant.Depth == 2 {
+				continue
+			}
+			apprentice := entity.User{Model: gorm.Model{ID: descendant.ApprenticeID}}
+			newRelations = append(newRelations, *entity.NewIndirectRelation(&apprentice, &candidate.Master, candidate.OrientationSteps))
 		}
 
 		// save new relations

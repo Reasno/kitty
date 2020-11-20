@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"testing"
@@ -11,7 +12,16 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract/mocks"
 )
 
+var useXtask bool
+
+func init() {
+	flag.BoolVar(&useXtask, "xtask", false, "use xtask for testing")
+}
+
 func TestEndpoints_Request(t *testing.T) {
+	if !useXtask {
+		t.Skip("need xtask to test enpoints")
+	}
 	conf := mocks.ConfigReader{}
 	conf.On("String", "xtask.url").Return("http://120.31.70.243:8989/xtasks/score/madd")
 

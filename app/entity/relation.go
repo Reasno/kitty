@@ -35,6 +35,19 @@ func NewRelation(apprentice *User, master *User, steps []OrientationStep) *Relat
 	}
 }
 
+func NewIndirectRelation(apprentice *User, master *User, steps []OrientationStep) *Relation {
+	return &Relation{
+		MasterID:             master.ID,
+		ApprenticeID:         apprentice.ID,
+		Master:               *master,
+		Apprentice:           *apprentice,
+		Depth:                2,
+		OrientationCompleted: len(steps) == 0,
+		OrientationSteps:     steps,
+		RewardClaimed:        false,
+	}
+}
+
 func (r *Relation) CompleteStep(step OrientationStep) {
 	var orientationCompleted = true
 	for n := range r.OrientationSteps {

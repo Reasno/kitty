@@ -47,7 +47,7 @@ option (options.openapiv2_swagger) = {
 // 分享服务
 service Share {
   // 获取邀请链接
-  rpc InviteByUrl (ShareEmptyRequest) returns (ShareDataReply) {
+  rpc InviteByUrl (ShareEmptyRequest) returns (ShareDataUrlReply) {
     option (options.openapiv2_operation) = {
       tags: "分享"
     };
@@ -57,7 +57,7 @@ service Share {
   }
 
   // 获取邀请码
-  rpc InviteByToken (ShareEmptyRequest) returns (ShareDataReply) {
+  rpc InviteByToken (ShareEmptyRequest) returns (ShareDataTokenReply) {
     option (options.openapiv2_operation) = {
       tags: "分享"
     };
@@ -139,10 +139,22 @@ message ShareListFriendDataItem {
   int64 create_at = 9;
 }
 
-message ShareDataReply {
+message ShareDataUrlReply {
+  message Url {
+    string url = 1;
+  }
   int32 code = 1 [(gogoproto.jsontag) = "code"];
   string msg = 2;
-  map<string, string> data = 3;
+  Url data = 3;
+}
+
+message ShareDataTokenReply {
+  message Code {
+    string code = 1;
+  }
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  string msg = 2;
+  Code data = 3;
 }
 
 message ShareAddInvitationRequest {

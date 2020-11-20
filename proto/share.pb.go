@@ -407,27 +407,27 @@ func (m *ShareListFriendDataItem) GetCreateAt() int64 {
 	return 0
 }
 
-type ShareDataReply struct {
-	Code                 int32             `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
-	Msg                  string            `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
-	Data                 map[string]string `protobuf:"bytes,3,rep,name=data,proto3" json:"data,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
-	XXX_unrecognized     []byte            `json:"-"`
-	XXX_sizecache        int32             `json:"-"`
+type ShareDataUrlReply struct {
+	Code                 int32                  `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Msg                  string                 `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Data                 *ShareDataUrlReply_Url `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
+	XXX_unrecognized     []byte                 `json:"-"`
+	XXX_sizecache        int32                  `json:"-"`
 }
 
-func (m *ShareDataReply) Reset()         { *m = ShareDataReply{} }
-func (m *ShareDataReply) String() string { return proto.CompactTextString(m) }
-func (*ShareDataReply) ProtoMessage()    {}
-func (*ShareDataReply) Descriptor() ([]byte, []int) {
+func (m *ShareDataUrlReply) Reset()         { *m = ShareDataUrlReply{} }
+func (m *ShareDataUrlReply) String() string { return proto.CompactTextString(m) }
+func (*ShareDataUrlReply) ProtoMessage()    {}
+func (*ShareDataUrlReply) Descriptor() ([]byte, []int) {
 	return fileDescriptor_cd0836ea8f2388e7, []int{6}
 }
-func (m *ShareDataReply) XXX_Unmarshal(b []byte) error {
+func (m *ShareDataUrlReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ShareDataReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *ShareDataUrlReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ShareDataReply.Marshal(b, m, deterministic)
+		return xxx_messageInfo_ShareDataUrlReply.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -437,37 +437,194 @@ func (m *ShareDataReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *ShareDataReply) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ShareDataReply.Merge(m, src)
+func (m *ShareDataUrlReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ShareDataUrlReply.Merge(m, src)
 }
-func (m *ShareDataReply) XXX_Size() int {
+func (m *ShareDataUrlReply) XXX_Size() int {
 	return m.Size()
 }
-func (m *ShareDataReply) XXX_DiscardUnknown() {
-	xxx_messageInfo_ShareDataReply.DiscardUnknown(m)
+func (m *ShareDataUrlReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_ShareDataUrlReply.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ShareDataReply proto.InternalMessageInfo
+var xxx_messageInfo_ShareDataUrlReply proto.InternalMessageInfo
 
-func (m *ShareDataReply) GetCode() int32 {
+func (m *ShareDataUrlReply) GetCode() int32 {
 	if m != nil {
 		return m.Code
 	}
 	return 0
 }
 
-func (m *ShareDataReply) GetMsg() string {
+func (m *ShareDataUrlReply) GetMsg() string {
 	if m != nil {
 		return m.Msg
 	}
 	return ""
 }
 
-func (m *ShareDataReply) GetData() map[string]string {
+func (m *ShareDataUrlReply) GetData() *ShareDataUrlReply_Url {
 	if m != nil {
 		return m.Data
 	}
 	return nil
+}
+
+type ShareDataUrlReply_Url struct {
+	Url                  string   `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ShareDataUrlReply_Url) Reset()         { *m = ShareDataUrlReply_Url{} }
+func (m *ShareDataUrlReply_Url) String() string { return proto.CompactTextString(m) }
+func (*ShareDataUrlReply_Url) ProtoMessage()    {}
+func (*ShareDataUrlReply_Url) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cd0836ea8f2388e7, []int{6, 0}
+}
+func (m *ShareDataUrlReply_Url) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ShareDataUrlReply_Url) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ShareDataUrlReply_Url.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ShareDataUrlReply_Url) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ShareDataUrlReply_Url.Merge(m, src)
+}
+func (m *ShareDataUrlReply_Url) XXX_Size() int {
+	return m.Size()
+}
+func (m *ShareDataUrlReply_Url) XXX_DiscardUnknown() {
+	xxx_messageInfo_ShareDataUrlReply_Url.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ShareDataUrlReply_Url proto.InternalMessageInfo
+
+func (m *ShareDataUrlReply_Url) GetUrl() string {
+	if m != nil {
+		return m.Url
+	}
+	return ""
+}
+
+type ShareDataTokenReply struct {
+	Code                 int32                     `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Msg                  string                    `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	Data                 *ShareDataTokenReply_Code `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
+	XXX_unrecognized     []byte                    `json:"-"`
+	XXX_sizecache        int32                     `json:"-"`
+}
+
+func (m *ShareDataTokenReply) Reset()         { *m = ShareDataTokenReply{} }
+func (m *ShareDataTokenReply) String() string { return proto.CompactTextString(m) }
+func (*ShareDataTokenReply) ProtoMessage()    {}
+func (*ShareDataTokenReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cd0836ea8f2388e7, []int{7}
+}
+func (m *ShareDataTokenReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ShareDataTokenReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ShareDataTokenReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ShareDataTokenReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ShareDataTokenReply.Merge(m, src)
+}
+func (m *ShareDataTokenReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *ShareDataTokenReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_ShareDataTokenReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ShareDataTokenReply proto.InternalMessageInfo
+
+func (m *ShareDataTokenReply) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *ShareDataTokenReply) GetMsg() string {
+	if m != nil {
+		return m.Msg
+	}
+	return ""
+}
+
+func (m *ShareDataTokenReply) GetData() *ShareDataTokenReply_Code {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type ShareDataTokenReply_Code struct {
+	Code                 string   `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ShareDataTokenReply_Code) Reset()         { *m = ShareDataTokenReply_Code{} }
+func (m *ShareDataTokenReply_Code) String() string { return proto.CompactTextString(m) }
+func (*ShareDataTokenReply_Code) ProtoMessage()    {}
+func (*ShareDataTokenReply_Code) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cd0836ea8f2388e7, []int{7, 0}
+}
+func (m *ShareDataTokenReply_Code) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ShareDataTokenReply_Code) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ShareDataTokenReply_Code.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ShareDataTokenReply_Code) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ShareDataTokenReply_Code.Merge(m, src)
+}
+func (m *ShareDataTokenReply_Code) XXX_Size() int {
+	return m.Size()
+}
+func (m *ShareDataTokenReply_Code) XXX_DiscardUnknown() {
+	xxx_messageInfo_ShareDataTokenReply_Code.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ShareDataTokenReply_Code proto.InternalMessageInfo
+
+func (m *ShareDataTokenReply_Code) GetCode() string {
+	if m != nil {
+		return m.Code
+	}
+	return ""
 }
 
 type ShareAddInvitationRequest struct {
@@ -481,7 +638,7 @@ func (m *ShareAddInvitationRequest) Reset()         { *m = ShareAddInvitationReq
 func (m *ShareAddInvitationRequest) String() string { return proto.CompactTextString(m) }
 func (*ShareAddInvitationRequest) ProtoMessage()    {}
 func (*ShareAddInvitationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cd0836ea8f2388e7, []int{7}
+	return fileDescriptor_cd0836ea8f2388e7, []int{8}
 }
 func (m *ShareAddInvitationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -527,7 +684,7 @@ func (m *ShareEmptyRequest) Reset()         { *m = ShareEmptyRequest{} }
 func (m *ShareEmptyRequest) String() string { return proto.CompactTextString(m) }
 func (*ShareEmptyRequest) ProtoMessage()    {}
 func (*ShareEmptyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cd0836ea8f2388e7, []int{8}
+	return fileDescriptor_cd0836ea8f2388e7, []int{9}
 }
 func (m *ShareEmptyRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -568,7 +725,7 @@ func (m *ShareGenericReply) Reset()         { *m = ShareGenericReply{} }
 func (m *ShareGenericReply) String() string { return proto.CompactTextString(m) }
 func (*ShareGenericReply) ProtoMessage()    {}
 func (*ShareGenericReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cd0836ea8f2388e7, []int{9}
+	return fileDescriptor_cd0836ea8f2388e7, []int{10}
 }
 func (m *ShareGenericReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -620,8 +777,10 @@ func init() {
 	proto.RegisterType((*ShareListFriendData)(nil), "share.v1.ShareListFriendData")
 	proto.RegisterType((*ShareListFriendDataItem)(nil), "share.v1.ShareListFriendDataItem")
 	proto.RegisterMapType((map[string]bool)(nil), "share.v1.ShareListFriendDataItem.StepsEntry")
-	proto.RegisterType((*ShareDataReply)(nil), "share.v1.ShareDataReply")
-	proto.RegisterMapType((map[string]string)(nil), "share.v1.ShareDataReply.DataEntry")
+	proto.RegisterType((*ShareDataUrlReply)(nil), "share.v1.ShareDataUrlReply")
+	proto.RegisterType((*ShareDataUrlReply_Url)(nil), "share.v1.ShareDataUrlReply.Url")
+	proto.RegisterType((*ShareDataTokenReply)(nil), "share.v1.ShareDataTokenReply")
+	proto.RegisterType((*ShareDataTokenReply_Code)(nil), "share.v1.ShareDataTokenReply.Code")
 	proto.RegisterType((*ShareAddInvitationRequest)(nil), "share.v1.ShareAddInvitationRequest")
 	proto.RegisterType((*ShareEmptyRequest)(nil), "share.v1.ShareEmptyRequest")
 	proto.RegisterType((*ShareGenericReply)(nil), "share.v1.ShareGenericReply")
@@ -630,71 +789,74 @@ func init() {
 func init() { proto.RegisterFile("share.proto", fileDescriptor_cd0836ea8f2388e7) }
 
 var fileDescriptor_cd0836ea8f2388e7 = []byte{
-	// 1023 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0xdd, 0x6f, 0xdb, 0x54,
-	0x14, 0xaf, 0x93, 0x38, 0xb5, 0x4f, 0xd6, 0xaa, 0xbb, 0x6d, 0x57, 0x2f, 0x2d, 0x5d, 0xf0, 0x24,
-	0x14, 0x15, 0x6a, 0xaf, 0x41, 0x62, 0x55, 0x05, 0x12, 0xe9, 0xc7, 0xa6, 0xb2, 0x91, 0x4a, 0x6e,
-	0xab, 0x89, 0x49, 0x28, 0xdc, 0xd9, 0x17, 0xe7, 0x52, 0xfb, 0xda, 0xd8, 0x37, 0x61, 0xe1, 0x11,
-	0xa4, 0xc1, 0x03, 0x12, 0xd2, 0x26, 0x26, 0xc4, 0x1b, 0xe2, 0x0d, 0x84, 0x34, 0x9e, 0x98, 0xf6,
-	0xc2, 0x2b, 0x8f, 0x48, 0xbc, 0x23, 0xd4, 0xb5, 0x15, 0xe2, 0x91, 0x3f, 0x00, 0x4d, 0xbe, 0x4e,
-	0x3f, 0xe6, 0xb4, 0x9d, 0xd4, 0x97, 0xe4, 0x9c, 0x73, 0x7f, 0xe7, 0xeb, 0xf7, 0xf3, 0xb5, 0xa1,
-	0x14, 0xb7, 0x70, 0x44, 0x8c, 0x30, 0x0a, 0x78, 0x80, 0x94, 0xd4, 0xe9, 0xcc, 0x95, 0xa7, 0xdc,
-	0x20, 0x70, 0x3d, 0x62, 0xe2, 0x90, 0x9a, 0x98, 0xb1, 0x80, 0x63, 0x4e, 0x03, 0x16, 0xa7, 0xb8,
-	0xf2, 0xab, 0xe2, 0xcf, 0x9e, 0x75, 0x09, 0x9b, 0xed, 0x60, 0x8f, 0x3a, 0x98, 0x13, 0xb3, 0xcf,
-	0xe8, 0x81, 0x8d, 0x23, 0xe0, 0x20, 0x24, 0x0c, 0x87, 0xb4, 0x53, 0x33, 0x83, 0x50, 0x14, 0x3c,
-	0xa6, 0xf8, 0x98, 0x1b, 0xb8, 0x81, 0x30, 0xcd, 0xc4, 0xea, 0x45, 0x55, 0x1c, 0x86, 0xa9, 0xa9,
-	0xbf, 0x05, 0x13, 0xeb, 0xc9, 0x9c, 0x4b, 0x1e, 0xa6, 0xbe, 0x45, 0x3e, 0xc1, 0x91, 0x63, 0x91,
-	0x8f, 0xdb, 0x24, 0xe6, 0x48, 0x87, 0x73, 0x38, 0x0c, 0x23, 0xc2, 0x38, 0xb5, 0xc9, 0xaa, 0xa3,
-	0x49, 0x15, 0xa9, 0x5a, 0xb0, 0x9e, 0x8b, 0xe9, 0x13, 0x30, 0xde, 0x9f, 0x1e, 0x7a, 0x5d, 0xdd,
-	0x80, 0x0b, 0xe2, 0xe0, 0x26, 0x8d, 0xf9, 0xb5, 0x88, 0x12, 0x76, 0x50, 0x76, 0x0c, 0x64, 0x87,
-	0x84, 0xbc, 0x25, 0xea, 0xc9, 0x56, 0xea, 0xe8, 0x5d, 0x18, 0xeb, 0xc3, 0x87, 0x5e, 0x17, 0x4d,
-	0x41, 0xc1, 0x0e, 0x1c, 0x92, 0x82, 0x17, 0x95, 0x7f, 0xff, 0xba, 0x24, 0x7c, 0x4b, 0xfc, 0xa2,
-	0x11, 0xc8, 0xfb, 0xb1, 0xab, 0xe5, 0x2a, 0x52, 0x55, 0xb5, 0x12, 0x13, 0xcd, 0x41, 0xc1, 0xc1,
-	0x1c, 0x6b, 0xf9, 0x8a, 0x54, 0x2d, 0xd5, 0x5e, 0x32, 0xf6, 0x45, 0x30, 0x32, 0xd5, 0x97, 0x31,
-	0xc7, 0x96, 0x80, 0xea, 0x0d, 0x18, 0x3d, 0xe6, 0x10, 0x5d, 0x05, 0x99, 0x72, 0xe2, 0xc7, 0x9a,
-	0x54, 0xc9, 0x57, 0x4b, 0xb5, 0x97, 0x4f, 0x2d, 0xb5, 0xca, 0x89, 0x6f, 0xa5, 0x78, 0xfd, 0xbf,
-	0x5c, 0x8f, 0xd3, 0x7e, 0x08, 0x1a, 0x86, 0x1c, 0xdd, 0x67, 0x32, 0x47, 0x1d, 0x34, 0x09, 0x6a,
-	0x3b, 0x26, 0x51, 0x93, 0x61, 0x9f, 0xf4, 0xd6, 0x50, 0x92, 0x40, 0x03, 0xfb, 0x04, 0x5d, 0x04,
-	0xa5, 0x45, 0xb0, 0xd3, 0xa4, 0xbe, 0xab, 0x15, 0xc4, 0xd9, 0x60, 0xe2, 0xaf, 0xfa, 0x2e, 0x7a,
-	0x05, 0x8a, 0x2e, 0x61, 0x0e, 0x89, 0x34, 0xb9, 0x22, 0x55, 0x87, 0x6b, 0xc3, 0x46, 0x22, 0x69,
-	0xa7, 0x66, 0x5c, 0x17, 0x51, 0xab, 0x77, 0x8a, 0x16, 0x41, 0x8e, 0x39, 0x09, 0x63, 0xad, 0x28,
-	0x96, 0x78, 0xed, 0x85, 0x4b, 0x18, 0xeb, 0x09, 0x7c, 0x85, 0xf1, 0xa8, 0x6b, 0xa5, 0xa9, 0x68,
-	0x1e, 0xce, 0xd9, 0x89, 0xbc, 0xcd, 0x98, 0x63, 0xde, 0x8e, 0xb5, 0x41, 0xd1, 0x71, 0xfc, 0xb0,
-	0x94, 0x10, 0x7f, 0x5d, 0x1c, 0x5a, 0x25, 0xfb, 0xd0, 0x41, 0x28, 0x11, 0x8f, 0x32, 0x4d, 0x11,
-	0x4a, 0x0b, 0x3b, 0xd9, 0xd8, 0x8e, 0x08, 0xe6, 0xa4, 0x89, 0xb9, 0xa6, 0x56, 0xa4, 0x6a, 0xde,
-	0x52, 0xd2, 0x40, 0x9d, 0x97, 0xe7, 0x01, 0x0e, 0xfb, 0x27, 0xea, 0x6e, 0x91, 0xae, 0x60, 0x4b,
-	0xb5, 0x12, 0x33, 0x79, 0x76, 0x3a, 0xd8, 0x6b, 0xa7, 0x54, 0x29, 0x56, 0xea, 0x2c, 0xe4, 0xe6,
-	0x25, 0xfd, 0x17, 0x09, 0x86, 0xc5, 0x4a, 0x42, 0xd8, 0x33, 0x3d, 0x3a, 0x6f, 0x1c, 0x3c, 0x3a,
-	0x09, 0x55, 0x7a, 0x86, 0xaa, 0x83, 0xba, 0x46, 0x62, 0xa5, 0x04, 0x09, 0x7c, 0xf9, 0x2a, 0xa8,
-	0x07, 0xa1, 0x17, 0xcd, 0xac, 0x1e, 0x9d, 0xf9, 0x4d, 0xb8, 0x28, 0x4a, 0xd7, 0x1d, 0x67, 0x95,
-	0x75, 0x68, 0x7a, 0x73, 0xf7, 0xaf, 0xc9, 0x25, 0x28, 0xd1, 0x24, 0x48, 0x9a, 0x07, 0x4b, 0xa8,
-	0x16, 0xa4, 0xa1, 0xa5, 0xc0, 0x21, 0xfa, 0x28, 0x9c, 0x17, 0xd9, 0x2b, 0x7e, 0xc8, 0xbb, 0xbd,
-	0x2c, 0x7d, 0xa9, 0x17, 0xbc, 0x4e, 0x18, 0x89, 0xa8, 0x7d, 0x26, 0x22, 0x66, 0x6e, 0x40, 0xe9,
-	0x88, 0xa4, 0x48, 0x83, 0xb1, 0xcd, 0xc6, 0x8d, 0xc6, 0xda, 0xad, 0x46, 0x73, 0xe9, 0x66, 0x7d,
-	0xf5, 0xdd, 0xe6, 0xfa, 0x46, 0x7d, 0x63, 0x73, 0x7d, 0x64, 0x00, 0x29, 0x50, 0x58, 0x5e, 0x6b,
-	0xac, 0x8c, 0x48, 0x48, 0x05, 0xd9, 0x5a, 0xa9, 0x2f, 0xbf, 0x37, 0x92, 0x43, 0x43, 0xa0, 0x36,
-	0xd6, 0x36, 0x9a, 0xa9, 0x9b, 0xaf, 0x3d, 0x28, 0x80, 0x2c, 0x46, 0x42, 0xef, 0x43, 0x49, 0xac,
-	0x49, 0x16, 0xbb, 0x9b, 0x91, 0x87, 0x26, 0x33, 0x04, 0x1f, 0xdd, 0xa3, 0xac, 0x9d, 0xc4, 0xbe,
-	0x3e, 0x71, 0xbf, 0xae, 0x40, 0x71, 0xf7, 0xcb, 0x7b, 0x3b, 0x4f, 0x7e, 0xfa, 0xec, 0xcf, 0x9d,
-	0x07, 0xb9, 0x22, 0x2a, 0x98, 0xed, 0xc8, 0x43, 0x1f, 0xc0, 0xd0, 0x7e, 0xf9, 0x8d, 0x60, 0x8b,
-	0xb0, 0xb3, 0x36, 0xd0, 0xb2, 0x0d, 0x06, 0x91, 0x6c, 0x0a, 0xa6, 0x22, 0x38, 0xff, 0x9c, 0x54,
-	0x89, 0x0c, 0xe8, 0x72, 0xa6, 0xd0, 0x71, 0x62, 0x96, 0xb3, 0xa3, 0x1c, 0x95, 0x47, 0x9f, 0xcc,
-	0x36, 0x04, 0x3d, 0x6d, 0xb8, 0x20, 0xcd, 0xa0, 0x16, 0xc0, 0xe1, 0x25, 0x45, 0x95, 0x13, 0xef,
-	0xef, 0x7e, 0xa7, 0xe9, 0x53, 0x10, 0x27, 0x6e, 0xe7, 0xd1, 0x98, 0xa3, 0xad, 0x9e, 0xea, 0xe9,
-	0x5b, 0x1c, 0x65, 0xdf, 0x77, 0xfd, 0x1f, 0x88, 0xd3, 0xb7, 0x9a, 0xca, 0x36, 0x2a, 0xe9, 0x45,
-	0x53, 0xbc, 0x1c, 0x16, 0xa4, 0x99, 0xc5, 0xff, 0xa5, 0xfb, 0xf5, 0xa7, 0x12, 0xba, 0x06, 0x93,
-	0xbb, 0xdf, 0xdc, 0xdb, 0x79, 0xfc, 0xdd, 0xee, 0x57, 0x0f, 0x77, 0x1e, 0xff, 0xbc, 0xfb, 0xf5,
-	0xa3, 0x34, 0x21, 0xb1, 0x7f, 0xfb, 0x5c, 0xaf, 0x40, 0xf1, 0x9f, 0x47, 0xbf, 0xee, 0x3d, 0xf9,
-	0xb1, 0x7c, 0xc1, 0x6d, 0xdf, 0xa5, 0x6f, 0x53, 0xf6, 0x21, 0x65, 0x94, 0x53, 0x12, 0x1b, 0x76,
-	0xe0, 0x1b, 0x36, 0xab, 0xc9, 0x57, 0x8c, 0x39, 0xe3, 0x8a, 0xae, 0x9a, 0x62, 0x12, 0xb3, 0x33,
-	0x57, 0x1b, 0xc1, 0x61, 0xe8, 0x51, 0x5b, 0xd0, 0x6f, 0x7e, 0x14, 0x07, 0x6c, 0xa1, 0x2f, 0x72,
-	0x7b, 0x0a, 0xca, 0x90, 0x7f, 0xe7, 0xd6, 0x06, 0x1a, 0x55, 0x72, 0xe5, 0xa1, 0x7a, 0x9b, 0xb7,
-	0x82, 0x88, 0x7e, 0x2a, 0x00, 0x95, 0xdc, 0x1d, 0x15, 0x06, 0xd3, 0xd3, 0x81, 0xa8, 0x0e, 0xe3,
-	0x99, 0xf9, 0xf6, 0x1e, 0x7e, 0xb1, 0xf7, 0xfd, 0x0f, 0xa8, 0xda, 0xe2, 0x3c, 0x5c, 0x30, 0x4d,
-	0x3f, 0x60, 0x84, 0xf7, 0x52, 0x67, 0x9d, 0xc0, 0x8e, 0x8d, 0xbb, 0xae, 0xc1, 0xb1, 0xcb, 0xa9,
-	0x6d, 0xd8, 0xcc, 0xbc, 0x6c, 0xfe, 0xbe, 0x3d, 0x2d, 0xfd, 0xb1, 0x3d, 0x2d, 0xfd, 0xbd, 0x3d,
-	0x2d, 0x7d, 0xfb, 0x74, 0x7a, 0xe0, 0xb6, 0xbc, 0x45, 0x39, 0xef, 0xde, 0x29, 0x8a, 0xcf, 0xef,
-	0xeb, 0xcf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xb0, 0xc0, 0x4e, 0x24, 0x33, 0x08, 0x00, 0x00,
+	// 1060 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0xcd, 0x6f, 0x1b, 0x45,
+	0x14, 0xef, 0xfa, 0x2b, 0xf6, 0x73, 0x13, 0xa5, 0x93, 0xa4, 0xd9, 0x3a, 0x69, 0x62, 0xb6, 0x12,
+	0xb2, 0x02, 0xd9, 0x6d, 0x5c, 0x09, 0xa2, 0x08, 0x24, 0x9c, 0x8f, 0x56, 0xa1, 0xc5, 0x91, 0x36,
+	0x89, 0x2a, 0x7a, 0x31, 0xd3, 0xdd, 0x61, 0x3d, 0x64, 0x77, 0x76, 0xd9, 0x1d, 0x9b, 0x9a, 0x23,
+	0x48, 0x85, 0x03, 0x12, 0xa2, 0x88, 0x8a, 0x8f, 0x13, 0xe2, 0x06, 0x42, 0xea, 0x8d, 0xaa, 0x17,
+	0xae, 0x1c, 0x91, 0xb8, 0x23, 0x94, 0x26, 0x11, 0xe2, 0xc8, 0x1f, 0x80, 0xd0, 0xcc, 0xae, 0x89,
+	0x63, 0xa7, 0x46, 0xca, 0x25, 0x79, 0xef, 0xcd, 0x7b, 0xbf, 0xf7, 0x7e, 0xef, 0x37, 0x99, 0x0d,
+	0x14, 0xa3, 0x26, 0x0e, 0x89, 0x1e, 0x84, 0x3e, 0xf7, 0x51, 0x3e, 0x76, 0xda, 0x4b, 0xa5, 0x59,
+	0xc7, 0xf7, 0x1d, 0x97, 0x18, 0x38, 0xa0, 0x06, 0x66, 0xcc, 0xe7, 0x98, 0x53, 0x9f, 0x45, 0x71,
+	0x5e, 0xe9, 0x05, 0xf9, 0xcb, 0x5a, 0x74, 0x08, 0x5b, 0x6c, 0x63, 0x97, 0xda, 0x98, 0x13, 0x63,
+	0xc0, 0x48, 0x92, 0xf5, 0x9e, 0x64, 0x3f, 0x20, 0x0c, 0x07, 0xb4, 0x5d, 0x35, 0xfc, 0x40, 0x02,
+	0x9e, 0x02, 0x3e, 0xe9, 0xf8, 0x8e, 0x2f, 0x4d, 0x43, 0x58, 0x49, 0xb4, 0x80, 0x83, 0x20, 0x36,
+	0xb5, 0x57, 0x61, 0x7a, 0x5b, 0xcc, 0xb9, 0xe6, 0x62, 0xea, 0x99, 0xe4, 0x3d, 0x1c, 0xda, 0x26,
+	0x79, 0xb7, 0x45, 0x22, 0x8e, 0x34, 0x38, 0x8f, 0x83, 0x20, 0x24, 0x8c, 0x53, 0x8b, 0x6c, 0xda,
+	0xaa, 0x52, 0x56, 0x2a, 0x19, 0xf3, 0x44, 0x4c, 0x9b, 0x86, 0xa9, 0xc1, 0xf2, 0xc0, 0xed, 0x68,
+	0x3a, 0x5c, 0x94, 0x07, 0xb7, 0x68, 0xc4, 0xaf, 0x87, 0x94, 0xb0, 0xff, 0x60, 0x27, 0x21, 0x6b,
+	0x93, 0x80, 0x37, 0x25, 0x5e, 0xd6, 0x8c, 0x1d, 0xad, 0x03, 0x93, 0x03, 0xf9, 0x81, 0xdb, 0x41,
+	0xb3, 0x90, 0xb1, 0x7c, 0x9b, 0xc4, 0xc9, 0xab, 0xf9, 0xbf, 0x7e, 0x9f, 0x97, 0xbe, 0x29, 0x7f,
+	0xa2, 0x71, 0x48, 0x7b, 0x91, 0xa3, 0xa6, 0xca, 0x4a, 0xa5, 0x60, 0x0a, 0x13, 0x2d, 0x41, 0xc6,
+	0xc6, 0x1c, 0xab, 0xe9, 0xb2, 0x52, 0x29, 0x56, 0x2f, 0xeb, 0x5d, 0x11, 0xf4, 0x3e, 0xf4, 0x75,
+	0xcc, 0xb1, 0x29, 0x53, 0xb5, 0x3a, 0x4c, 0x9c, 0x72, 0x88, 0x5e, 0x86, 0x2c, 0xe5, 0xc4, 0x8b,
+	0x54, 0xa5, 0x9c, 0xae, 0x14, 0xab, 0xcf, 0x0d, 0x85, 0xda, 0xe4, 0xc4, 0x33, 0xe3, 0x7c, 0xed,
+	0xef, 0x54, 0xb2, 0xd3, 0xc1, 0x14, 0x34, 0x06, 0x29, 0xda, 0xdd, 0x64, 0x8a, 0xda, 0x68, 0x06,
+	0x0a, 0xad, 0x88, 0x84, 0x0d, 0x86, 0x3d, 0x92, 0xd0, 0xc8, 0x8b, 0x40, 0x1d, 0x7b, 0x04, 0x5d,
+	0x82, 0x7c, 0x93, 0x60, 0xbb, 0x41, 0x3d, 0x47, 0xcd, 0xc8, 0xb3, 0x11, 0xe1, 0x6f, 0x7a, 0x0e,
+	0x7a, 0x1e, 0x72, 0x0e, 0x61, 0x36, 0x09, 0xd5, 0x6c, 0x59, 0xa9, 0x8c, 0x55, 0xc7, 0x74, 0x21,
+	0x69, 0xbb, 0xaa, 0xdf, 0x90, 0x51, 0x33, 0x39, 0x45, 0xab, 0x90, 0x8d, 0x38, 0x09, 0x22, 0x35,
+	0x27, 0x49, 0xbc, 0xf8, 0xbf, 0x24, 0xf4, 0x6d, 0x91, 0xbe, 0xc1, 0x78, 0xd8, 0x31, 0xe3, 0x52,
+	0xb4, 0x0c, 0xe7, 0x2d, 0x21, 0x6f, 0x23, 0xe2, 0x98, 0xb7, 0x22, 0x75, 0x44, 0x76, 0x9c, 0x3a,
+	0x86, 0x92, 0xe2, 0x6f, 0xcb, 0x43, 0xb3, 0x68, 0x1d, 0x3b, 0x08, 0x09, 0xf1, 0x28, 0x53, 0xf3,
+	0x52, 0x69, 0x69, 0x0b, 0xc6, 0x56, 0x48, 0x30, 0x27, 0x0d, 0xcc, 0xd5, 0x42, 0x59, 0xa9, 0xa4,
+	0xcd, 0x7c, 0x1c, 0xa8, 0xf1, 0xd2, 0x32, 0xc0, 0x71, 0x7f, 0xa1, 0xee, 0x1e, 0xe9, 0xc8, 0x6d,
+	0x15, 0x4c, 0x61, 0x8a, 0xbb, 0xd3, 0xc6, 0x6e, 0x2b, 0x5e, 0x55, 0xde, 0x8c, 0x9d, 0x95, 0xd4,
+	0xb2, 0xa2, 0x7d, 0xa6, 0xc0, 0x05, 0x49, 0x49, 0x10, 0xd9, 0x0d, 0xdd, 0xb3, 0xdd, 0x9e, 0x6b,
+	0x27, 0x6e, 0xcf, 0x7c, 0xdf, 0xb6, 0x7a, 0xa1, 0x75, 0x61, 0xc8, 0xe4, 0xd2, 0x34, 0xa4, 0x77,
+	0x43, 0x57, 0xa0, 0xb5, 0x42, 0xb7, 0x3b, 0x6d, 0x2b, 0x74, 0xb5, 0xaf, 0x94, 0xe4, 0x66, 0x89,
+	0xc2, 0x1d, 0x7f, 0x8f, 0xb0, 0xb3, 0x4d, 0xf5, 0xd2, 0x89, 0xa9, 0xb4, 0x53, 0xa6, 0x3a, 0x06,
+	0xd7, 0xd7, 0x24, 0x92, 0x1c, 0xac, 0x04, 0x19, 0xe1, 0xc5, 0x32, 0x24, 0xfd, 0x0a, 0x71, 0x17,
+	0xed, 0x15, 0xb8, 0x24, 0xab, 0x6b, 0xb6, 0xbd, 0xc9, 0xda, 0x34, 0x7e, 0x35, 0xba, 0x7f, 0xa2,
+	0xf3, 0x50, 0xa4, 0x22, 0x48, 0x1a, 0x3d, 0x75, 0x10, 0x87, 0x04, 0xa2, 0x36, 0x91, 0x2c, 0x7b,
+	0xc3, 0x0b, 0x78, 0x27, 0xa9, 0xd2, 0xd6, 0x92, 0xe0, 0x0d, 0xc2, 0x48, 0x48, 0xad, 0x33, 0x71,
+	0x5d, 0xb8, 0x09, 0xc5, 0x9e, 0xeb, 0x84, 0x54, 0x98, 0xdc, 0xad, 0xdf, 0xac, 0x6f, 0xdd, 0xae,
+	0x37, 0xd6, 0x6e, 0xd5, 0x36, 0xdf, 0x68, 0x6c, 0xef, 0xd4, 0x76, 0x76, 0xb7, 0xc7, 0xcf, 0xa1,
+	0x3c, 0x64, 0xd6, 0xb7, 0xea, 0x1b, 0xe3, 0x0a, 0x2a, 0x40, 0xd6, 0xdc, 0xa8, 0xad, 0xbf, 0x39,
+	0x9e, 0x42, 0xa3, 0x50, 0xa8, 0x6f, 0xed, 0x34, 0x62, 0x37, 0x5d, 0xfd, 0x26, 0x03, 0x59, 0x39,
+	0x12, 0x7a, 0x0b, 0x8a, 0x92, 0x26, 0x59, 0xed, 0x08, 0xad, 0x66, 0xfa, 0x76, 0xd8, 0xcb, 0xa3,
+	0x34, 0x33, 0x44, 0x76, 0x6d, 0xfa, 0x41, 0x2d, 0x0f, 0xb9, 0xc3, 0x8f, 0xef, 0x1f, 0x3c, 0xf9,
+	0xe1, 0x83, 0xdf, 0x0e, 0x3e, 0x4f, 0xe5, 0x50, 0xc6, 0x68, 0x85, 0x2e, 0x22, 0x30, 0xda, 0xed,
+	0x20, 0xd5, 0x18, 0xde, 0xe3, 0xf2, 0x50, 0x11, 0x35, 0xb5, 0xbf, 0xcb, 0x08, 0xca, 0x1a, 0x72,
+	0x63, 0x21, 0x5c, 0x38, 0x21, 0x99, 0x14, 0xf8, 0x4a, 0x1f, 0xda, 0x69, 0xa2, 0x0e, 0xd0, 0xea,
+	0x95, 0x49, 0x9b, 0xe9, 0x6f, 0x08, 0x5a, 0xdc, 0x70, 0x45, 0x59, 0x40, 0x4d, 0x80, 0xe3, 0x87,
+	0x02, 0x95, 0x9f, 0xf9, 0x86, 0x74, 0x3b, 0xcd, 0x0d, 0xc9, 0x78, 0x26, 0x3b, 0x97, 0x46, 0x1c,
+	0xed, 0x25, 0xea, 0xc7, 0x5f, 0x12, 0xd4, 0xff, 0xe6, 0x0e, 0x7e, 0xa4, 0x86, 0xb3, 0x9a, 0xed,
+	0x6f, 0x54, 0xd4, 0x72, 0x86, 0x7c, 0xa0, 0x56, 0x94, 0x85, 0xd5, 0x7f, 0x94, 0x07, 0xb5, 0xa7,
+	0x0a, 0xba, 0x0e, 0x33, 0x87, 0x5f, 0xdc, 0x3f, 0x78, 0xfc, 0xf5, 0xe1, 0x27, 0x0f, 0x0f, 0x1e,
+	0xff, 0x78, 0xf8, 0xe9, 0xa3, 0xb8, 0x40, 0xd8, 0x3f, 0x7f, 0xa8, 0x95, 0x21, 0xf7, 0xe7, 0xa3,
+	0x9f, 0x8e, 0x9e, 0x7c, 0x5f, 0xba, 0xe8, 0xb4, 0xee, 0xd1, 0xd7, 0x28, 0x7b, 0x9b, 0x32, 0xca,
+	0x29, 0x89, 0x74, 0xcb, 0xf7, 0x74, 0x8b, 0x55, 0xb3, 0x57, 0xf5, 0x25, 0xfd, 0xaa, 0x56, 0x30,
+	0xe4, 0x24, 0x46, 0x7b, 0xa9, 0x3a, 0x8e, 0x83, 0xc0, 0xa5, 0x96, 0x5c, 0xbf, 0xf1, 0x4e, 0xe4,
+	0xb3, 0x95, 0x81, 0xc8, 0x9d, 0x59, 0x28, 0x41, 0xfa, 0xf5, 0xdb, 0x3b, 0x68, 0x22, 0x9f, 0x2a,
+	0x8d, 0xd6, 0x5a, 0xbc, 0xe9, 0x87, 0xf4, 0x7d, 0x99, 0x50, 0x4e, 0xdd, 0x2d, 0xc0, 0x48, 0x7c,
+	0x7a, 0x2e, 0xac, 0xc1, 0x54, 0xdf, 0x7c, 0x47, 0x0f, 0x3f, 0x3a, 0xfa, 0xf6, 0x3b, 0x54, 0x69,
+	0x72, 0x1e, 0xac, 0x18, 0x86, 0xe7, 0x33, 0xc2, 0x93, 0xd2, 0x45, 0xdb, 0xb7, 0x22, 0xfd, 0x9e,
+	0xa3, 0x73, 0xec, 0x70, 0x6a, 0xe9, 0x16, 0x33, 0xae, 0x18, 0xbf, 0xec, 0xcf, 0x29, 0xbf, 0xee,
+	0xcf, 0x29, 0x7f, 0xec, 0xcf, 0x29, 0x5f, 0x3e, 0x9d, 0x3b, 0x77, 0x27, 0xbb, 0x47, 0x39, 0xef,
+	0xdc, 0xcd, 0xc9, 0x7f, 0x01, 0xae, 0xfd, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x59, 0x7f, 0x73, 0x37,
+	0xb7, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -710,9 +872,9 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ShareClient interface {
 	// 获取邀请链接
-	InviteByUrl(ctx context.Context, in *ShareEmptyRequest, opts ...grpc.CallOption) (*ShareDataReply, error)
+	InviteByUrl(ctx context.Context, in *ShareEmptyRequest, opts ...grpc.CallOption) (*ShareDataUrlReply, error)
 	// 获取邀请码
-	InviteByToken(ctx context.Context, in *ShareEmptyRequest, opts ...grpc.CallOption) (*ShareDataReply, error)
+	InviteByToken(ctx context.Context, in *ShareEmptyRequest, opts ...grpc.CallOption) (*ShareDataTokenReply, error)
 	// 填写邀请码
 	AddInvitationCode(ctx context.Context, in *ShareAddInvitationRequest, opts ...grpc.CallOption) (*ShareGenericReply, error)
 	// 获取邀请列表
@@ -729,8 +891,8 @@ func NewShareClient(cc *grpc.ClientConn) ShareClient {
 	return &shareClient{cc}
 }
 
-func (c *shareClient) InviteByUrl(ctx context.Context, in *ShareEmptyRequest, opts ...grpc.CallOption) (*ShareDataReply, error) {
-	out := new(ShareDataReply)
+func (c *shareClient) InviteByUrl(ctx context.Context, in *ShareEmptyRequest, opts ...grpc.CallOption) (*ShareDataUrlReply, error) {
+	out := new(ShareDataUrlReply)
 	err := c.cc.Invoke(ctx, "/share.v1.Share/InviteByUrl", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -738,8 +900,8 @@ func (c *shareClient) InviteByUrl(ctx context.Context, in *ShareEmptyRequest, op
 	return out, nil
 }
 
-func (c *shareClient) InviteByToken(ctx context.Context, in *ShareEmptyRequest, opts ...grpc.CallOption) (*ShareDataReply, error) {
-	out := new(ShareDataReply)
+func (c *shareClient) InviteByToken(ctx context.Context, in *ShareEmptyRequest, opts ...grpc.CallOption) (*ShareDataTokenReply, error) {
+	out := new(ShareDataTokenReply)
 	err := c.cc.Invoke(ctx, "/share.v1.Share/InviteByToken", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -777,9 +939,9 @@ func (c *shareClient) ClaimReward(ctx context.Context, in *ShareClaimRewardReque
 // ShareServer is the server API for Share service.
 type ShareServer interface {
 	// 获取邀请链接
-	InviteByUrl(context.Context, *ShareEmptyRequest) (*ShareDataReply, error)
+	InviteByUrl(context.Context, *ShareEmptyRequest) (*ShareDataUrlReply, error)
 	// 获取邀请码
-	InviteByToken(context.Context, *ShareEmptyRequest) (*ShareDataReply, error)
+	InviteByToken(context.Context, *ShareEmptyRequest) (*ShareDataTokenReply, error)
 	// 填写邀请码
 	AddInvitationCode(context.Context, *ShareAddInvitationRequest) (*ShareGenericReply, error)
 	// 获取邀请列表
@@ -792,10 +954,10 @@ type ShareServer interface {
 type UnimplementedShareServer struct {
 }
 
-func (*UnimplementedShareServer) InviteByUrl(ctx context.Context, req *ShareEmptyRequest) (*ShareDataReply, error) {
+func (*UnimplementedShareServer) InviteByUrl(ctx context.Context, req *ShareEmptyRequest) (*ShareDataUrlReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InviteByUrl not implemented")
 }
-func (*UnimplementedShareServer) InviteByToken(ctx context.Context, req *ShareEmptyRequest) (*ShareDataReply, error) {
+func (*UnimplementedShareServer) InviteByToken(ctx context.Context, req *ShareEmptyRequest) (*ShareDataTokenReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InviteByToken not implemented")
 }
 func (*UnimplementedShareServer) AddInvitationCode(ctx context.Context, req *ShareAddInvitationRequest) (*ShareGenericReply, error) {
@@ -1202,7 +1364,7 @@ func (m *ShareListFriendDataItem) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *ShareDataReply) Marshal() (dAtA []byte, err error) {
+func (m *ShareDataUrlReply) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1212,12 +1374,12 @@ func (m *ShareDataReply) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ShareDataReply) MarshalTo(dAtA []byte) (int, error) {
+func (m *ShareDataUrlReply) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ShareDataReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *ShareDataUrlReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1226,24 +1388,17 @@ func (m *ShareDataReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
-	if len(m.Data) > 0 {
-		for k := range m.Data {
-			v := m.Data[k]
-			baseI := i
-			i -= len(v)
-			copy(dAtA[i:], v)
-			i = encodeVarintShare(dAtA, i, uint64(len(v)))
-			i--
-			dAtA[i] = 0x12
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintShare(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintShare(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0x1a
+	if m.Data != nil {
+		{
+			size, err := m.Data.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintShare(dAtA, i, uint64(size))
 		}
+		i--
+		dAtA[i] = 0x1a
 	}
 	if len(m.Msg) > 0 {
 		i -= len(m.Msg)
@@ -1256,6 +1411,125 @@ func (m *ShareDataReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintShare(dAtA, i, uint64(m.Code))
 		i--
 		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ShareDataUrlReply_Url) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ShareDataUrlReply_Url) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ShareDataUrlReply_Url) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Url) > 0 {
+		i -= len(m.Url)
+		copy(dAtA[i:], m.Url)
+		i = encodeVarintShare(dAtA, i, uint64(len(m.Url)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ShareDataTokenReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ShareDataTokenReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ShareDataTokenReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Data != nil {
+		{
+			size, err := m.Data.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintShare(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Msg) > 0 {
+		i -= len(m.Msg)
+		copy(dAtA[i:], m.Msg)
+		i = encodeVarintShare(dAtA, i, uint64(len(m.Msg)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Code != 0 {
+		i = encodeVarintShare(dAtA, i, uint64(m.Code))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ShareDataTokenReply_Code) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ShareDataTokenReply_Code) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ShareDataTokenReply_Code) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Code) > 0 {
+		i -= len(m.Code)
+		copy(dAtA[i:], m.Code)
+		i = encodeVarintShare(dAtA, i, uint64(len(m.Code)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1497,7 +1771,7 @@ func (m *ShareListFriendDataItem) Size() (n int) {
 	return n
 }
 
-func (m *ShareDataReply) Size() (n int) {
+func (m *ShareDataUrlReply) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1510,13 +1784,64 @@ func (m *ShareDataReply) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovShare(uint64(l))
 	}
-	if len(m.Data) > 0 {
-		for k, v := range m.Data {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovShare(uint64(len(k))) + 1 + len(v) + sovShare(uint64(len(v)))
-			n += mapEntrySize + 1 + sovShare(uint64(mapEntrySize))
-		}
+	if m.Data != nil {
+		l = m.Data.Size()
+		n += 1 + l + sovShare(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *ShareDataUrlReply_Url) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Url)
+	if l > 0 {
+		n += 1 + l + sovShare(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *ShareDataTokenReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Code != 0 {
+		n += 1 + sovShare(uint64(m.Code))
+	}
+	l = len(m.Msg)
+	if l > 0 {
+		n += 1 + l + sovShare(uint64(l))
+	}
+	if m.Data != nil {
+		l = m.Data.Size()
+		n += 1 + l + sovShare(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *ShareDataTokenReply_Code) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Code)
+	if l > 0 {
+		n += 1 + l + sovShare(uint64(l))
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -2334,7 +2659,7 @@ func (m *ShareListFriendDataItem) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ShareDataReply) Unmarshal(dAtA []byte) error {
+func (m *ShareDataUrlReply) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2357,10 +2682,10 @@ func (m *ShareDataReply) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ShareDataReply: wiretype end group for non-group")
+			return fmt.Errorf("proto: ShareDataUrlReply: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ShareDataReply: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: ShareDataUrlReply: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2444,102 +2769,324 @@ func (m *ShareDataReply) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Data == nil {
-				m.Data = make(map[string]string)
+				m.Data = &ShareDataUrlReply_Url{}
 			}
-			var mapkey string
-			var mapvalue string
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowShare
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
+			if err := m.Data.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipShare(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthShare
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthShare
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ShareDataUrlReply_Url) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowShare
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Url: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Url: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Url", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
 				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowShare
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthShare
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthShare
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var stringLenmapvalue uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowShare
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapvalue |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapvalue := int(stringLenmapvalue)
-					if intStringLenmapvalue < 0 {
-						return ErrInvalidLengthShare
-					}
-					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
-					if postStringIndexmapvalue < 0 {
-						return ErrInvalidLengthShare
-					}
-					if postStringIndexmapvalue > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
-					iNdEx = postStringIndexmapvalue
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipShare(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if skippy < 0 {
-						return ErrInvalidLengthShare
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
 				}
 			}
-			m.Data[mapkey] = mapvalue
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthShare
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthShare
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Url = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipShare(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthShare
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthShare
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ShareDataTokenReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowShare
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ShareDataTokenReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ShareDataTokenReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			}
+			m.Code = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Code |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthShare
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthShare
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Msg = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthShare
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthShare
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Data == nil {
+				m.Data = &ShareDataTokenReply_Code{}
+			}
+			if err := m.Data.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipShare(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthShare
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthShare
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ShareDataTokenReply_Code) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowShare
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Code: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Code: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Code", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowShare
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthShare
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthShare
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Code = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

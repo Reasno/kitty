@@ -134,7 +134,7 @@ func CtxValuesToSend(keys ...string) httptransport.ClientOption {
 // HTTP Client Decode
 
 // DecodeHTTPInviteByUrlResponse is a transport/http.DecodeResponseFunc that decodes
-// a JSON-encoded ShareDataReply response from the HTTP response body.
+// a JSON-encoded ShareDataUrlReply response from the HTTP response body.
 // If the response has a non-200 status code, we will interpret that as an
 // error and attempt to decode the specific error message from the response
 // body. Primarily useful in a client.
@@ -152,7 +152,7 @@ func DecodeHTTPInviteByUrlResponse(_ context.Context, r *http.Response) (interfa
 		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
 	}
 
-	var resp pb.ShareDataReply
+	var resp pb.ShareDataUrlReply
 	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
 		return nil, errorDecoder(buf)
 	}
@@ -161,7 +161,7 @@ func DecodeHTTPInviteByUrlResponse(_ context.Context, r *http.Response) (interfa
 }
 
 // DecodeHTTPInviteByTokenResponse is a transport/http.DecodeResponseFunc that decodes
-// a JSON-encoded ShareDataReply response from the HTTP response body.
+// a JSON-encoded ShareDataTokenReply response from the HTTP response body.
 // If the response has a non-200 status code, we will interpret that as an
 // error and attempt to decode the specific error message from the response
 // body. Primarily useful in a client.
@@ -179,7 +179,7 @@ func DecodeHTTPInviteByTokenResponse(_ context.Context, r *http.Response) (inter
 		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
 	}
 
-	var resp pb.ShareDataReply
+	var resp pb.ShareDataTokenReply
 	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
 		return nil, errorDecoder(buf)
 	}

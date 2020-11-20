@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/go-kit/kit/log/level"
 	"github.com/speps/go-hashids"
 	"github.com/spf13/cobra"
 )
 
+var decode bool
+
 func init() {
+	inviteCmd.Flags().BoolVarP(&decode, "decode", "d", false, "instead of encode an id, decode a token to id")
 	rootCmd.AddCommand(inviteCmd)
 }
 
@@ -19,11 +23,20 @@ var inviteCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		hd := hashids.NewData()
-		hd.Salt = conf.String("app.salt")
+		hd.Salt = conf.String("global.salt")
 		hd.MinLength = 10
 		h, _ := hashids.NewWithData(hd)
-		i, _ := strconv.Atoi(args[0])
-		result, _ := h.Encode([]int{i})
-		fmt.Println(result)
+		if !decode {
+			i, _ := strconv.Atoi(args[0])
+			result, _ := h.Encode([]int{i})
+			fmt.Println(result)
+			return
+		}
+		result, err := h.DecodeWithError(args[0])
+		if err != nil {
+			level.Error(logger).Log("err", err)
+			return
+		}
+		fmt.Println(result[0])
 	},
 }

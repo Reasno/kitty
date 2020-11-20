@@ -12,6 +12,7 @@ type ModuleContainer struct {
 	CloserProviders   []func()
 	RunProviders      []func(g *run.Group)
 	MigrationProvider []Migrations
+	SeedProvider      []func() error
 }
 
 func NewModuleContainer() ModuleContainer {
@@ -21,6 +22,7 @@ func NewModuleContainer() ModuleContainer {
 		CloserProviders:   []func(){},
 		RunProviders:      []func(g *run.Group){},
 		MigrationProvider: []Migrations{},
+		SeedProvider:      []func() error{},
 	}
 }
 
@@ -50,6 +52,10 @@ type MigrationProvider interface {
 	ProvideRollback(flag string) error
 }
 
+type SeedProvider interface {
+	ProvideSeed() error
+}
+
 type HttpFunc func(router *mux.Router)
 
 func (h HttpFunc) ProvideHttp(router *mux.Router) {
@@ -71,5 +77,8 @@ func (s *ModuleContainer) Register(app interface{}) {
 	}
 	if p, ok := app.(MigrationProvider); ok {
 		s.MigrationProvider = append(s.MigrationProvider, Migrations{p.ProvideMigration, p.ProvideRollback})
+	}
+	if p, ok := app.(SeedProvider); ok {
+		s.SeedProvider = append(s.SeedProvider, p.ProvideSeed)
 	}
 }

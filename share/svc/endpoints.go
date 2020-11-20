@@ -64,20 +64,20 @@ func NewEndpoints(service pb.ShareServer) Endpoints {
 
 // Endpoints
 
-func (e Endpoints) InviteByUrl(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataReply, error) {
+func (e Endpoints) InviteByUrl(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataUrlReply, error) {
 	response, err := e.InviteByUrlEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return response.(*pb.ShareDataReply), nil
+	return response.(*pb.ShareDataUrlReply), nil
 }
 
-func (e Endpoints) InviteByToken(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataReply, error) {
+func (e Endpoints) InviteByToken(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataTokenReply, error) {
 	response, err := e.InviteByTokenEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
-	return response.(*pb.ShareDataReply), nil
+	return response.(*pb.ShareDataTokenReply), nil
 }
 
 func (e Endpoints) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvitationRequest) (*pb.ShareGenericReply, error) {

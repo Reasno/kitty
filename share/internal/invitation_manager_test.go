@@ -9,19 +9,23 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
-	mc "glab.tagtic.cn/ad_gains/kitty/pkg/contract/mocks"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"glab.tagtic.cn/ad_gains/kitty/share/internal/mocks"
 )
 
-func getConf() contract.ConfigReader {
-	conf := &mc.ConfigReader{}
-	conf.On("Strings", "orientation_events").Return([]string{"say_hello"})
-	conf.On("String", "url").Return("http://www.donews.com?%s")
-	conf.On("Int", "reward.level1").Return(100)
-	conf.On("Int", "reward.level2").Return(50)
-	return conf
+func getConf() *ShareConfig {
+	return &ShareConfig{
+		OrientationEvents: []string{"say_hello"},
+		Url:               "http://www.donews.com?%s",
+		Reward: struct {
+			Level1 int `yaml:"level1"`
+			Level2 int `yaml:"level2"`
+		}{
+			100,
+			50,
+		},
+		TaskId: "111",
+	}
 }
 
 type MockClient func(ctx context.Context, dto *XTaskRequest) (*XTaskResponse, error)
@@ -323,7 +327,7 @@ func TestInvitationManager_ListApprentice(t *testing.T) {
 					ur.On("QueryRelations", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, condition entity.Relation) []entity.Relation {
 						return []entity.Relation{{
 							MasterID:             condition.MasterID,
-							ApprenticeID:         100,
+							ApprenticeID:         1,
 							Depth:                condition.Depth,
 							OrientationCompleted: false,
 							OrientationSteps:     nil,
@@ -347,7 +351,7 @@ func TestInvitationManager_ListApprentice(t *testing.T) {
 					ur.On("QueryRelations", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, condition entity.Relation) []entity.Relation {
 						return []entity.Relation{{
 							MasterID:             condition.MasterID,
-							ApprenticeID:         100,
+							ApprenticeID:         1,
 							Depth:                condition.Depth,
 							OrientationCompleted: false,
 							OrientationSteps:     nil,
@@ -362,15 +366,50 @@ func TestInvitationManager_ListApprentice(t *testing.T) {
 			2,
 			50,
 		},
+		{
+			"多个返回值",
+			InvitationManager{
+				conf: getConf(),
+				rr: func() RelationRepository {
+					var ur mocks.RelationRepository
+					ur.On("QueryRelations", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, condition entity.Relation) []entity.Relation {
+						return []entity.Relation{{
+							MasterID:             condition.MasterID,
+							ApprenticeID:         1,
+							Depth:                condition.Depth,
+							OrientationCompleted: false,
+							OrientationSteps:     nil,
+							RewardClaimed:        false,
+						}, {
+							MasterID:             condition.MasterID,
+							ApprenticeID:         2,
+							Depth:                condition.Depth,
+							OrientationCompleted: false,
+							OrientationSteps:     nil,
+							RewardClaimed:        false,
+						}}
+					}, nil).Once()
+					return &ur
+				}(),
+				tokenizer: NewTokenizer("foo"),
+			},
+			1,
+			1,
+			100,
+		},
 	}
 	for _, c := range cases {
 		cc := c
 		t.Run(cc.name, func(t *testing.T) {
 			rel, err := cc.service.ListApprentices(context.Background(), uint64(cc.masterId), cc.depth)
 			assert.NoError(t, err)
-			assert.Equal(t, cc.masterId, rel[0].MasterID)
-			assert.Equal(t, cc.depth, rel[0].Depth)
-			assert.Equal(t, cc.amount, rel[0].Amount)
+			for i, r := range rel {
+				assert.Equal(t, cc.masterId, r.MasterID)
+				assert.Equal(t, uint(1+i), r.ApprenticeID)
+				assert.Equal(t, cc.depth, r.Depth)
+				assert.Equal(t, cc.amount, r.Amount)
+
+			}
 		})
 	}
 }

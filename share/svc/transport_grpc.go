@@ -73,20 +73,20 @@ type grpcServer struct {
 
 // Methods for grpcServer to implement ShareServer interface
 
-func (s *grpcServer) InviteByUrl(ctx context.Context, req *pb.ShareEmptyRequest) (*pb.ShareDataReply, error) {
+func (s *grpcServer) InviteByUrl(ctx context.Context, req *pb.ShareEmptyRequest) (*pb.ShareDataUrlReply, error) {
 	_, rep, err := s.invitebyurl.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*pb.ShareDataReply), nil
+	return rep.(*pb.ShareDataUrlReply), nil
 }
 
-func (s *grpcServer) InviteByToken(ctx context.Context, req *pb.ShareEmptyRequest) (*pb.ShareDataReply, error) {
+func (s *grpcServer) InviteByToken(ctx context.Context, req *pb.ShareEmptyRequest) (*pb.ShareDataTokenReply, error) {
 	_, rep, err := s.invitebytoken.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*pb.ShareDataReply), nil
+	return rep.(*pb.ShareDataTokenReply), nil
 }
 
 func (s *grpcServer) AddInvitationCode(ctx context.Context, req *pb.ShareAddInvitationRequest) (*pb.ShareGenericReply, error) {
@@ -155,14 +155,14 @@ func DecodeGRPCClaimRewardRequest(_ context.Context, grpcReq interface{}) (inter
 // EncodeGRPCInviteByUrlResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain invitebyurl response to a gRPC invitebyurl reply. Primarily useful in a server.
 func EncodeGRPCInviteByUrlResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.ShareDataReply)
+	resp := response.(*pb.ShareDataUrlReply)
 	return resp, nil
 }
 
 // EncodeGRPCInviteByTokenResponse is a transport/grpc.EncodeResponseFunc that converts a
 // user-domain invitebytoken response to a gRPC invitebytoken reply. Primarily useful in a server.
 func EncodeGRPCInviteByTokenResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(*pb.ShareDataReply)
+	resp := response.(*pb.ShareDataTokenReply)
 	return resp, nil
 }
 

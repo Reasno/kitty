@@ -487,10 +487,10 @@ var _ interface {
 	ErrorName() string
 } = ShareListFriendDataItemValidationError{}
 
-// Validate checks the field values on ShareDataReply with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
-func (m *ShareDataReply) Validate() error {
+// Validate checks the field values on ShareDataUrlReply with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ShareDataUrlReply) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -499,14 +499,22 @@ func (m *ShareDataReply) Validate() error {
 
 	// no validation rules for Msg
 
-	// no validation rules for Data
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ShareDataUrlReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }
 
-// ShareDataReplyValidationError is the validation error returned by
-// ShareDataReply.Validate if the designated constraints aren't met.
-type ShareDataReplyValidationError struct {
+// ShareDataUrlReplyValidationError is the validation error returned by
+// ShareDataUrlReply.Validate if the designated constraints aren't met.
+type ShareDataUrlReplyValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -514,22 +522,24 @@ type ShareDataReplyValidationError struct {
 }
 
 // Field function returns field value.
-func (e ShareDataReplyValidationError) Field() string { return e.field }
+func (e ShareDataUrlReplyValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ShareDataReplyValidationError) Reason() string { return e.reason }
+func (e ShareDataUrlReplyValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ShareDataReplyValidationError) Cause() error { return e.cause }
+func (e ShareDataUrlReplyValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ShareDataReplyValidationError) Key() bool { return e.key }
+func (e ShareDataUrlReplyValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ShareDataReplyValidationError) ErrorName() string { return "ShareDataReplyValidationError" }
+func (e ShareDataUrlReplyValidationError) ErrorName() string {
+	return "ShareDataUrlReplyValidationError"
+}
 
 // Error satisfies the builtin error interface
-func (e ShareDataReplyValidationError) Error() string {
+func (e ShareDataUrlReplyValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -541,14 +551,14 @@ func (e ShareDataReplyValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sShareDataReply.%s: %s%s",
+		"invalid %sShareDataUrlReply.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ShareDataReplyValidationError{}
+var _ error = ShareDataUrlReplyValidationError{}
 
 var _ interface {
 	Field() string
@@ -556,7 +566,88 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ShareDataReplyValidationError{}
+} = ShareDataUrlReplyValidationError{}
+
+// Validate checks the field values on ShareDataTokenReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ShareDataTokenReply) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Msg
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ShareDataTokenReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ShareDataTokenReplyValidationError is the validation error returned by
+// ShareDataTokenReply.Validate if the designated constraints aren't met.
+type ShareDataTokenReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ShareDataTokenReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ShareDataTokenReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ShareDataTokenReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ShareDataTokenReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ShareDataTokenReplyValidationError) ErrorName() string {
+	return "ShareDataTokenReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ShareDataTokenReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sShareDataTokenReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ShareDataTokenReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ShareDataTokenReplyValidationError{}
 
 // Validate checks the field values on ShareAddInvitationRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -764,3 +855,141 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ShareGenericReplyValidationError{}
+
+// Validate checks the field values on ShareDataUrlReply_Url with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ShareDataUrlReply_Url) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Url
+
+	return nil
+}
+
+// ShareDataUrlReply_UrlValidationError is the validation error returned by
+// ShareDataUrlReply_Url.Validate if the designated constraints aren't met.
+type ShareDataUrlReply_UrlValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ShareDataUrlReply_UrlValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ShareDataUrlReply_UrlValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ShareDataUrlReply_UrlValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ShareDataUrlReply_UrlValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ShareDataUrlReply_UrlValidationError) ErrorName() string {
+	return "ShareDataUrlReply_UrlValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ShareDataUrlReply_UrlValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sShareDataUrlReply_Url.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ShareDataUrlReply_UrlValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ShareDataUrlReply_UrlValidationError{}
+
+// Validate checks the field values on ShareDataTokenReply_Code with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ShareDataTokenReply_Code) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	return nil
+}
+
+// ShareDataTokenReply_CodeValidationError is the validation error returned by
+// ShareDataTokenReply_Code.Validate if the designated constraints aren't met.
+type ShareDataTokenReply_CodeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ShareDataTokenReply_CodeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ShareDataTokenReply_CodeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ShareDataTokenReply_CodeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ShareDataTokenReply_CodeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ShareDataTokenReply_CodeValidationError) ErrorName() string {
+	return "ShareDataTokenReply_CodeValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ShareDataTokenReply_CodeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sShareDataTokenReply_Code.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ShareDataTokenReply_CodeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ShareDataTokenReply_CodeValidationError{}

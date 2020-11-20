@@ -30,4 +30,5 @@ const (
 	NoRewardAvailable              = "没有可供领取的奖励"
 	InvalidInviteTarget            = "不合法的邀请对象"
 	XTastAbnormally                = "任务服务繁忙，请稍后再试"
+	ReenteringCode                 = "不能重复填写邀请码"
 )

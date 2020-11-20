@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"strings"
 	"sync"
 
@@ -98,10 +97,6 @@ func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 	}
 }
 
-func (r *repository) GetRaw(ctx context.Context, name string) (value []byte, e error) {
-	panic("not implemented")
-}
-
 func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (value []byte, e error) {
 	resp, err := r.client.Get(ctx, dbKey)
 	if err != nil {
@@ -113,15 +108,6 @@ func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (
 	return nil, err
 }
 
-func (r *repository) SetRaw(ctx context.Context, name string, value string) error {
-	panic("not implemented")
-}
-
-// IsNewest 传入的内容是否和ETCD中的最新版本一致
-func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, error) {
-	panic("not implemented")
-}
-
 func (r *repository) GetCompiled(ruleName string) []entity.Rule {
 	r.rwLock.RLock()
 	defer r.rwLock.RUnlock()
@@ -129,8 +115,4 @@ func (r *repository) GetCompiled(ruleName string) []entity.Rule {
 		return c.RuleSet
 	}
 	panic(fmt.Sprintf("unregistered rule %s", ruleName))
-}
-
-func (r *repository) ValidateRules(ruleName string, reader io.Reader) error {
-	panic("implement me")
 }

@@ -11,5 +11,17 @@ type InvitationManagerFactory struct {
 }
 
 func (i *InvitationManagerFactory) NewManager(conf contract.ConfigReader) *InvitationManager {
-	return &InvitationManager{conf: conf, rr: i.Rr, tokenizer: i.T, xtaskClient: i.C}
+	sc := ShareConfig{
+		OrientationEvents: conf.Strings("orientation_events"),
+		Url:               conf.String("url"),
+		Reward: struct {
+			Level1 int `yaml:"level1"`
+			Level2 int `yaml:"level2"`
+		}{
+			conf.Int("reward.level1"),
+			conf.Int("reward.level2"),
+		},
+		TaskId: conf.String("task_id"),
+	}
+	return &InvitationManager{conf: &sc, rr: i.Rr, tokenizer: i.T, xtaskClient: i.C}
 }

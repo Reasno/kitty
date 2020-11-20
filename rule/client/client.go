@@ -12,18 +12,22 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
 	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
-	"glab.tagtic.cn/ad_gains/kitty/rule/service"
 	"go.etcd.io/etcd/clientv3"
 )
 
 type RuleEngine struct {
-	repository service.Repository
+	repository Repository
 	logger     log.Logger
 }
 
 type ofRule struct {
 	d        *RuleEngine
 	ruleName string
+}
+
+type Repository interface {
+	GetCompiled(ruleName string) []entity.Rule
+	WatchConfigUpdate(ctx context.Context) error
 }
 
 func (r *ofRule) Tenant(tenant *kconf.Tenant) (contract.ConfigReader, error) {
@@ -65,7 +69,7 @@ type Option func(*config)
 type config struct {
 	ctx         context.Context
 	client      *clientv3.Client
-	repo        service.Repository
+	repo        Repository
 	logger      log.Logger
 	listOfRules []string
 }
@@ -76,7 +80,7 @@ func WithClient(client *clientv3.Client) Option {
 	}
 }
 
-func WithRepository(repository service.Repository) Option {
+func WithRepository(repository Repository) Option {
 	return func(c *config) {
 		c.repo = repository
 	}

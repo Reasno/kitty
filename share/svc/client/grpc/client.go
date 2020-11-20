@@ -44,7 +44,7 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.ShareServer, error)
 			"InviteByUrl",
 			EncodeGRPCInviteByUrlRequest,
 			DecodeGRPCInviteByUrlResponse,
-			pb.ShareDataReply{},
+			pb.ShareDataUrlReply{},
 			clientOptions...,
 		).Endpoint()
 	}
@@ -57,7 +57,7 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.ShareServer, error)
 			"InviteByToken",
 			EncodeGRPCInviteByTokenRequest,
 			DecodeGRPCInviteByTokenResponse,
-			pb.ShareDataReply{},
+			pb.ShareDataTokenReply{},
 			clientOptions...,
 		).Endpoint()
 	}
@@ -115,14 +115,14 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.ShareServer, error)
 // DecodeGRPCInviteByUrlResponse is a transport/grpc.DecodeResponseFunc that converts a
 // gRPC invitebyurl reply to a user-domain invitebyurl response. Primarily useful in a client.
 func DecodeGRPCInviteByUrlResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*pb.ShareDataReply)
+	reply := grpcReply.(*pb.ShareDataUrlReply)
 	return reply, nil
 }
 
 // DecodeGRPCInviteByTokenResponse is a transport/grpc.DecodeResponseFunc that converts a
 // gRPC invitebytoken reply to a user-domain invitebytoken response. Primarily useful in a client.
 func DecodeGRPCInviteByTokenResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*pb.ShareDataReply)
+	reply := grpcReply.(*pb.ShareDataTokenReply)
 	return reply, nil
 }
 
