@@ -72,7 +72,7 @@ service Share {
       tags: "分享"
     };
     option (google.api.http) = {
-      post: "/code"
+      put: "/code"
       body: "*"
     };
   }

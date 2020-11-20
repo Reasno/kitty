@@ -69,7 +69,7 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		serverOptions...,
 	))
 
-	m.Methods("POST").Path("/code").Handler(httptransport.NewServer(
+	m.Methods("PUT").Path("/code").Handler(httptransport.NewServer(
 		endpoints.AddInvitationCodeEndpoint,
 		DecodeHTTPAddInvitationCodeZeroRequest,
 		EncodeHTTPGenericResponse,

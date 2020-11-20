@@ -73,7 +73,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.ShareServer
 	var AddInvitationCodeZeroEndpoint endpoint.Endpoint
 	{
 		AddInvitationCodeZeroEndpoint = httptransport.NewClient(
-			"POST",
+			"PUT",
 			copyURL(u, "/code"),
 			EncodeHTTPAddInvitationCodeZeroRequest,
 			DecodeHTTPAddInvitationCodeResponse,

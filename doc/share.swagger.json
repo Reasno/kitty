@@ -59,7 +59,7 @@
           "分享"
         ]
       },
-      "post": {
+      "put": {
         "summary": "填写邀请码",
         "operationId": "Share_AddInvitationCode",
         "responses": {
