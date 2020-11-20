@@ -530,8 +530,6 @@ func (m *UserLoginRequest) Validate() error {
 
 	// no validation rules for ThirdPartyId
 
-	// no validation rules for InviteCode
-
 	return nil
 }
 

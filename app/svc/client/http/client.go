@@ -396,8 +396,6 @@ func EncodeHTTPLoginZeroRequest(_ context.Context, r *http.Request, request inte
 
 	toRet.ThirdPartyId = req.ThirdPartyId
 
-	toRet.InviteCode = req.InviteCode
-
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(toRet); err != nil {

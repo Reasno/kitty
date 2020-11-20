@@ -481,10 +481,6 @@
         "third_party_id": {
           "type": "string",
           "title": "第三方ID"
-        },
-        "invite_code": {
-          "type": "string",
-          "title": "邀请码"
         }
       }
     },
