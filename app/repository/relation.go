@@ -22,19 +22,14 @@ func NewRelationRepo(db *gorm.DB) *RelationRepo {
 
 func (r *RelationRepo) QueryRelations(ctx context.Context, condition entity.Relation) ([]entity.Relation, error) {
 	var relations []entity.Relation
-	err := r.db.WithContext(
-		ctx,
-	).Preload(
-		"Apprentice",
-	).Preload(
-		"Master",
-	).Preload(
-		"OrientationSteps",
-	).Where(
-		&condition,
-	).Order(
-		"reward_claimed desc, orientation_completed, created_at desc",
-	).Find(&relations).Error
+	err := r.db.
+		WithContext(ctx).
+		Preload("Apprentice").
+		Preload("Master").
+		Preload("OrientationSteps").
+		Where(&condition).
+		Order("reward_claimed desc, orientation_completed, created_at desc").
+		Find(&relations).Error
 
 	return relations, err
 }

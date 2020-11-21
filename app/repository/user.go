@@ -57,7 +57,7 @@ func (r *UserRepo) UpdateCallback(ctx context.Context, id uint, f func(user *ent
 	var u entity.User
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		tx = tx.WithContext(ctx)
-		err := tx.Model(entity.User{}).Where("id = ?", id).First(&u).Error
+		err := tx.Model(entity.User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", id).First(&u).Error
 		if err != nil {
 			return errors.Wrap(err, emsg)
 		}
