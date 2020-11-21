@@ -42,7 +42,10 @@ var serveCmd = &cobra.Command{
 			}
 			h := getHttpHandler(ln, moduleContainer.HttpProviders...)
 			srv := &http.Server{
-				Handler: h,
+				Handler:      h,
+				IdleTimeout:  10 * time.Second,
+				ReadTimeout:  10 * time.Second,
+				WriteTimeout: 10 * time.Second,
 			}
 			g.Add(func() error {
 				return srv.Serve(ln)
@@ -117,7 +120,7 @@ func getHttpHandler(ln net.Listener, providers ...func(*mux.Router)) http.Handle
 func getGRPCServer(ln net.Listener, providers ...func(s *grpc.Server)) *grpc.Server {
 	_ = level.Info(logger).Log("transport", "gRPC", "addr", ln.Addr())
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.ConnectionTimeout(time.Second))
 	for _, p := range providers {
 		p(s)
 	}
