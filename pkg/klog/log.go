@@ -49,7 +49,7 @@ func NewLogger(env contract.Env) (logger log.Logger) {
 }
 
 func WithContext(logger log.Logger, ctx context.Context) log.Logger {
-	claim := jwt2.GetClaim(ctx)
+	claim := jwt2.ClaimFromContext(ctx)
 	transport, _ := ctx.Value("transport").(string)
 	requestUrl, _ := ctx.Value("request-url").(string)
 

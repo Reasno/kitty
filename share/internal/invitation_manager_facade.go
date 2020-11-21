@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
@@ -46,14 +47,14 @@ func (im *InvitationManagerFacade) ListApprentices(ctx context.Context, masterId
 	return m.ListApprentices(ctx, masterId, depth)
 }
 
-func (im *InvitationManagerFacade) GetToken(ctx context.Context) string {
+func (im *InvitationManagerFacade) GetToken(ctx context.Context, id uint) string {
 	m, _ := im.getManager(ctx)
-	return m.GetToken(ctx)
+	return m.GetToken(ctx, id)
 }
 
-func (im *InvitationManagerFacade) GetUrl(ctx context.Context) string {
+func (im *InvitationManagerFacade) GetUrl(ctx context.Context, claim *jwt2.Claim) string {
 	m, _ := im.getManager(ctx)
-	return m.GetUrl(ctx)
+	return m.GetUrl(ctx, claim)
 }
 
 func (im *InvitationManagerFacade) getManager(ctx context.Context) (*InvitationManager, error) {

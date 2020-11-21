@@ -35,7 +35,7 @@ func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat, mobile, p
 	}
 }
 
-func GetClaim(ctx context.Context) *Claim {
+func ClaimFromContext(ctx context.Context) *Claim {
 	if c, ok := ctx.Value(jwt.JWTClaimsContextKey).(*Claim); ok {
 		return c
 	}

@@ -111,7 +111,7 @@ func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.Gen
 
 func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
 	if in.Id == 0 {
-		claim := kittyjwt.GetClaim(ctx)
+		claim := kittyjwt.ClaimFromContext(ctx)
 		in.Id = claim.UserId
 	}
 	u, err := s.ur.Get(ctx, uint(in.Id))
@@ -135,7 +135,7 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 }
 
 func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 	device := &entity.Device{
 		Os:        uint8(in.Device.Os),
 		Imei:      in.Device.Imei,
@@ -177,7 +177,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 }
 
 func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
 		UserName:     in.UserName,
 		HeadImg:      in.HeadImg,
@@ -195,7 +195,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 }
 
 func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 
 	var (
 		toUpdate entity.User
@@ -281,7 +281,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 }
 
 func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 	user, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
 		return nil, dbErr(err)

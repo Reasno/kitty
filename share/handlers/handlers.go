@@ -27,8 +27,8 @@ type InvitationManager interface {
 	ClaimReward(ctx context.Context, masterId uint64, apprenticeId uint64) error
 	AdvanceStep(ctx context.Context, apprenticeId uint64, eventName string) error
 	ListApprentices(ctx context.Context, masterId uint64, depth int) ([]internal.RelationWithRewardAmount, error)
-	GetToken(ctx context.Context) string
-	GetUrl(ctx context.Context) string
+	GetToken(ctx context.Context, id uint) string
+	GetUrl(ctx context.Context, claim *kittyjwt.Claim) string
 }
 
 type UserRepository interface {
@@ -37,7 +37,7 @@ type UserRepository interface {
 
 func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvitationRequest) (*pb.ShareGenericReply, error) {
 
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 
 	err := s.ur.UpdateCallback(ctx, uint(claim.UserId), func(user *entity.User) error {
 		if user.InviteCode != "" {
@@ -76,7 +76,7 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 }
 
 func (s shareService) ClaimReward(ctx context.Context, in *pb.ShareClaimRewardRequest) (*pb.ShareGenericReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 	err := s.manager.ClaimReward(ctx, claim.UserId, in.ApprenticeId)
 	if err != nil {
 		if errors.Is(err, entity.ErrOrientationHasNotBeenCompleted) {
@@ -95,7 +95,7 @@ func (s shareService) ClaimReward(ctx context.Context, in *pb.ShareClaimRewardRe
 }
 
 func (s shareService) ListFriend(ctx context.Context, in *pb.ShareListFriendRequest) (*pb.ShareListFriendReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 	rels, err := s.manager.ListApprentices(ctx, claim.UserId, int(in.Depth))
 	if err != nil {
 		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
@@ -133,7 +133,7 @@ func status(item *internal.RelationWithRewardAmount) pb.ClaimStatus {
 }
 
 func (s shareService) InviteByUrl(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataUrlReply, error) {
-	url := s.manager.GetUrl(ctx)
+	url := s.manager.GetUrl(ctx, kittyjwt.ClaimFromContext(ctx))
 	var resp = pb.ShareDataUrlReply{
 		Code: 0,
 		Data: &pb.ShareDataUrlReply_Url{
@@ -144,7 +144,8 @@ func (s shareService) InviteByUrl(ctx context.Context, in *pb.ShareEmptyRequest)
 }
 
 func (s shareService) InviteByToken(ctx context.Context, in *pb.ShareEmptyRequest) (*pb.ShareDataTokenReply, error) {
-	code := s.manager.GetToken(ctx)
+	id := uint(kittyjwt.ClaimFromContext(ctx).UserId)
+	code := s.manager.GetToken(ctx, id)
 	var resp = pb.ShareDataTokenReply{
 		Code: 0,
 		Data: &pb.ShareDataTokenReply_Code{

@@ -89,7 +89,7 @@ func (r *UserRepo) GetFromWechat(ctx context.Context, packageName, wechat string
 
 	wechatUser.CommonSUUID = device.Suuid
 	wechatUser.PackageName = packageName
-	wechatUser.WechatOpenId = sql.NullString{wechat, true}
+	wechatUser.WechatOpenId = sql.NullString{String: wechat, Valid: true}
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		defer func() {
@@ -125,7 +125,7 @@ func (r *UserRepo) GetFromMobile(ctx context.Context, packageName, mobile string
 	var (
 		u entity.User
 	)
-	err := r.db.WithContext(ctx).Where("package_name = ? and mobile = ?", packageName, mobile).Attrs(entity.User{CommonSUUID: device.Suuid, PackageName: packageName, Mobile: sql.NullString{mobile, true}}).FirstOrCreate(&u).Error
+	err := r.db.WithContext(ctx).Where("package_name = ? and mobile = ?", packageName, mobile).Attrs(entity.User{CommonSUUID: device.Suuid, PackageName: packageName, Mobile: sql.NullString{String: mobile, Valid: true}}).FirstOrCreate(&u).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.Wrap(err, emsg)
 	}

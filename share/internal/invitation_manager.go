@@ -5,6 +5,8 @@ package internal
 import (
 	"context"
 	"fmt"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"net/url"
 	"strconv"
 
@@ -54,6 +56,7 @@ type InvitationManager struct {
 	rr          RelationRepository
 	tokenizer   EncodeDecoder
 	xtaskClient XTaskRequester
+	logger      log.Logger
 }
 
 type EncodeDecoder interface {
@@ -110,7 +113,7 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 						UniqueId:   xid.New().String(),
 					})
 					if err != nil {
-						return err
+						return errors.Wrap(err, "xtask request failed")
 					}
 					if resp.Code != 0 {
 						return kerr.CustomErr(uint32(resp.Code), ErrFailedXtaskRequest, resp.Msg)
@@ -154,20 +157,19 @@ func (im *InvitationManager) ListApprentices(ctx context.Context, masterId uint6
 	return out, nil
 }
 
-func (im *InvitationManager) GetToken(ctx context.Context) string {
-	claim := jwt2.GetClaim(ctx)
-	value, _ := im.tokenizer.Encode(uint(claim.UserId))
+func (im *InvitationManager) GetToken(_ context.Context, id uint) string {
+	value, err := im.tokenizer.Encode(id)
+	_ = level.Warn(im.logger).Log("err", err)
 	return value
 }
 
-func (im *InvitationManager) GetUrl(ctx context.Context) string {
-	claim := jwt2.GetClaim(ctx)
+func (im *InvitationManager) GetUrl(ctx context.Context, claim *jwt2.Claim) string {
 	args := url.Values{}
 	args.Add("user_id", strconv.FormatUint(claim.UserId, 10))
 	args.Add("channel", claim.Channel)
 	args.Add("version_code", claim.VersionCode)
 	args.Add("package_name", claim.PackageName)
-	args.Add("invite_code", im.GetToken(ctx))
+	args.Add("invite_code", im.GetToken(ctx, uint(claim.UserId)))
 	argsStr := args.Encode()
 
 	return fmt.Sprintf(im.conf.Url, argsStr)

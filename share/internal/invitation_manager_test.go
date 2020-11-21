@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"errors"
+	"github.com/go-kit/kit/log"
 	"testing"
 
 	"github.com/go-kit/kit/auth/jwt"
@@ -290,6 +291,7 @@ func TestInvitationManager_GetUrl(t *testing.T) {
 				conf:      getConf(),
 				rr:        nil,
 				tokenizer: NewTokenizer("foo"),
+				logger:    log.NewNopLogger(),
 			},
 			context.WithValue(context.Background(), jwt.JWTClaimsContextKey, &kjwt.Claim{
 				PackageName: "com.donews.www",
@@ -303,7 +305,7 @@ func TestInvitationManager_GetUrl(t *testing.T) {
 	for _, c := range cases {
 		cc := c
 		t.Run(cc.name, func(t *testing.T) {
-			uri := cc.service.GetUrl(cc.ctx)
+			uri := cc.service.GetUrl(cc.ctx, kjwt.ClaimFromContext(cc.ctx))
 			assert.Equal(t, cc.out, uri)
 		})
 	}

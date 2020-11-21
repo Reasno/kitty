@@ -1,13 +1,15 @@
 package internal
 
 import (
+	"github.com/go-kit/kit/log"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
 type InvitationManagerFactory struct {
-	Rr RelationRepository
-	T  EncodeDecoder
-	C  XTaskRequester
+	Rr     RelationRepository
+	T      EncodeDecoder
+	C      XTaskRequester
+	Logger log.Logger
 }
 
 func (i *InvitationManagerFactory) NewManager(conf contract.ConfigReader) *InvitationManager {
@@ -23,5 +25,5 @@ func (i *InvitationManagerFactory) NewManager(conf contract.ConfigReader) *Invit
 		},
 		TaskId: conf.String("task_id"),
 	}
-	return &InvitationManager{conf: &sc, rr: i.Rr, tokenizer: i.T, xtaskClient: i.C}
+	return &InvitationManager{conf: &sc, rr: i.Rr, tokenizer: i.T, xtaskClient: i.C, logger: i.Logger}
 }

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	stdjwt "github.com/dgrijalva/jwt-go"
-	"github.com/go-kit/kit/auth/jwt"
 	"github.com/opentracing/opentracing-go"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
@@ -22,7 +21,7 @@ type UserBus interface {
 	Emit(ctx context.Context, info contract.Marshaller) error
 }
 type EventBus interface {
-	Emit(ctx context.Context, event string) error
+	Emit(ctx context.Context, event string, claim *kjwt.Claim) error
 }
 
 func (m MonitoredAppService) Login(ctx context.Context, request *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
@@ -34,7 +33,10 @@ func (m MonitoredAppService) Login(ctx context.Context, request *pb.UserLoginReq
 	span := opentracing.SpanFromContext(ctx)
 	go func() {
 		ctx := opentracing.ContextWithSpan(context.Background(), span)
-		ctx = context.WithValue(ctx, jwt.JWTClaimsContextKey, &kjwt.Claim{
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		claim := kjwt.Claim{
 			StandardClaims: stdjwt.StandardClaims{},
 			PackageName:    request.PackageName,
 			UserId:         resp.Data.Id,
@@ -43,12 +45,10 @@ func (m MonitoredAppService) Login(ctx context.Context, request *pb.UserLoginReq
 			VersionCode:    request.VersionCode,
 			Wechat:         request.Wechat,
 			Mobile:         request.Mobile,
-		})
+		}
 
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
 		if resp.Data.IsNew {
-			_ = m.eventBus.Emit(ctx, "new_user")
+			_ = m.eventBus.Emit(ctx, "new_user", &claim)
 		}
 	}()
 

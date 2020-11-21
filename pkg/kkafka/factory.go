@@ -48,8 +48,8 @@ func (k *KafkaProducerFactory) Writer(topic string) *kafka.Writer {
 		Addr:        kafka.TCP(k.brokers...),
 		Topic:       topic,
 		Balancer:    &kafka.LeastBytes{},
-		Logger:      klog.KafkaLogAdapter{level.Debug(k.logger)},
-		ErrorLogger: klog.KafkaLogAdapter{level.Warn(k.logger)},
+		Logger:      klog.KafkaLogAdapter{Logging: level.Debug(k.logger)},
+		ErrorLogger: klog.KafkaLogAdapter{Logging: level.Warn(k.logger)},
 	}
 	if k.tracer != nil {
 		writer.Transport = NewTransport(kafka.DefaultTransport, k.tracer)

@@ -142,28 +142,28 @@ func TestUniqueConstraint(t *testing.T) {
 	userRepo := NewUserRepo(db, NewFileRepo(nil, nil))
 	ctx := context.Background()
 	user := entity.User{
-		Mobile: sql.NullString{"110", true},
+		Mobile: sql.NullString{String: "110", Valid: true},
 	}
 	err := userRepo.Save(ctx, &user)
 	if err != nil {
 		t.Fatal(err)
 	}
 	user2 := entity.User{
-		Mobile: sql.NullString{"110", true},
+		Mobile: sql.NullString{String: "110", Valid: true},
 	}
 	err = userRepo.Save(ctx, &user2)
 	if err != ErrAlreadyBind {
 		t.Fatal(err)
 	}
 	user3 := entity.User{
-		WechatOpenId: sql.NullString{"110", true},
+		WechatOpenId: sql.NullString{String: "110", Valid: true},
 	}
 	err = userRepo.Save(ctx, &user3)
 	if err != nil {
 		t.Fatal(err)
 	}
 	user4 := entity.User{
-		WechatOpenId: sql.NullString{"110", true},
+		WechatOpenId: sql.NullString{String: "110", Valid: true},
 	}
 	err = userRepo.Save(ctx, &user4)
 	if err != ErrAlreadyBind {

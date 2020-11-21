@@ -19,7 +19,7 @@ func NewTraceMiddleware(tracer stdtracing.Tracer, env string) LabeledMiddleware 
 			name := fmt.Sprintf("%s(%s)", s, env)
 			e := opentracing.TraceServer(tracer, name)(endpoint)
 			span := stdtracing.SpanFromContext(ctx)
-			claim := kjwt.GetClaim(ctx)
+			claim := kjwt.ClaimFromContext(ctx)
 			if r, ok := request.(pb.UserLoginRequest); ok {
 				claim.Suuid = r.Device.Suuid
 			}

@@ -52,9 +52,10 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 		return nil, nil, err
 	}
 	invitationManagerFactory := internal.InvitationManagerFactory{
-		Rr: relationRepo,
-		T:  tokenizer,
-		C:  xTaskRequester,
+		Rr:     relationRepo,
+		T:      tokenizer,
+		C:      xTaskRequester,
+		Logger: logger,
 	}
 	invitationManagerFacade := &internal.InvitationManagerFacade{
 		Name:    appName,
