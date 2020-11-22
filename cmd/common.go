@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/go-kit/kit/log/level"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 
@@ -18,26 +17,13 @@ var moduleContainer container.ModuleContainer
 
 func initModules() {
 	moduleContainer = container.NewModuleContainer()
-	ruleModuleConfig := coreModule.StaticConf.Cut("rule")
-	ruleModule := rule.New(ruleModuleConfig, coreModule.Logger)
+	ruleModule := rule.New(coreModule.Make("rule"))
+	engine, _ := client.NewRuleEngine(client.WithRepository(ruleModule.GetRepository()))
+
 	moduleContainer.Register(ruleModule)
-
-	dynConf, err := client.NewRuleEngine(client.WithRepository(ruleModule.GetRepository()))
-	if err != nil {
-		panic(err)
-	}
-
-	appModuleConfig := coreModule.StaticConf.Cut("app")
-	globalModuleConfig := coreModule.StaticConf.Cut("global")
-	appModuleDynConfig := dynConf.Of(
-		fmt.Sprintf("%s-%s",
-			appModuleConfig.String("name"),
-			appModuleConfig.String("env")),
-	)
-
-	moduleContainer.Register(app.New(appModuleConfig, coreModule.Logger, appModuleDynConfig))
-	moduleContainer.Register(share.New(appModuleConfig, coreModule.Logger, appModuleDynConfig))
-	moduleContainer.Register(ots3.New(globalModuleConfig, coreModule.Logger))
+	moduleContainer.Register(app.New(coreModule.MakeWithEngine("app", engine)))
+	moduleContainer.Register(share.New(coreModule.MakeWithEngine("app", engine)))
+	moduleContainer.Register(ots3.New(coreModule.Make("s3")))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Doc))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.HealthCheck))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Metrics))

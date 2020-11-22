@@ -5,12 +5,9 @@ import (
 	"net/http"
 
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
 	"github.com/oklog/run"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 	"glab.tagtic.cn/ad_gains/kitty/rule/service"
 )
 
@@ -21,18 +18,12 @@ type Module struct {
 }
 
 func New(moduleConfig contract.ConfigReader, logger log.Logger) *Module {
-	module, cleanup, err := injectModule(setUp(moduleConfig, logger))
+	module, cleanup, err := injectModule(moduleConfig, logger)
 	if err != nil {
 		panic(err)
 	}
 	module.close = cleanup
 	return module
-}
-
-func setUp(moduleConfig contract.ConfigReader, logger log.Logger) (contract.ConfigReader, log.Logger) {
-	appLogger := log.With(logger, "module", config.ProvideAppName(moduleConfig).String())
-	appLogger = level.NewFilter(logger, klog.LevelFilter(moduleConfig.String("level")))
-	return moduleConfig, appLogger
 }
 
 func (m *Module) ProvideHttp(router *mux.Router) {

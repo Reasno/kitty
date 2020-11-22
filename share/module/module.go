@@ -4,11 +4,9 @@ import (
 	"net/http"
 
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	"google.golang.org/grpc"
 )
@@ -21,18 +19,12 @@ type Module struct {
 }
 
 func New(appModuleConfig contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) *Module {
-	appModule, cleanup, err := injectModule(setUp(appModuleConfig, logger, dynConf))
+	appModule, cleanup, err := injectModule(appModuleConfig, logger, dynConf)
 	if err != nil {
 		panic(err)
 	}
 	appModule.cleanup = cleanup
 	return appModule
-}
-
-func setUp(appModuleConfig contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (contract.ConfigReader, log.Logger, config.DynamicConfigReader) {
-	appLogger := log.With(logger, "module", config.ProvideAppName(appModuleConfig).String())
-	appLogger = level.NewFilter(logger, klog.LevelFilter(appModuleConfig.String("level")))
-	return appModuleConfig, appLogger, dynConf
 }
 
 func (a *Module) ProvideCloser() {
