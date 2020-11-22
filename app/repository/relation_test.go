@@ -193,7 +193,7 @@ func TestRelationRepo_AddRelations(t *testing.T) {
 			"4to1",
 			user(4),
 			user(1),
-			true,
+			false,
 		},
 	}
 

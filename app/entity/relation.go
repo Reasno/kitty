@@ -2,12 +2,14 @@ package entity
 
 import (
 	"errors"
-
 	"glab.tagtic.cn/ad_gains/kitty/app/msg"
 	"gorm.io/gorm"
 )
 
 var ErrRewardClaimed = errors.New(msg.RewardClaimed)
+var ErrRelationCircled = errors.New("关系中不能有环")
+var ErrRelationArgument = errors.New("错误的关系参数")
+var ErrRelationExist = errors.New("关系已经存在")
 var ErrOrientationHasNotBeenCompleted = errors.New(msg.OrientationHasNotBeenCompleted)
 
 type Relation struct {
@@ -73,6 +75,43 @@ func (r *Relation) ClaimReward() error {
 	}
 	r.RewardClaimed = true
 	return nil
+}
+
+func (r *Relation) RewriteSocialGraph(grandMaster *User, descendants []Relation) (addition []Relation, err error) {
+	newRelations := []Relation{*r}
+	if grandMaster != nil && grandMaster.ID != 0 {
+		newRelations = append(newRelations, *NewIndirectRelation(&r.Apprentice, grandMaster, r.OrientationSteps))
+	}
+
+	// 检测四阶环
+	if circleDetected(&r.Master, grandMaster, descendants) {
+		return nil, ErrRelationCircled
+	}
+
+	for _, descendant := range descendants {
+		if descendant.Depth == 2 {
+			continue
+		}
+		apprentice := User{Model: gorm.Model{ID: descendant.ApprenticeID}}
+		newRelations = append(newRelations, *NewIndirectRelation(&apprentice, &r.Master, r.OrientationSteps))
+	}
+	return newRelations, nil
+}
+
+func circleDetected(master, grandMaster *User, descendants []Relation) bool {
+	if grandMaster != nil && grandMaster.ID != 0 {
+		return in(grandMaster, descendants) || in(master, descendants)
+	}
+	return in(master, descendants)
+}
+
+func in(user *User, descendants []Relation) bool {
+	for _, v := range descendants {
+		if user.ID == v.ApprenticeID {
+			return true
+		}
+	}
+	return false
 }
 
 type OrientationStep struct {

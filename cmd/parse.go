@@ -25,10 +25,10 @@ var parseCmd = &cobra.Command{
 			if token.Method != jwt.SigningMethodHS256 {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
-			return []byte(conf.String("global.security.key")), nil
+			return []byte(coreModule.StaticConf.String("global.security.key")), nil
 		})
 		if err != nil {
-			level.Error(logger).Log("err", err)
+			level.Error(coreModule.Logger).Log("err", err)
 		}
 		if !token.Valid {
 			fmt.Println("token is NOT valid.")

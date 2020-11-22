@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/go-kit/kit/log/level"
 	"github.com/speps/go-hashids"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +22,7 @@ var inviteCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		hd := hashids.NewData()
-		hd.Salt = conf.String("global.salt")
+		hd.Salt = coreModule.StaticConf.String("global.salt")
 		hd.MinLength = 10
 		h, _ := hashids.NewWithData(hd)
 		if !decode {
@@ -34,7 +33,7 @@ var inviteCmd = &cobra.Command{
 		}
 		result, err := h.DecodeWithError(args[0])
 		if err != nil {
-			level.Error(logger).Log("err", err)
+			er(err)
 			return
 		}
 		fmt.Println(result[0])

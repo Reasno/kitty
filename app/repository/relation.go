@@ -2,15 +2,12 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"gorm.io/gorm"
 )
-
-var ErrRelationArgument = errors.New("错误的关系参数")
-var ErrRelationExist = errors.New("关系已经存在")
-var ErrRelationCircled = errors.New("关系中不能有环")
 
 type RelationRepo struct {
 	db *gorm.DB
@@ -40,20 +37,20 @@ func (r *RelationRepo) AddRelations(
 ) error {
 	var (
 		descendants       []entity.Relation
+		newRelations      []entity.Relation
 		ancestor          entity.Relation
 		secondaryAncestor entity.Relation
-		grandMaster       *entity.User
 		err               error
 	)
 
 	if candidate.MasterID == 0 {
-		return ErrRelationArgument
+		return entity.ErrRelationArgument
 	}
 	if candidate.ApprenticeID == 0 {
-		return ErrRelationArgument
+		return entity.ErrRelationArgument
 	}
 	if candidate.ApprenticeID == candidate.MasterID {
-		return ErrRelationArgument
+		return entity.ErrRelationArgument
 	}
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
@@ -72,27 +69,18 @@ func (r *RelationRepo) AddRelations(
 		}).Find(&descendants)
 
 		if ancestor.ID != 0 {
-			return ErrRelationExist
+			return entity.ErrRelationExist
+		}
+		if secondaryAncestor.MasterID != 0 {
+			fmt.Println(secondaryAncestor.Master.ID)
+		}
+		for _, v := range descendants {
+			fmt.Println(v.ApprenticeID)
 		}
 
-		newRelations := []entity.Relation{*candidate}
-
-		if secondaryAncestor.ID != 0 {
-			grandMaster = &secondaryAncestor.Master
-			grandMaster.ID = secondaryAncestor.MasterID
-			newRelations = append(newRelations, *entity.NewIndirectRelation(&candidate.Apprentice, grandMaster, candidate.OrientationSteps))
-		}
-
-		if circleDetected(&candidate.Master, grandMaster, descendants) {
-			return ErrRelationCircled
-		}
-
-		for _, descendant := range descendants {
-			if descendant.Depth == 2 {
-				continue
-			}
-			apprentice := entity.User{Model: gorm.Model{ID: descendant.ApprenticeID}}
-			newRelations = append(newRelations, *entity.NewIndirectRelation(&apprentice, &candidate.Master, candidate.OrientationSteps))
+		newRelations, err = candidate.RewriteSocialGraph(&secondaryAncestor.Master, descendants)
+		if err != nil {
+			return err
 		}
 
 		// save new relations
@@ -102,22 +90,6 @@ func (r *RelationRepo) AddRelations(
 		}
 		return nil
 	})
-}
-
-func circleDetected(master, grandMaster *entity.User, descendant []entity.Relation) bool {
-	if grandMaster != nil {
-		return in(grandMaster, descendant) || in(master, descendant)
-	}
-	return in(master, descendant)
-}
-
-func in(user *entity.User, descendant []entity.Relation) bool {
-	for _, v := range descendant {
-		if user.ID == v.ApprenticeID {
-			return true
-		}
-	}
-	return false
 }
 
 func (r *RelationRepo) UpdateRelations(

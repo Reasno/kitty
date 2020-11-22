@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/go-kit/kit/log/level"
 	"github.com/spf13/cobra"
 )
 
@@ -21,11 +20,11 @@ var seedCmd = &cobra.Command{
 
 		for _, f := range moduleContainer.SeedProvider {
 			if err := f(); err != nil {
-				level.Error(logger).Log("err", fmt.Sprintf("unable to seed %s", err.Error()))
+				er(fmt.Errorf("unable to seed %w", err))
 				return
 			}
 		}
 
-		level.Info(logger).Log("msg", "seeding successfully completed")
+		info("seeding successfully completed")
 	},
 }

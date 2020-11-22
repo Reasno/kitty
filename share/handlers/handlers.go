@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"glab.tagtic.cn/ad_gains/kitty/app/msg"
-	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
@@ -55,13 +54,13 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 	if errors.Is(err, ErrReenteringInviteCode) {
 		return nil, kerr.InvalidArgumentErr(err, msg.ReenteringCode)
 	}
-	if errors.Is(err, repository.ErrRelationArgument) {
+	if errors.Is(err, entity.ErrRelationArgument) {
 		return nil, kerr.InvalidArgumentErr(err, msg.InvalidInviteTarget)
 	}
-	if errors.Is(err, repository.ErrRelationCircled) {
+	if errors.Is(err, entity.ErrRelationCircled) {
 		return nil, kerr.FailedPreconditionErr(err, msg.ErrorCircledInvitation)
 	}
-	if errors.Is(err, repository.ErrRelationExist) {
+	if errors.Is(err, entity.ErrRelationExist) {
 		return nil, kerr.FailedPreconditionErr(err, msg.ErrorRelationAlreadyExists)
 	}
 	if errors.Is(err, internal.ErrFailedToDecodeToken) {

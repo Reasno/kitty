@@ -23,11 +23,6 @@ var DbSet = wire.NewSet(
 	ProvideGormDB,
 )
 
-var OpenTracingSet = wire.NewSet(
-	ProvideJaegerLogAdapter,
-	ProvideOpentracing,
-)
-
 var NameAndEnvSet = wire.NewSet(
 	config.ProvideAppName,
 	config.ProvideEnv,
