@@ -30,7 +30,7 @@ func New(cfgFile string) *Module {
 
 func (m Module) Make(name string) (contract.ConfigReader, log.Logger) {
 	conf := m.StaticConf.Cut(name)
-	logger := log.With(m.Logger, "component", conf.String("name"))
+	logger := log.With(m.Logger, "module", conf.String("name"))
 	logger = level.NewFilter(logger, klog.LevelFilter(conf.String("level")))
 	return conf, logger
 }
