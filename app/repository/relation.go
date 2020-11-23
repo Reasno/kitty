@@ -58,7 +58,7 @@ func (r *RelationRepo) AddRelations(
 			ApprenticeID: candidate.ApprenticeID,
 		}).First(&ancestor)
 
-		tx.WithContext(ctx).Preload("Apprentice").Preload("Master").Where(&entity.Relation{
+		tx.WithContext(ctx).Preload("Master").Where(&entity.Relation{
 			ApprenticeID: candidate.MasterID,
 			Depth:        1,
 		}).First(&secondaryAncestor)
