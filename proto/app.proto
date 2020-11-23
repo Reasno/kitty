@@ -73,6 +73,16 @@ service App {
       tags: "用户信息"
     };
   }
+
+  // 批量获取用户信息接口
+  rpc GetInfoBatch (UserInfoBatchRequest) returns (UserInfoBatchReply) {
+    option (google.api.http) = {
+      get: "/batch/info"
+    };
+    option (options.openapiv2_operation) = {
+      tags: "用户信息"
+    };
+  }
   // 更新个人信息
   // 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
   rpc UpdateInfo (UserInfoUpdateRequest) returns (UserInfoReply) {
@@ -273,6 +283,12 @@ message UserInfoReply {
   string msg = 4;
 }
 
+message UserInfoBatchReply {
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  repeated UserInfo data = 3;
+  string msg = 4;
+}
+
 
 message GetCodeRequest {
   string mobile = 1 [
@@ -280,6 +296,14 @@ message GetCodeRequest {
     (validate.rules).string = {pattern: "\\d{11}"}
   ];
   string packageName = 2;
+}
+
+message UserInfoBatchRequest {
+  repeated uint64 id = 1;
+  // 同时获得微信相关信息
+  bool wechat = 2;
+  // 同时获得淘宝相关信息
+  bool taobao = 3;
 }
 
 message UserInfoRequest {

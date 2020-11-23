@@ -76,6 +76,13 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		serverOptions...,
 	))
 
+	m.Methods("GET").Path("/batch/info").Handler(httptransport.NewServer(
+		endpoints.GetInfoBatchEndpoint,
+		DecodeHTTPGetInfoBatchZeroRequest,
+		EncodeHTTPGenericResponse,
+		serverOptions...,
+	))
+
 	m.Methods("POST").Path("/info").Handler(httptransport.NewServer(
 		endpoints.UpdateInfoEndpoint,
 		DecodeHTTPUpdateInfoZeroRequest,
@@ -296,6 +303,86 @@ func DecodeHTTPGetInfoZeroRequest(_ context.Context, r *http.Request) (interface
 			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting TaobaoGetInfo from query, queryParams: %v", queryParams))
 		}
 		req.Taobao = TaobaoGetInfo
+	}
+
+	return &req, err
+}
+
+// DecodeHTTPGetInfoBatchZeroRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded getinfobatch request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPGetInfoBatchZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	defer r.Body.Close()
+	var req pb.UserInfoBatchRequest
+	buf, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read body of http request")
+	}
+	if len(buf) > 0 {
+		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
+		unmarshaller := jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		}
+		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
+			const size = 8196
+			if len(buf) > size {
+				buf = buf[:size]
+			}
+			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
+				http.StatusBadRequest,
+				nil,
+			}
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := r.URL.Query()
+	_ = queryParams
+
+	if IdGetInfoBatchStrArr, ok := queryParams["id"]; ok {
+		IdGetInfoBatchStr := IdGetInfoBatchStrArr[0]
+
+		var IdGetInfoBatch []uint64
+		if len(IdGetInfoBatchStrArr) > 1 {
+			IdGetInfoBatch = make([]uint64, len(IdGetInfoBatchStrArr))
+			for i, v := range IdGetInfoBatchStrArr {
+				converted, err := strconv.ParseUint(v, 10, 64)
+				if err != nil {
+					return nil, errors.Wrapf(err, "couldn't decode IdGetInfoBatch from %v", IdGetInfoBatchStr)
+				}
+				IdGetInfoBatch[i] = converted
+			}
+		} else {
+			err = json.Unmarshal([]byte(IdGetInfoBatchStr), &IdGetInfoBatch)
+			if err != nil {
+				IdGetInfoBatchStr = "[" + IdGetInfoBatchStr + "]"
+			}
+			err = json.Unmarshal([]byte(IdGetInfoBatchStr), &IdGetInfoBatch)
+		}
+		if err != nil {
+			return nil, errors.Wrapf(err, "couldn't decode IdGetInfoBatch from %v", IdGetInfoBatchStr)
+		}
+		req.Id = IdGetInfoBatch
+	}
+
+	if WechatGetInfoBatchStrArr, ok := queryParams["wechat"]; ok {
+		WechatGetInfoBatchStr := WechatGetInfoBatchStrArr[0]
+		WechatGetInfoBatch, err := strconv.ParseBool(WechatGetInfoBatchStr)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting WechatGetInfoBatch from query, queryParams: %v", queryParams))
+		}
+		req.Wechat = WechatGetInfoBatch
+	}
+
+	if TaobaoGetInfoBatchStrArr, ok := queryParams["taobao"]; ok {
+		TaobaoGetInfoBatchStr := TaobaoGetInfoBatchStrArr[0]
+		TaobaoGetInfoBatch, err := strconv.ParseBool(TaobaoGetInfoBatchStr)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting TaobaoGetInfoBatch from query, queryParams: %v", queryParams))
+		}
+		req.Taobao = TaobaoGetInfoBatch
 	}
 
 	return &req, err

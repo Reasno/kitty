@@ -49,6 +49,7 @@ type UserRepository interface {
 	GetFromDevice(ctx context.Context, packageName, suuid string, device *entity.Device) (user *entity.User, err error)
 	Update(ctx context.Context, id uint, user entity.User) (newUser *entity.User, err error)
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
+	GetAll(ctx context.Context, ids ...uint) (user []entity.User, err error)
 	Save(ctx context.Context, user *entity.User) error
 }
 
@@ -512,4 +513,35 @@ func toReply(user *entity.User) *pb.UserInfoReply {
 			TaobaoExtra:  &taobaoExtra,
 		},
 	}
+}
+
+func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchRequest) (*pb.UserInfoBatchReply, error) {
+	var args []uint
+	for _, v := range in.Id {
+		args = append(args, uint(v))
+	}
+	users, err := s.ur.GetAll(ctx, args...)
+	if errors.Is(err, repository.ErrRecordNotFound) {
+		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
+	}
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	var resp = pb.UserInfoBatchReply{
+		Code: 0,
+		Data: []*pb.UserInfo{},
+	}
+
+	for _, v := range users {
+		tmp := toReply(&v).Data
+		if !in.Taobao {
+			tmp.TaobaoExtra = nil
+		}
+		if !in.Wechat {
+			tmp.WechatExtra = nil
+		}
+		resp.Data = append(resp.Data, tmp)
+	}
+
+	return &resp, nil
 }

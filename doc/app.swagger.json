@@ -16,6 +16,50 @@
     "application/json"
   ],
   "paths": {
+    "/batch/info": {
+      "get": {
+        "summary": "批量获取用户信息接口",
+        "operationId": "App_GetInfoBatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v2UserInfoBatchReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uint64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "wechat",
+            "description": "同时获得微信相关信息.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "taobao",
+            "description": "同时获得淘宝相关信息.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "用户信息"
+        ]
+      }
+    },
     "/bind": {
       "post": {
         "summary": "用户已登录后，绑定额外的手机号或微信号。\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
@@ -388,6 +432,24 @@
           "$ref": "#/definitions/v2TaobaoExtra"
         },
         "mobile": {
+          "type": "string"
+        }
+      }
+    },
+    "v2UserInfoBatchReply": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v2UserInfo"
+          }
+        },
+        "msg": {
           "type": "string"
         }
       }

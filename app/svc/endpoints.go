@@ -33,36 +33,39 @@ import (
 // single type that implements the Service interface. For example, you might
 // construct individual endpoints using transport/http.NewClient, combine them into an Endpoints, and return it to the caller as a Service.
 type Endpoints struct {
-	LoginEndpoint      endpoint.Endpoint
-	GetCodeEndpoint    endpoint.Endpoint
-	GetInfoEndpoint    endpoint.Endpoint
-	UpdateInfoEndpoint endpoint.Endpoint
-	BindEndpoint       endpoint.Endpoint
-	UnbindEndpoint     endpoint.Endpoint
-	RefreshEndpoint    endpoint.Endpoint
+	LoginEndpoint        endpoint.Endpoint
+	GetCodeEndpoint      endpoint.Endpoint
+	GetInfoEndpoint      endpoint.Endpoint
+	GetInfoBatchEndpoint endpoint.Endpoint
+	UpdateInfoEndpoint   endpoint.Endpoint
+	BindEndpoint         endpoint.Endpoint
+	UnbindEndpoint       endpoint.Endpoint
+	RefreshEndpoint      endpoint.Endpoint
 }
 
 func NewEndpoints(service pb.AppServer) Endpoints {
 
 	// Endpoint domain.
 	var (
-		loginEndpoint      = MakeLoginEndpoint(service)
-		getcodeEndpoint    = MakeGetCodeEndpoint(service)
-		getinfoEndpoint    = MakeGetInfoEndpoint(service)
-		updateinfoEndpoint = MakeUpdateInfoEndpoint(service)
-		bindEndpoint       = MakeBindEndpoint(service)
-		unbindEndpoint     = MakeUnbindEndpoint(service)
-		refreshEndpoint    = MakeRefreshEndpoint(service)
+		loginEndpoint        = MakeLoginEndpoint(service)
+		getcodeEndpoint      = MakeGetCodeEndpoint(service)
+		getinfoEndpoint      = MakeGetInfoEndpoint(service)
+		getinfobatchEndpoint = MakeGetInfoBatchEndpoint(service)
+		updateinfoEndpoint   = MakeUpdateInfoEndpoint(service)
+		bindEndpoint         = MakeBindEndpoint(service)
+		unbindEndpoint       = MakeUnbindEndpoint(service)
+		refreshEndpoint      = MakeRefreshEndpoint(service)
 	)
 
 	endpoints := Endpoints{
-		LoginEndpoint:      loginEndpoint,
-		GetCodeEndpoint:    getcodeEndpoint,
-		GetInfoEndpoint:    getinfoEndpoint,
-		UpdateInfoEndpoint: updateinfoEndpoint,
-		BindEndpoint:       bindEndpoint,
-		UnbindEndpoint:     unbindEndpoint,
-		RefreshEndpoint:    refreshEndpoint,
+		LoginEndpoint:        loginEndpoint,
+		GetCodeEndpoint:      getcodeEndpoint,
+		GetInfoEndpoint:      getinfoEndpoint,
+		GetInfoBatchEndpoint: getinfobatchEndpoint,
+		UpdateInfoEndpoint:   updateinfoEndpoint,
+		BindEndpoint:         bindEndpoint,
+		UnbindEndpoint:       unbindEndpoint,
+		RefreshEndpoint:      refreshEndpoint,
 	}
 
 	return endpoints
@@ -92,6 +95,14 @@ func (e Endpoints) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Use
 		return nil, err
 	}
 	return response.(*pb.UserInfoReply), nil
+}
+
+func (e Endpoints) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchRequest) (*pb.UserInfoBatchReply, error) {
+	response, err := e.GetInfoBatchEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.UserInfoBatchReply), nil
 }
 
 func (e Endpoints) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
@@ -161,6 +172,17 @@ func MakeGetInfoEndpoint(s pb.AppServer) endpoint.Endpoint {
 	}
 }
 
+func MakeGetInfoBatchEndpoint(s pb.AppServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.UserInfoBatchRequest)
+		v, err := s.GetInfoBatch(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 func MakeUpdateInfoEndpoint(s pb.AppServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*pb.UserInfoUpdateRequest)
@@ -212,13 +234,14 @@ func MakeRefreshEndpoint(s pb.AppServer) endpoint.Endpoint {
 // WrapAllExcept(middleware, "Status", "Ping")
 func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...string) {
 	included := map[string]struct{}{
-		"Login":      {},
-		"GetCode":    {},
-		"GetInfo":    {},
-		"UpdateInfo": {},
-		"Bind":       {},
-		"Unbind":     {},
-		"Refresh":    {},
+		"Login":        {},
+		"GetCode":      {},
+		"GetInfo":      {},
+		"GetInfoBatch": {},
+		"UpdateInfo":   {},
+		"Bind":         {},
+		"Unbind":       {},
+		"Refresh":      {},
 	}
 
 	for _, ex := range excluded {
@@ -237,6 +260,9 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		}
 		if inc == "GetInfo" {
 			e.GetInfoEndpoint = middleware(e.GetInfoEndpoint)
+		}
+		if inc == "GetInfoBatch" {
+			e.GetInfoBatchEndpoint = middleware(e.GetInfoBatchEndpoint)
 		}
 		if inc == "UpdateInfo" {
 			e.UpdateInfoEndpoint = middleware(e.UpdateInfoEndpoint)
@@ -264,13 +290,14 @@ type LabeledMiddleware func(string, endpoint.Endpoint) endpoint.Endpoint
 // functionality.
 func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoint) endpoint.Endpoint, excluded ...string) {
 	included := map[string]struct{}{
-		"Login":      {},
-		"GetCode":    {},
-		"GetInfo":    {},
-		"UpdateInfo": {},
-		"Bind":       {},
-		"Unbind":     {},
-		"Refresh":    {},
+		"Login":        {},
+		"GetCode":      {},
+		"GetInfo":      {},
+		"GetInfoBatch": {},
+		"UpdateInfo":   {},
+		"Bind":         {},
+		"Unbind":       {},
+		"Refresh":      {},
 	}
 
 	for _, ex := range excluded {
@@ -289,6 +316,9 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		}
 		if inc == "GetInfo" {
 			e.GetInfoEndpoint = middleware("GetInfo", e.GetInfoEndpoint)
+		}
+		if inc == "GetInfoBatch" {
+			e.GetInfoBatchEndpoint = middleware("GetInfoBatch", e.GetInfoBatchEndpoint)
 		}
 		if inc == "UpdateInfo" {
 			e.UpdateInfoEndpoint = middleware("UpdateInfo", e.UpdateInfoEndpoint)

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
+	"gorm.io/gorm"
 )
 
 func TestGetFromWechat(t *testing.T) {
@@ -130,6 +131,25 @@ func TestGetSave(t *testing.T) {
 	}
 	if u.ID != user.ID {
 		t.Fatalf("want %d, go %d", user.ID, u.ID)
+	}
+}
+
+func TestUserRepo_GetAll(t *testing.T) {
+	setUp(t)
+	defer tearDown()
+
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil))
+	ctx := context.Background()
+	for i := 1; i < 5; i++ {
+		user := entity.User{Model: gorm.Model{ID: uint(i)}}
+		_ = userRepo.Save(ctx, &user)
+	}
+	users, err := userRepo.GetAll(ctx, 1, 2, 3, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(users) != 4 {
+		t.Fatal("there should be four users")
 	}
 }
 
