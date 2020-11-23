@@ -119,6 +119,8 @@ message ShareListFriendReply {
 
 message ShareListFriendData {
   repeated ShareListFriendDataItem items = 1;
+  int32 count_all = 2;
+  int32 count_not_ready = 3;
 }
 
 enum ClaimStatus {

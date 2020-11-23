@@ -355,6 +355,10 @@ func (m *ShareListFriendData) Validate() error {
 
 	}
 
+	// no validation rules for CountAll
+
+	// no validation rules for CountNotReady
+
 	return nil
 }
 

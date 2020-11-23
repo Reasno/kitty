@@ -99,7 +99,10 @@ func (s shareService) ListFriend(ctx context.Context, in *pb.ShareListFriendRequ
 	if err != nil {
 		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
 	}
-	var resp pb.ShareListFriendReply
+	var (
+		resp          pb.ShareListFriendReply
+		countNotReady int32
+	)
 	resp.Data = new(pb.ShareListFriendData)
 	for _, rel := range rels {
 		item := &pb.ShareListFriendDataItem{
@@ -111,23 +114,26 @@ func (s shareService) ListFriend(ctx context.Context, in *pb.ShareListFriendRequ
 			Steps:    make(map[string]bool),
 			CreateAt: rel.CreatedAt.Unix(),
 		}
-		item.ClaimStatus = status(&rel)
+		item.ClaimStatus = status(&rel, &countNotReady)
 
 		for _, step := range rel.OrientationSteps {
 			item.Steps[step.Name] = step.StepCompleted
 		}
 		resp.Data.Items = append(resp.Data.Items, item)
 	}
+	resp.Data.CountNotReady = countNotReady
+	resp.Data.CountAll = int32(len(rels))
 	return &resp, nil
 }
 
-func status(item *internal.RelationWithRewardAmount) pb.ClaimStatus {
+func status(item *internal.RelationWithRewardAmount, countNotReady *int32) pb.ClaimStatus {
 	if item.RewardClaimed {
 		return pb.ClaimStatus_DONE
 	}
 	if item.OrientationCompleted {
 		return pb.ClaimStatus_READY
 	}
+	*countNotReady++
 	return pb.ClaimStatus_NOT_READY
 }
 

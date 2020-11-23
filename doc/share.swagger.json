@@ -223,6 +223,14 @@
           "items": {
             "$ref": "#/definitions/v1ShareListFriendDataItem"
           }
+        },
+        "count_all": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "count_not_ready": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
