@@ -200,6 +200,66 @@ func TestAppService_GetInfo(t *testing.T) {
 	}
 }
 
+func TestAppService_GetInfoBatch(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name    string
+		service appService
+		in      pb.UserInfoBatchRequest
+		out     pb.UserInfoBatchReply
+	}{
+		{
+			"获取用户信息",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					ur.On("GetAll", mock.Anything, mock.AnythingOfType("uint"), mock.AnythingOfType("uint"), mock.AnythingOfType("uint")).Return(func(ctx context.Context, ids ...uint) []entity.User {
+						return []entity.User{{Mobile: ns("123"), PackageName: "foo", Model: gorm.Model{ID: ids[0]}, UserName: "foo"}}
+					}, nil).Once()
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					return cr
+				})(),
+				sender: &mc.SmsSender{},
+				wechat: &wm.Wechater{},
+			},
+
+			pb.UserInfoBatchRequest{
+				Id: []uint64{1, 2, 3},
+			},
+			pb.UserInfoBatchReply{
+				Code: 0,
+				Data: []*pb.UserInfo{{
+					Id:       1,
+					UserName: "foo",
+				}},
+			},
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			out, err := cc.service.GetInfoBatch(context.Background(), &cc.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if out.Code != cc.out.Code {
+				t.Fatalf("want %d, got %d", cc.out.Code, out.Code)
+			}
+			if out.Data[0].Id != cc.out.Data[0].Id {
+				t.Fatalf("want %d, got %d", cc.out.Data[0].Id, out.Data[0].Id)
+			}
+			if out.Data[0].UserName != cc.out.Data[0].UserName {
+				t.Fatalf("want %s, got %s", cc.out.Data[0].UserName, out.Data[0].UserName)
+			}
+		})
+	}
+}
+
 func TestAppService_Refresh(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

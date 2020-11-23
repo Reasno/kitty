@@ -74,7 +74,7 @@ service App {
     };
   }
 
-  // 批量获取用户信息接口
+  // 批量获取用户信息接口。如果一个或多个用户ID在数据库中不存在，不会报错，在返回结果中只会包含存在的数据。
   rpc GetInfoBatch (UserInfoBatchRequest) returns (UserInfoBatchReply) {
     option (google.api.http) = {
       get: "/batch/info"

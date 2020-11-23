@@ -1612,7 +1612,7 @@ type AppClient interface {
 	GetCode(ctx context.Context, in *GetCodeRequest, opts ...grpc.CallOption) (*GenericReply, error)
 	// 获取任意用户信息，填0获取本人信息
 	GetInfo(ctx context.Context, in *UserInfoRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
-	// 批量获取用户信息接口
+	// 批量获取用户信息接口。如果一个或多个用户ID在数据库中不存在，不会报错，在返回结果中只会包含存在的数据。
 	GetInfoBatch(ctx context.Context, in *UserInfoBatchRequest, opts ...grpc.CallOption) (*UserInfoBatchReply, error)
 	// 更新个人信息
 	// 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
@@ -1717,7 +1717,7 @@ type AppServer interface {
 	GetCode(context.Context, *GetCodeRequest) (*GenericReply, error)
 	// 获取任意用户信息，填0获取本人信息
 	GetInfo(context.Context, *UserInfoRequest) (*UserInfoReply, error)
-	// 批量获取用户信息接口
+	// 批量获取用户信息接口。如果一个或多个用户ID在数据库中不存在，不会报错，在返回结果中只会包含存在的数据。
 	GetInfoBatch(context.Context, *UserInfoBatchRequest) (*UserInfoBatchReply, error)
 	// 更新个人信息
 	// 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
