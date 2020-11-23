@@ -142,12 +142,14 @@ func TestShareService_ClaimReward(t *testing.T) {
 func TestShareService_ListFriend(t *testing.T) {
 	//t.Parallel()
 	cases := []struct {
-		name    string
-		service shareService
-		ctx     context.Context
-		req     pb.ShareListFriendRequest
-		status  pb.ClaimStatus
-		err     error
+		name          string
+		service       shareService
+		ctx           context.Context
+		req           pb.ShareListFriendRequest
+		status        pb.ClaimStatus
+		countAll      int32
+		countNotReady int32
+		err           error
 	}{
 		{
 			name: "正常请求ready",
@@ -174,8 +176,10 @@ func TestShareService_ListFriend(t *testing.T) {
 			req: pb.ShareListFriendRequest{
 				Depth: 1,
 			},
-			status: pb.ClaimStatus_READY,
-			err:    nil,
+			status:        pb.ClaimStatus_READY,
+			countAll:      1,
+			countNotReady: 0,
+			err:           nil,
 		},
 		{
 			name: "正常请求not ready",
@@ -202,8 +206,10 @@ func TestShareService_ListFriend(t *testing.T) {
 			req: pb.ShareListFriendRequest{
 				Depth: 1,
 			},
-			status: pb.ClaimStatus_NOT_READY,
-			err:    nil,
+			status:        pb.ClaimStatus_NOT_READY,
+			countAll:      1,
+			countNotReady: 1,
+			err:           nil,
 		},
 		{
 			name: "正常请求claimed",
@@ -230,8 +236,10 @@ func TestShareService_ListFriend(t *testing.T) {
 			req: pb.ShareListFriendRequest{
 				Depth: 1,
 			},
-			status: pb.ClaimStatus_DONE,
-			err:    nil,
+			countAll:      1,
+			countNotReady: 0,
+			status:        pb.ClaimStatus_DONE,
+			err:           nil,
 		},
 		{
 			name: "异常请求",
@@ -269,6 +277,8 @@ func TestShareService_ListFriend(t *testing.T) {
 			assert.True(t, errors.Is(err, cc.err))
 			if err == nil {
 				assert.Equal(t, cc.status, resp.Data.Items[0].ClaimStatus)
+				assert.Equal(t, cc.countAll, resp.Data.CountAll)
+				assert.Equal(t, cc.countNotReady, resp.Data.CountNotReady)
 			}
 		})
 	}
