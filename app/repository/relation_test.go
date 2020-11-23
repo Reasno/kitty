@@ -10,7 +10,6 @@ import (
 )
 
 func TestRelationRepo_QueryRelations(t *testing.T) {
-
 	setUp(t)
 	defer tearDown()
 

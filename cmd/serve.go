@@ -43,9 +43,9 @@ var serveCmd = &cobra.Command{
 			h := getHttpHandler(ln, moduleContainer.HttpProviders...)
 			srv := &http.Server{
 				Handler:      h,
-				IdleTimeout:  10 * time.Second,
-				ReadTimeout:  10 * time.Second,
-				WriteTimeout: 10 * time.Second,
+				IdleTimeout:  2 * time.Second,
+				ReadTimeout:  2 * time.Second,
+				WriteTimeout: 2 * time.Second,
 			}
 			g.Add(func() error {
 				return srv.Serve(ln)

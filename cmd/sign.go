@@ -41,7 +41,7 @@ var signCmd = &cobra.Command{
 	Short: "sign a jwt token",
 	Long:  `Sign a valid jwt token for further use`,
 	Run: func(cmd *cobra.Command, args []string) {
-		key := coreModule.StaticConf.String("global.security.key")
+		key := coreModule.Conf.String("global.security.key")
 		token := jwt.NewWithClaims(
 			jwt.SigningMethodHS256,
 			kittyjwt.NewClaim(
@@ -56,7 +56,7 @@ var signCmd = &cobra.Command{
 				s.ttl,
 			),
 		)
-		token.Header["kid"] = coreModule.StaticConf.String("global.security.kid")
+		token.Header["kid"] = coreModule.Conf.String("global.security.kid")
 		tokenString, err := token.SignedString([]byte(key))
 		if err != nil {
 			er(err)

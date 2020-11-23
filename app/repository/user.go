@@ -65,6 +65,7 @@ func (r *UserRepo) UpdateCallback(ctx context.Context, id uint, f func(user *ent
 		if err != nil {
 			return err
 		}
+
 		err = tx.Save(u).Error
 		if err != nil {
 			if err, ok := err.(*mysql.MySQLError); ok {

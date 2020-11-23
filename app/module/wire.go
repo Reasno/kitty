@@ -30,6 +30,11 @@ var NameAndEnvSet = wire.NewSet(
 	wire.Bind(new(contract.AppName), new(config.AppName)),
 )
 
+var OpenTracingSet = wire.NewSet(
+	ProvideJaegerLogAdapter,
+	ProvideOpentracing,
+)
+
 var AppServerSet = wire.NewSet(
 	provideSmsConfig,
 	DbSet,

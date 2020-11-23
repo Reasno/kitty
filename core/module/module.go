@@ -3,13 +3,11 @@ package module
 import (
 	"github.com/go-kit/kit/log"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
-	"glab.tagtic.cn/ad_gains/kitty/rule/client"
 )
 
 type Module struct {
-	StaticConf contract.ConfigReader
-	Engine     *client.RuleEngine
-	Logger     log.Logger
+	Conf   contract.ConfigReader
+	Logger log.Logger
 }
 
 func New(cfgFile string) *Module {
@@ -19,7 +17,7 @@ func New(cfgFile string) *Module {
 	}
 	logger := ProvideLogger(conf)
 	return &Module{
-		StaticConf: conf,
-		Logger:     logger,
+		Conf:   conf,
+		Logger: logger,
 	}
 }

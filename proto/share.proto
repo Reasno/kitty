@@ -108,7 +108,7 @@ message ShareClaimRewardReply {
 }
 
 message ShareListFriendRequest {
-  int32 depth = 1;
+  int32 depth = 1 [(validate.rules).int32 = {in: [1,2]}];
 }
 
 message ShareListFriendReply {

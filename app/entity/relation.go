@@ -77,7 +77,7 @@ func (r *Relation) ClaimReward() error {
 	return nil
 }
 
-func (r *Relation) RewriteSocialGraph(grandMaster *User, descendants []Relation) (addition []Relation, err error) {
+func (r *Relation) Connect(grandMaster *User, descendants []Relation) (addition []Relation, err error) {
 	newRelations := []Relation{*r}
 	if grandMaster != nil && grandMaster.ID != 0 {
 		newRelations = append(newRelations, *NewIndirectRelation(&r.Apprentice, grandMaster, r.OrientationSteps))

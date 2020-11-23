@@ -76,12 +76,12 @@ var DbSet = wire.NewSet(
 	ProvideGormDB,
 )
 
+var NameAndEnvSet = wire.NewSet(config.ProvideAppName, config.ProvideEnv, wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)))
+
 var OpenTracingSet = wire.NewSet(
 	ProvideJaegerLogAdapter,
 	ProvideOpentracing,
 )
-
-var NameAndEnvSet = wire.NewSet(config.ProvideAppName, config.ProvideEnv, wire.Bind(new(contract.Env), new(config.Env)), wire.Bind(new(contract.AppName), new(config.AppName)))
 
 var AppServerSet = wire.NewSet(
 	provideSmsConfig,

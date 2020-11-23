@@ -180,7 +180,12 @@ func (m *ShareListFriendRequest) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Depth
+	if _, ok := _ShareListFriendRequest_Depth_InLookup[m.GetDepth()]; !ok {
+		return ShareListFriendRequestValidationError{
+			field:  "Depth",
+			reason: "value must be in list [1 2]",
+		}
+	}
 
 	return nil
 }
@@ -240,6 +245,11 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ShareListFriendRequestValidationError{}
+
+var _ShareListFriendRequest_Depth_InLookup = map[int32]struct{}{
+	1: {},
+	2: {},
+}
 
 // Validate checks the field values on ShareListFriendReply with the rules
 // defined in the proto definition for this message. If any rules are

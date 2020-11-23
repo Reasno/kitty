@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
@@ -71,20 +70,14 @@ func (r *RelationRepo) AddRelations(
 		if ancestor.ID != 0 {
 			return entity.ErrRelationExist
 		}
-		if secondaryAncestor.MasterID != 0 {
-			fmt.Println(secondaryAncestor.Master.ID)
-		}
-		for _, v := range descendants {
-			fmt.Println(v.ApprenticeID)
-		}
 
-		newRelations, err = candidate.RewriteSocialGraph(&secondaryAncestor.Master, descendants)
+		newRelations, err = candidate.Connect(&secondaryAncestor.Master, descendants)
 		if err != nil {
 			return err
 		}
 
 		// save new relations
-		err = tx.WithContext(ctx).Create(&newRelations).Error
+		err = tx.WithContext(ctx).Omit("Master").Omit("Apprentice").Create(&newRelations).Error
 		if err != nil {
 			return errors.Wrap(err, "unable to create relations")
 		}

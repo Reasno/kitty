@@ -14,7 +14,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version number of Kitty",
 	Long:  `All software has versions. This is Kitty's`,
 	Run: func(cmd *cobra.Command, args []string) {
-		version := coreModule.StaticConf.String("global.version")
+		version := coreModule.Conf.String("global.version")
 		info(fmt.Sprintf("Kitty %s", version))
 	},
 }

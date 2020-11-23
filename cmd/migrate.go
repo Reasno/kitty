@@ -25,7 +25,7 @@ var migrateCommand = &cobra.Command{
 		initModules()
 		defer shutdownModules()
 
-		env := config.ProvideEnv(coreModule.StaticConf)
+		env := config.ProvideEnv(coreModule.Conf)
 		if env.IsProd() {
 			er(fmt.Errorf("migrations and rollback in production requires force flag to be set"))
 			os.Exit(1)

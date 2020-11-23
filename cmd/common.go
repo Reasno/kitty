@@ -59,13 +59,13 @@ func info(msg string) {
 }
 
 func conf() contract.ConfigReader {
-	return coreModule.StaticConf
+	return coreModule.Conf
 }
 
 // name unpacks the core module to several dependencies for other modules
 func name(name string) (contract.ConfigReader, log.Logger) {
 	m := coreModule
-	conf := m.StaticConf.Cut(name)
+	conf := m.Conf.Cut(name)
 	logger := log.With(m.Logger, "module", conf.String("name"))
 	logger = level.NewFilter(logger, klog.LevelFilter(conf.String("level")))
 	return conf, logger
@@ -74,7 +74,7 @@ func name(name string) (contract.ConfigReader, log.Logger) {
 // nameD like name, but also provide config.DynamicConfigReader
 func nameD(name string, client *client.RuleEngine) (contract.ConfigReader, log.Logger, config.DynamicConfigReader) {
 	m := coreModule
-	conf := m.StaticConf.Cut(name)
+	conf := m.Conf.Cut(name)
 	logger := log.With(m.Logger, "module", conf.String("name"))
 	logger = level.NewFilter(logger, klog.LevelFilter(conf.String("level")))
 	dyn := client.Of(

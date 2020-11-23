@@ -7,9 +7,8 @@ import (
 	stdjwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type Claim struct {
@@ -34,35 +33,29 @@ func NewAuthenticationMiddleware(securityConfig *SecurityConfig) endpoint.Middle
 		e = jwt.NewParser(kf, stdjwt.SigningMethodHS256, kittyjwt.ClaimFactory)(e)
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			response, err = e(ctx, request)
-			return response, unwrap(err)
+			return response, wrap(err)
 		}
 	}
 }
 
-func unwrap(err error) error {
+func wrap(err error) error {
 	if errors.Is(err, jwt.ErrTokenInvalid) {
-		err = status.Error(codes.Unauthenticated, err.Error())
-		return err
+		return kerr.UnauthenticatedErr(err, err.Error())
 	}
 	if errors.Is(err, jwt.ErrTokenExpired) {
-		err = status.Error(codes.Unauthenticated, err.Error())
-		return err
+		return kerr.UnauthenticatedErr(err, err.Error())
 	}
 	if errors.Is(err, jwt.ErrTokenContextMissing) {
-		err = status.Error(codes.Unauthenticated, err.Error())
-		return err
+		return kerr.UnauthenticatedErr(err, err.Error())
 	}
 	if errors.Is(err, jwt.ErrTokenNotActive) {
-		err = status.Error(codes.Unauthenticated, err.Error())
-		return err
+		return kerr.UnauthenticatedErr(err, err.Error())
 	}
 	if errors.Is(err, jwt.ErrUnexpectedSigningMethod) {
-		err = status.Error(codes.Unauthenticated, err.Error())
-		return err
+		return kerr.UnauthenticatedErr(err, err.Error())
 	}
 	if errors.Is(err, jwt.ErrTokenMalformed) {
-		err = status.Error(codes.Unauthenticated, err.Error())
-		return err
+		return kerr.UnauthenticatedErr(err, err.Error())
 	}
 	return err
 }
@@ -79,7 +72,7 @@ func NewOptionalAuthenticationMiddleware(securityConfig *SecurityConfig) endpoin
 				return plain(ctx, request)
 			}
 			response, err = auth(ctx, request)
-			return response, unwrap(err)
+			return response, wrap(err)
 		}
 	}
 }

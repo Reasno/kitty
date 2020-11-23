@@ -22,7 +22,7 @@ var inviteCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		hd := hashids.NewData()
-		hd.Salt = coreModule.StaticConf.String("global.salt")
+		hd.Salt = coreModule.Conf.String("global.salt")
 		hd.MinLength = 10
 		h, _ := hashids.NewWithData(hd)
 		if !decode {
