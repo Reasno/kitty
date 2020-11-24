@@ -32,7 +32,7 @@ func (_m *InvitationManager) AddToken(ctx context.Context, userId uint64, token 
 }
 
 // AdvanceStep provides a mock function with given fields: ctx, apprenticeId, eventName
-func (_m *InvitationManager) AdvanceStep(ctx context.Context, apprenticeId uint64, eventName string) error {
+func (_m *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error {
 	ret := _m.Called(ctx, apprenticeId, eventName)
 
 	var r0 error

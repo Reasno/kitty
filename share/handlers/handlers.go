@@ -24,7 +24,7 @@ type shareService struct {
 type InvitationManager interface {
 	AddToken(ctx context.Context, userId uint64, token string) error
 	ClaimReward(ctx context.Context, masterId uint64, apprenticeId uint64) error
-	AdvanceStep(ctx context.Context, apprenticeId uint64, eventName string) error
+	CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error
 	ListApprentices(ctx context.Context, masterId uint64, depth int) ([]internal.RelationWithRewardAmount, error)
 	GetToken(ctx context.Context, id uint) string
 	GetUrl(ctx context.Context, claim *kittyjwt.Claim) string

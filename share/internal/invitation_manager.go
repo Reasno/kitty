@@ -126,7 +126,7 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 	})
 }
 
-func (im *InvitationManager) AdvanceStep(ctx context.Context, apprenticeId uint64, eventName string) error {
+func (im *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error {
 
 	apprentice := user(uint(apprenticeId))
 

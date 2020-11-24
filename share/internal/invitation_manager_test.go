@@ -271,7 +271,7 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 	for _, c := range cases {
 		cc := c
 		t.Run(cc.name, func(t *testing.T) {
-			err := cc.service.AdvanceStep(context.Background(), cc.apprenticeId, cc.eventName)
+			err := cc.service.CompleteStep(context.Background(), cc.apprenticeId, cc.eventName)
 			assert.True(t, errors.Is(err, cc.out))
 		})
 	}
