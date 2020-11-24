@@ -71,7 +71,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 	u, err = s.loginFrom(ctx, in, device)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
 	// 再存一些信息

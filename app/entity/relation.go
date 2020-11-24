@@ -66,6 +66,19 @@ func (r *Relation) CompleteStep(step OrientationStep) {
 	r.OrientationCompleted = orientationCompleted
 }
 
+func (r *Relation) Validate() error {
+	if r.MasterID == 0 {
+		return ErrRelationArgument
+	}
+	if r.ApprenticeID == 0 {
+		return ErrRelationArgument
+	}
+	if r.ApprenticeID == r.MasterID {
+		return ErrRelationArgument
+	}
+	return nil
+}
+
 func (r *Relation) ClaimReward() error {
 	if r.RewardClaimed {
 		return ErrRewardClaimed

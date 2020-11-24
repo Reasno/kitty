@@ -42,14 +42,8 @@ func (r *RelationRepo) AddRelations(
 		err               error
 	)
 
-	if candidate.MasterID == 0 {
-		return entity.ErrRelationArgument
-	}
-	if candidate.ApprenticeID == 0 {
-		return entity.ErrRelationArgument
-	}
-	if candidate.ApprenticeID == candidate.MasterID {
-		return entity.ErrRelationArgument
+	if err := candidate.Validate(); err != nil {
+		return errors.WithStack(err)
 	}
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
