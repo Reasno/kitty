@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/segmentio/kafka-go"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
@@ -27,6 +28,7 @@ func (er *EventReceiver) handleSign(ctx context.Context, msg kafka.Message) erro
 	if err != nil {
 		return err
 	}
+	ctx = addTenant(ctx, &signEvent)
 	return er.Manager.CompleteStep(ctx, signEvent.UserId, signEvent.EventName)
 }
 
@@ -36,6 +38,7 @@ func (er *EventReceiver) handleTask(ctx context.Context, msg kafka.Message) erro
 	if err != nil {
 		return err
 	}
+	ctx = addTenant(ctx, &taskEvent)
 	return er.Manager.CompleteStep(ctx, taskEvent.UserId, taskEvent.EventName)
 }
 
@@ -53,4 +56,18 @@ func (er *EventReceiver) SubscribeCheckin(ctx context.Context) error {
 		er.Conf.String("kafka.signEventBus"),
 		kkafka.WithGroup(groupId),
 	).Subscribe(ctx, er.handleSign)
+}
+
+type Tenanter interface {
+	GetChannel() string
+	GetUserId() uint64
+	GetPackageName() string
+}
+
+func addTenant(ctx context.Context, t Tenanter) context.Context {
+	return context.WithValue(ctx, config.TenantKey, &config.Tenant{
+		Channel:     t.GetChannel(),
+		UserId:      t.GetUserId(),
+		PackageName: t.GetPackageName(),
+	})
 }
