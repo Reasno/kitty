@@ -28,7 +28,7 @@ func (er *EventReceiver) handleSign(ctx context.Context, msg kafka.Message) erro
 	if err != nil {
 		return err
 	}
-	ctx = addTenant(ctx, &signEvent)
+	ctx = withTenant(ctx, &signEvent)
 	return er.Manager.CompleteStep(ctx, signEvent.UserId, signEvent.EventName)
 }
 
@@ -38,7 +38,7 @@ func (er *EventReceiver) handleTask(ctx context.Context, msg kafka.Message) erro
 	if err != nil {
 		return err
 	}
-	ctx = addTenant(ctx, &taskEvent)
+	ctx = withTenant(ctx, &taskEvent)
 	return er.Manager.CompleteStep(ctx, taskEvent.UserId, taskEvent.EventName)
 }
 
@@ -64,7 +64,7 @@ type Tenanter interface {
 	GetPackageName() string
 }
 
-func addTenant(ctx context.Context, t Tenanter) context.Context {
+func withTenant(ctx context.Context, t Tenanter) context.Context {
 	return context.WithValue(ctx, config.TenantKey, &config.Tenant{
 		Channel:     t.GetChannel(),
 		UserId:      t.GetUserId(),
