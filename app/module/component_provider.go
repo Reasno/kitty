@@ -63,7 +63,7 @@ type userBus struct {
 	kkafka.DataStore
 }
 
-func provideUserBus(factory *kkafka.KafkaProducerFactory, conf contract.ConfigReader) *userBus {
+func provideUserBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader) *userBus {
 	return &userBus{kkafka.DataStore{
 		Factory: factory,
 		Topic:   conf.String("kafka.userBus"),
@@ -74,14 +74,14 @@ type eventBus struct {
 	kkafka.EventStore
 }
 
-func provideEventBus(factory *kkafka.KafkaProducerFactory, conf contract.ConfigReader) *eventBus {
+func provideEventBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader) *eventBus {
 	return &eventBus{kkafka.EventStore{
 		Factory: factory,
 		Topic:   conf.String("kafka.eventBus"),
 	}}
 }
 
-func provideKafkaProducerFactory(conf contract.ConfigReader, logger log.Logger, tracer opentracing.Tracer) (*kkafka.KafkaProducerFactory, func()) {
+func ProvideKafkaFactory(conf contract.ConfigReader, logger log.Logger, tracer opentracing.Tracer) (*kkafka.KafkaFactory, func()) {
 	factory := kkafka.NewKafkaProducerFactoryWithTracer(conf.Strings("kafka.brokers"), logger, tracer)
 	return factory, func() {
 		_ = factory.Close()

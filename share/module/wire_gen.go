@@ -14,6 +14,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
+	"glab.tagtic.cn/ad_gains/kitty/share/consumer"
 	"glab.tagtic.cn/ad_gains/kitty/share/handlers"
 	"glab.tagtic.cn/ad_gains/kitty/share/internal"
 )
@@ -70,8 +71,16 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	endpoints := provideEndpoints(moduleOverallMiddleware, shareServer)
 	grpcShareServer := provideGrpc(endpoints, tracer, logger, appName)
 	handler := provideHttp(endpoints, tracer, logger, appName)
-	moduleModule := provideModule(grpcShareServer, handler, appName)
+	kafkaFactory, cleanup3 := module.ProvideKafkaFactory(reader, logger, tracer)
+	eventReceiver := consumer.EventReceiver{
+		AppName: appName,
+		Conf:    reader,
+		Manager: invitationManagerFacade,
+		Factory: kafkaFactory,
+	}
+	moduleModule := provideModule(grpcShareServer, handler, eventReceiver, appName)
 	return moduleModule, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
@@ -79,4 +88,4 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 
 // wire.go:
 
-var ShareServiceSet = wire.NewSet(module.DbSet, module.OpenTracingSet, module.NameAndEnvSet, module.ProvideSecurityConfig, module.ProvideHistogramMetrics, module.ProvideHttpClient, module.ProvideUploadManager, repository.NewUserRepo, repository.NewRelationRepo, repository.NewFileRepo, provideTokenizer, internal.NewXTaskRequester, handlers.NewShareService, handlers.ProvideShareServer, wire.Struct(new(internal.InvitationManagerFactory), "*"), wire.Struct(new(internal.InvitationManagerFacade), "*"), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(internal.RelationRepository), new(*repository.RelationRepo)), wire.Bind(new(handlers.InvitationManager), new(*internal.InvitationManagerFacade)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(internal.EncodeDecoder), new(*internal.Tokenizer)))
+var ShareServiceSet = wire.NewSet(module.DbSet, module.OpenTracingSet, module.NameAndEnvSet, module.ProvideSecurityConfig, module.ProvideKafkaFactory, module.ProvideHistogramMetrics, module.ProvideHttpClient, module.ProvideUploadManager, repository.NewUserRepo, repository.NewRelationRepo, repository.NewFileRepo, provideTokenizer, internal.NewXTaskRequester, handlers.NewShareService, handlers.ProvideShareServer, wire.Struct(new(internal.InvitationManagerFactory), "*"), wire.Struct(new(internal.InvitationManagerFacade), "*"), wire.Struct(new(consumer.EventReceiver), "*"), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(internal.RelationRepository), new(*repository.RelationRepo)), wire.Bind(new(handlers.InvitationManager), new(*internal.InvitationManagerFacade)), wire.Bind(new(consumer.InvitationManager), new(*internal.InvitationManagerFacade)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(internal.EncodeDecoder), new(*internal.Tokenizer)))

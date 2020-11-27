@@ -1,6 +1,7 @@
 package kkafka
 
 import (
+	"context"
 	"sync"
 
 	"github.com/go-kit/kit/log"
@@ -10,40 +11,35 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 )
 
-type KafkaProducerFactory struct {
+type KafkaFactory struct {
 	tracer  opentracing.Tracer
 	mutex   sync.Mutex
-	cache   map[string]*kafka.Writer
 	brokers []string
 	closers []func() error
 	logger  log.Logger
 }
 
-func NewKafkaProducerFactory(brokers []string, logger log.Logger) *KafkaProducerFactory {
-	return &KafkaProducerFactory{
-		cache:   map[string]*kafka.Writer{},
+func NewKafkaProducerFactory(brokers []string, logger log.Logger) *KafkaFactory {
+	return &KafkaFactory{
 		brokers: brokers,
 		closers: []func() error{},
 		logger:  logger,
 	}
 }
 
-func NewKafkaProducerFactoryWithTracer(brokers []string, logger log.Logger, tracer opentracing.Tracer) *KafkaProducerFactory {
-	return &KafkaProducerFactory{
+func NewKafkaProducerFactoryWithTracer(brokers []string, logger log.Logger, tracer opentracing.Tracer) *KafkaFactory {
+	return &KafkaFactory{
 		tracer:  tracer,
-		cache:   map[string]*kafka.Writer{},
 		brokers: brokers,
 		closers: []func() error{},
 		logger:  logger,
 	}
 }
 
-func (k *KafkaProducerFactory) Writer(topic string) *kafka.Writer {
+func (k *KafkaFactory) Writer(topic string) Publisher {
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
-	if w, ok := k.cache[topic]; ok {
-		return w
-	}
+
 	writer := &kafka.Writer{
 		Addr:        kafka.TCP(k.brokers...),
 		Topic:       topic,
@@ -51,15 +47,73 @@ func (k *KafkaProducerFactory) Writer(topic string) *kafka.Writer {
 		Logger:      klog.KafkaLogAdapter{Logging: level.Debug(k.logger)},
 		ErrorLogger: klog.KafkaLogAdapter{Logging: level.Warn(k.logger)},
 	}
-	if k.tracer != nil {
-		writer.Transport = NewTransport(kafka.DefaultTransport, k.tracer)
-	}
-	k.cache[topic] = writer
+
 	k.closers = append(k.closers, writer.Close)
-	return writer
+	if k.tracer != nil {
+		writer.Transport = NewTransport(kafka.DefaultTransport, k.tracer, topic)
+	}
+	return &pub{
+		Writer: writer,
+		topic:  topic,
+		tracer: k.tracer,
+		opName: "kafka.publish",
+	}
 }
 
-func (k *KafkaProducerFactory) Close() error {
+type readerConfig struct {
+	groupId     string
+	parallelism int
+}
+
+type readerOpt func(config *readerConfig)
+
+func WithGroup(group string) readerOpt {
+	return func(config *readerConfig) {
+		config.groupId = group
+	}
+}
+
+func WithParallelism(parallelism int) readerOpt {
+	return func(config *readerConfig) {
+		config.parallelism = parallelism
+	}
+}
+
+func (k *KafkaFactory) Reader(topic string, opt ...readerOpt) Subscriber {
+	k.mutex.Lock()
+	defer k.mutex.Unlock()
+
+	var config = readerConfig{
+		groupId:     "",
+		parallelism: 1,
+	}
+	for _, o := range opt {
+		o(&config)
+	}
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:     k.brokers,
+		Topic:       topic,
+		GroupID:     config.groupId,
+		Logger:      klog.KafkaLogAdapter{Logging: level.Debug(k.logger)},
+		ErrorLogger: klog.KafkaLogAdapter{Logging: level.Warn(k.logger)},
+	})
+
+	k.closers = append(k.closers, reader.Close)
+
+	snk := wrap(reader, k.tracer, config.parallelism)
+	return snk
+}
+
+func wrap(reader *kafka.Reader, tracer opentracing.Tracer, parallelism int) *sub {
+	return &sub{
+		Reader:      reader,
+		tracer:      tracer,
+		opName:      "kafka",
+		parallelism: parallelism,
+	}
+}
+
+func (k *KafkaFactory) Close() error {
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
 	for _, v := range k.closers {
@@ -69,4 +123,12 @@ func (k *KafkaProducerFactory) Close() error {
 		}
 	}
 	return nil
+}
+
+type Subscriber interface {
+	Subscribe(ctx context.Context, fn HandleFunc) error
+}
+
+type Publisher interface {
+	Publish(ctx context.Context, msg ...kafka.Message) error
 }

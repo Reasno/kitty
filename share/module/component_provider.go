@@ -14,6 +14,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kgrpc"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	kitty "glab.tagtic.cn/ad_gains/kitty/proto"
+	"glab.tagtic.cn/ad_gains/kitty/share/consumer"
 	"glab.tagtic.cn/ad_gains/kitty/share/internal"
 	"glab.tagtic.cn/ad_gains/kitty/share/svc"
 )
@@ -28,11 +29,12 @@ func provideEndpoints(middleware overallMiddleware, server kitty.ShareServer) sv
 
 type overallMiddleware func(endpoints svc.Endpoints) svc.Endpoints
 
-func provideModule(server GrpcShareServer, handler http.Handler, appName contract.AppName) *Module {
+func provideModule(server GrpcShareServer, handler http.Handler, eventReceiver consumer.EventReceiver, appName contract.AppName) *Module {
 	return &Module{
-		appName:    appName,
-		grpcServer: server,
-		handler:    handler,
+		appName:       appName,
+		grpcServer:    server,
+		handler:       handler,
+		eventReciever: eventReceiver,
 	}
 }
 

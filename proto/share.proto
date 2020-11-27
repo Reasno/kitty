@@ -171,3 +171,32 @@ message ShareGenericReply {
   string msg = 2;
 }
 
+message TaskEvent {
+  int32 id = 1; // 任务id
+  uint64 userId  = 2; // 用户id
+  string packageName = 3; // 应用包名
+  string channel = 4; // 渠道
+  string name = 5; // 任务名称
+  string eventName  = 6; // 自定义事件名称
+  int32 score = 7; // 任务分数
+  string dateTime  = 8; // 时间发生时间 2020-12-17 18:12:22
+  string thirdPartyId  = 9; // 第三方id，用于给第三方系统回调
+  int32 doneNum = 10; // 任务完成次数
+  int32 totalNum = 11; // 任务每日可执行次数
+  bool isDone = 12; // 任务是否完成
+  string ext = 13; // 扩展字段，补充业务使用
+}
+
+message SignEvent{
+  int32 id = 1; // 签到天数
+  uint64 userId  = 2; // 用户id
+  string packageName = 3; // 应用包名
+  string channel = 4; // 渠道
+  string name = 5; // 任务名称
+  string eventName  = 6; // 自定义事件名称
+  int32 score = 7; // 任务分数
+  string dateTime  = 8; // 时间发生时间 2020-12-17 18:12:22
+  string thirdPartyId  = 9; // 第三方id，用于给第三方系统回调
+  bool isDouble = 10; // 签到是否翻倍
+  string ext = 11; // 扩展字段，补充业务使用
+}

@@ -128,6 +128,10 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 
 func (im *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error {
 
+	if !in(eventName, im.conf.OrientationEvents) {
+		return nil
+	}
+
 	apprentice := user(uint(apprenticeId))
 
 	return im.rr.UpdateRelations(ctx, &apprentice, func(relations []entity.Relation) error {
@@ -181,4 +185,13 @@ func getSteps(names []string) []entity.OrientationStep {
 		steps = append(steps, entity.OrientationStep{Name: s})
 	}
 	return steps
+}
+
+func in(name string, names []string) bool {
+	for _, n := range names {
+		if n == name {
+			return true
+		}
+	}
+	return false
 }

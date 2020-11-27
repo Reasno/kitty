@@ -13,15 +13,15 @@ import (
 )
 
 type EventStore struct {
-	Factory *KafkaProducerFactory
-	Topic   string
-	once    sync.Once
-	writer  *kafka.Writer
+	Factory   *KafkaFactory
+	Topic     string
+	once      sync.Once
+	publisher Publisher
 }
 
 func (e *EventStore) Emit(ctx context.Context, event string, claim *kjwt.Claim) error {
 	e.once.Do(func() {
-		e.writer = e.Factory.Writer(e.Topic)
+		e.publisher = e.Factory.Writer(e.Topic)
 	})
 	dto := &Message{
 		Timestamp:   time.Now().UTC().Format(time.RFC3339),
@@ -38,7 +38,7 @@ func (e *EventStore) Emit(ctx context.Context, event string, claim *kjwt.Claim) 
 		return errors.Wrap(err, "unable to marshal dto")
 	}
 
-	return e.writer.WriteMessages(ctx, kafka.Message{
+	return e.publisher.Publish(ctx, kafka.Message{
 		Value: b,
 	})
 }

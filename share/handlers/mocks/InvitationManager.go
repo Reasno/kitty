@@ -31,20 +31,6 @@ func (_m *InvitationManager) AddToken(ctx context.Context, userId uint64, token 
 	return r0
 }
 
-// AdvanceStep provides a mock function with given fields: ctx, apprenticeId, eventName
-func (_m *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error {
-	ret := _m.Called(ctx, apprenticeId, eventName)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, string) error); ok {
-		r0 = rf(ctx, apprenticeId, eventName)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // ClaimReward provides a mock function with given fields: ctx, masterId, apprenticeId
 func (_m *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, apprenticeId uint64) error {
 	ret := _m.Called(ctx, masterId, apprenticeId)
@@ -52,6 +38,20 @@ func (_m *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) error); ok {
 		r0 = rf(ctx, masterId, apprenticeId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// CompleteStep provides a mock function with given fields: ctx, apprenticeId, eventName
+func (_m *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error {
+	ret := _m.Called(ctx, apprenticeId, eventName)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, string) error); ok {
+		r0 = rf(ctx, apprenticeId, eventName)
 	} else {
 		r0 = ret.Error(0)
 	}

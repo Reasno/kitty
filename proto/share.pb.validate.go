@@ -870,6 +870,182 @@ var _ interface {
 	ErrorName() string
 } = ShareGenericReplyValidationError{}
 
+// Validate checks the field values on TaskEvent with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *TaskEvent) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	// no validation rules for UserId
+
+	// no validation rules for PackageName
+
+	// no validation rules for Channel
+
+	// no validation rules for Name
+
+	// no validation rules for EventName
+
+	// no validation rules for Score
+
+	// no validation rules for DateTime
+
+	// no validation rules for ThirdPartyId
+
+	// no validation rules for DoneNum
+
+	// no validation rules for TotalNum
+
+	// no validation rules for IsDone
+
+	// no validation rules for Ext
+
+	return nil
+}
+
+// TaskEventValidationError is the validation error returned by
+// TaskEvent.Validate if the designated constraints aren't met.
+type TaskEventValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TaskEventValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TaskEventValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TaskEventValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TaskEventValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TaskEventValidationError) ErrorName() string { return "TaskEventValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TaskEventValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTaskEvent.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TaskEventValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TaskEventValidationError{}
+
+// Validate checks the field values on SignEvent with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *SignEvent) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	// no validation rules for UserId
+
+	// no validation rules for PackageName
+
+	// no validation rules for Channel
+
+	// no validation rules for Name
+
+	// no validation rules for EventName
+
+	// no validation rules for Score
+
+	// no validation rules for DateTime
+
+	// no validation rules for ThirdPartyId
+
+	// no validation rules for IsDouble
+
+	// no validation rules for Ext
+
+	return nil
+}
+
+// SignEventValidationError is the validation error returned by
+// SignEvent.Validate if the designated constraints aren't met.
+type SignEventValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SignEventValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SignEventValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SignEventValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SignEventValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SignEventValidationError) ErrorName() string { return "SignEventValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SignEventValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSignEvent.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SignEventValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SignEventValidationError{}
+
 // Validate checks the field values on ShareDataUrlReply_Url with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.

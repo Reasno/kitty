@@ -68,7 +68,7 @@ var AppServerSet = wire.NewSet(
 func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {
 	panic(wire.Build(
 		AppServerSet,
-		provideKafkaProducerFactory,
+		ProvideKafkaFactory,
 		provideUserBus,
 		provideEventBus,
 		ProvideSecurityConfig,
