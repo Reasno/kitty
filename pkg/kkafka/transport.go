@@ -9,6 +9,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/protocol"
 )
 
 type Transport struct {
@@ -26,6 +27,9 @@ func NewTransport(underlying kafka.RoundTripper, tracer opentracing.Tracer, topi
 }
 
 func (t *Transport) RoundTrip(ctx context.Context, addr net.Addr, request kafka.Request) (kafka.Response, error) {
+	if request.ApiKey() != protocol.Metadata {
+		return t.underlying.RoundTrip(ctx, addr, request)
+	}
 	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, t.tracer, "kafka.transport")
 	defer span.Finish()
 	ext.SpanKind.Set(span, ext.SpanKindProducerEnum)

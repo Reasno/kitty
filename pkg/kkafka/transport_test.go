@@ -2,6 +2,7 @@ package kkafka
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"testing"
 
@@ -12,7 +13,17 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 )
 
+var useKafka bool
+
+func init() {
+	flag.BoolVar(&useKafka, "kafka", false, "use kafka for testing")
+}
+
 func TestTransport(t *testing.T) {
+	if !useKafka {
+		t.Skip("requires kafka")
+	}
+
 	factory := NewKafkaFactory([]string{"127.0.0.1:9092"}, klog.NewLogger(config.Env("testing")), opentracing.NoopTracer{})
 	h := factory.MakeHandler("test")
 	_ = h.Handle(context.Background(), kafka.Message{
@@ -28,6 +39,10 @@ func TestTransport(t *testing.T) {
 }
 
 func TestTransportTracing(t *testing.T) {
+	if !useKafka {
+		t.Skip("requires kafka")
+	}
+
 	tracer, closer, _ := jaeger.Configuration{
 		ServiceName: "your-service-name",
 	}.NewTracer()
