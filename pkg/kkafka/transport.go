@@ -31,6 +31,7 @@ func (t *Transport) RoundTrip(ctx context.Context, addr net.Addr, request kafka.
 	ext.SpanKind.Set(span, ext.SpanKindProducerEnum)
 	ext.PeerAddress.Set(span, addr.String())
 	ext.MessageBusDestination.Set(span, t.topic)
+	span.LogKV("api", request.ApiKey())
 	resp, err := t.underlying.RoundTrip(ctx, addr, request)
 	if err != nil {
 		span.LogKV("error", err.Error())
