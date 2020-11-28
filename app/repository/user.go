@@ -22,7 +22,7 @@ var ErrRecordNotFound = errors.New("record not found")
 const emsg = "UserRepo"
 
 func (r *UserRepo) Save(ctx context.Context, user *entity.User) error {
-	if err := r.db.Save(user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
 		if err, ok := err.(*mysql.MySQLError); ok {
 			if err.Number == 1062 {
 				return ErrAlreadyBind
