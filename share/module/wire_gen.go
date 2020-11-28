@@ -72,7 +72,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	grpcShareServer := provideGrpc(endpoints, tracer, logger, appName)
 	handler := provideHttp(endpoints, tracer, logger, appName)
 	kafkaFactory, cleanup3 := module.ProvideKafkaFactory(reader, logger, tracer)
-	middleware := provideKafkaMiddleware(tracer)
+	middleware := provideKafkaMiddleware(tracer, logger)
 	eventReceiver := consumer.EventReceiver{
 		AppName: appName,
 		Conf:    reader,

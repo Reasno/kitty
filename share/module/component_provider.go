@@ -63,7 +63,8 @@ func provideGrpc(endpoints svc.Endpoints, tracer stdopentracing.Tracer, logger l
 	)
 }
 
-func provideKafkaMiddleware(tracer stdopentracing.Tracer) kkafka.Middleware {
+func provideKafkaMiddleware(tracer stdopentracing.Tracer, logger log.Logger) kkafka.Middleware {
 	t := kkafka.TracingConsumerMiddleware(tracer, "kafka.consumer")
-	return t
+	l := kkafka.ErrorLogMiddleware(logger)
+	return kkafka.Chain(l, t)
 }

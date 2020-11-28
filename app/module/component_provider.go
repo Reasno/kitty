@@ -90,8 +90,8 @@ func ProvideKafkaFactory(conf contract.ConfigReader, logger log.Logger, tracer o
 	}
 }
 
-func provideKafkaMiddleware(tracer opentracing.Tracer) kkafka.Middleware {
-	return kkafka.TracingProducerMiddleware(tracer, "kafka.producer")
+func provideKafkaMiddleware(tracer opentracing.Tracer, logger log.Logger) kkafka.Middleware {
+	return kkafka.Chain(kkafka.TracingProducerMiddleware(tracer, "kafka.producer"), kkafka.ErrorLogMiddleware(logger))
 }
 
 func ProvideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader, client contract.HttpDoer) *ots3.Manager {

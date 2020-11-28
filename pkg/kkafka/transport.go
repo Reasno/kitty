@@ -8,7 +8,6 @@ import (
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -99,80 +98,6 @@ func (s *Subscriber) Serve(ctx context.Context) error {
 		})
 	}
 	return g.Run()
-}
-
-type Middleware func(h Handler) Handler
-
-func TracingConsumerMiddleware(tracer opentracing.Tracer, opName string) Middleware {
-	return func(h Handler) Handler {
-		return HandleFunc(func(ctx context.Context, msg kafka.Message) error {
-			carrier := getCarrier(&msg)
-			spanContext, err := tracer.Extract(opentracing.TextMap, carrier)
-			span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, tracer, opName, opentracing.FollowsFrom(spanContext))
-			defer span.Finish()
-
-			ext.SpanKind.Set(span, ext.SpanKindConsumerEnum)
-			ext.PeerService.Set(span, "kafka")
-			span.SetTag("topic", msg.Topic)
-			span.SetTag("partition", msg.Partition)
-			span.SetTag("offset", msg.Offset)
-
-			err = h.Handle(ctx, msg)
-			if err != nil {
-				span.LogKV("error", err.Error())
-				ext.Error.Set(span, true)
-				// This is user's fault, so we are not returning any error here
-				return err
-			}
-			return nil
-		})
-	}
-}
-
-func TracingProducerMiddleware(tracer opentracing.Tracer, opName string) Middleware {
-	return func(h Handler) Handler {
-		return HandleFunc(func(ctx context.Context, msg kafka.Message) error {
-			span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, tracer, opName)
-			defer span.Finish()
-			ext.SpanKind.Set(span, ext.SpanKindProducerEnum)
-			ext.MessageBusDestination.Set(span, msg.Topic)
-			ext.PeerService.Set(span, "kafka")
-
-			carrier := make(opentracing.TextMapCarrier)
-			err := tracer.Inject(span.Context(), opentracing.TextMap, carrier)
-			if err != nil {
-				return errors.Wrap(err, "unable to inject tracing context")
-			}
-
-			var header kafka.Header
-			for k, v := range carrier {
-				header.Key = k
-				header.Value = []byte(v)
-			}
-			msg.Headers = append(msg.Headers, header)
-
-			err = h.Handle(ctx, msg)
-			if err != nil {
-				span.LogKV("error", err.Error())
-				ext.Error.Set(span, true)
-				// This is user's fault, so we are not returning any error here
-				return err
-			}
-
-			return nil
-		})
-	}
-}
-
-func getCarrier(msg *kafka.Message) opentracing.TextMapCarrier {
-
-	var mapCarrier = make(opentracing.TextMapCarrier)
-	if msg.Headers != nil {
-		for _, v := range msg.Headers {
-			mapCarrier[v.Key] = string(v.Value)
-		}
-	}
-	return mapCarrier
 }
 
 type pub struct {
