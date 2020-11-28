@@ -44,6 +44,7 @@ var AppServerSet = wire.NewSet(
 	ProvideHttpClient,
 	ProvideUploadManager,
 	ProvideRedis,
+	provideKafkaMiddleware,
 	provideWechatConfig,
 	wechat.NewWechaterFactory,
 	wechat.NewWechaterFacade,

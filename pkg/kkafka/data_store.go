@@ -12,19 +12,20 @@ import (
 type DataStore struct {
 	Factory   *KafkaFactory
 	Topic     string
+	MW        Middleware
 	once      sync.Once
-	publisher Publisher
+	publisher Handler
 }
 
 func (e *DataStore) Emit(ctx context.Context, marshaller contract.Marshaller) error {
 	e.once.Do(func() {
-		e.publisher = e.Factory.Writer(e.Topic)
+		e.publisher = e.Factory.MakeHandler(e.Topic)
 	})
 	b, err := marshaller.Marshal()
 	if err != nil {
 		return errors.Wrap(err, "unable to marshal pb")
 	}
-	return e.publisher.Publish(ctx, kafka.Message{
+	return e.MW(e.publisher).Handle(ctx, kafka.Message{
 		Value: b,
 	})
 }

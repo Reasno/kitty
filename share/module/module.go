@@ -47,7 +47,7 @@ func (a *Module) ProvideRunGroup(group *run.Group) {
 	{
 		ctx, cancel := context.WithCancel(context.Background())
 		group.Add(func() error {
-			return a.eventReciever.SubscribeCheckin(ctx)
+			return a.eventReciever.ReceiveTask(ctx)
 		}, func(err error) {
 			cancel()
 		})
@@ -56,7 +56,7 @@ func (a *Module) ProvideRunGroup(group *run.Group) {
 	{
 		ctx, cancel := context.WithCancel(context.Background())
 		group.Add(func() error {
-			return a.eventReciever.SubscribeTask(ctx)
+			return a.eventReciever.ReceiveSign(ctx)
 		}, func(err error) {
 			cancel()
 		})

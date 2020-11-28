@@ -63,10 +63,11 @@ type userBus struct {
 	kkafka.DataStore
 }
 
-func provideUserBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader) *userBus {
+func provideUserBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, mw kkafka.Middleware) *userBus {
 	return &userBus{kkafka.DataStore{
 		Factory: factory,
 		Topic:   conf.String("kafka.userBus"),
+		MW:      mw,
 	}}
 }
 
@@ -74,18 +75,23 @@ type eventBus struct {
 	kkafka.EventStore
 }
 
-func provideEventBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader) *eventBus {
+func provideEventBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, mw kkafka.Middleware) *eventBus {
 	return &eventBus{kkafka.EventStore{
 		Factory: factory,
 		Topic:   conf.String("kafka.eventBus"),
+		MW:      mw,
 	}}
 }
 
 func ProvideKafkaFactory(conf contract.ConfigReader, logger log.Logger, tracer opentracing.Tracer) (*kkafka.KafkaFactory, func()) {
-	factory := kkafka.NewKafkaProducerFactoryWithTracer(conf.Strings("kafka.brokers"), logger, tracer)
+	factory := kkafka.NewKafkaFactory(conf.Strings("kafka.brokers"), logger, tracer)
 	return factory, func() {
 		_ = factory.Close()
 	}
+}
+
+func provideKafkaMiddleware(tracer opentracing.Tracer) kkafka.Middleware {
+	return kkafka.TracingProducerMiddleware(tracer, "kafka.producer")
 }
 
 func ProvideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader, client contract.HttpDoer) *ots3.Manager {

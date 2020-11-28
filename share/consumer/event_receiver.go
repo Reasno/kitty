@@ -16,6 +16,7 @@ type EventReceiver struct {
 	Conf    contract.ConfigReader
 	Manager InvitationManager
 	Factory *kkafka.KafkaFactory
+	MW      kkafka.Middleware
 }
 
 type InvitationManager interface {
@@ -42,20 +43,22 @@ func (er *EventReceiver) handleTask(ctx context.Context, msg kafka.Message) erro
 	return er.Manager.CompleteStep(ctx, taskEvent.UserId, taskEvent.EventName)
 }
 
-func (er *EventReceiver) SubscribeTask(ctx context.Context) error {
+func (er *EventReceiver) ReceiveTask(ctx context.Context) error {
 	groupId := strings.Join([]string{"EventReceiver", er.AppName.String()}, "-")
-	return er.Factory.Reader(
+	return er.Factory.MakeSub(
 		er.Conf.String("kafka.taskEventBus"),
+		er.MW(kkafka.HandleFunc(er.handleTask)),
 		kkafka.WithGroup(groupId),
-	).Subscribe(ctx, er.handleTask)
+	).Serve(ctx)
 }
 
-func (er *EventReceiver) SubscribeCheckin(ctx context.Context) error {
+func (er *EventReceiver) ReceiveSign(ctx context.Context) error {
 	groupId := strings.Join([]string{"EventReceiver", er.AppName.String()}, "-")
-	return er.Factory.Reader(
+	return er.Factory.MakeSub(
 		er.Conf.String("kafka.signEventBus"),
+		er.MW(kkafka.HandleFunc(er.handleSign)),
 		kkafka.WithGroup(groupId),
-	).Subscribe(ctx, er.handleSign)
+	).Serve(ctx)
 }
 
 type Tenanter interface {

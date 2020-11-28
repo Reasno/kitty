@@ -13,6 +13,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kgrpc"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
 	kitty "glab.tagtic.cn/ad_gains/kitty/proto"
 	"glab.tagtic.cn/ad_gains/kitty/share/consumer"
 	"glab.tagtic.cn/ad_gains/kitty/share/internal"
@@ -60,4 +61,9 @@ func provideGrpc(endpoints svc.Endpoints, tracer stdopentracing.Tracer, logger l
 		),
 		grpctransport.ServerBefore(jwt.GRPCToContext()),
 	)
+}
+
+func provideKafkaMiddleware(tracer stdopentracing.Tracer) kkafka.Middleware {
+	t := kkafka.TracingConsumerMiddleware(tracer, "kafka.consumer")
+	return t
 }

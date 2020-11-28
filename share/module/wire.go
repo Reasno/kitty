@@ -32,6 +32,7 @@ var ShareServiceSet = wire.NewSet(
 	internal.NewXTaskRequester,
 	handlers.NewShareService,
 	handlers.ProvideShareServer,
+	provideKafkaMiddleware,
 	wire.Struct(new(internal.InvitationManagerFactory), "*"),
 	wire.Struct(new(internal.InvitationManagerFacade), "*"),
 	wire.Struct(new(consumer.EventReceiver), "*"),

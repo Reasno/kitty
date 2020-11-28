@@ -2,8 +2,8 @@ package kkafka
 
 import (
 	"context"
+
 	"net"
-	"strings"
 
 	"github.com/oklog/run"
 	"github.com/opentracing/opentracing-go"
@@ -42,55 +42,58 @@ func (t *Transport) RoundTrip(ctx context.Context, addr net.Addr, request kafka.
 
 type HandleFunc func(ctx context.Context, msg kafka.Message) error
 
-type sub struct {
-	*kafka.Reader
-	tracer      opentracing.Tracer
-	opName      string
+func (h HandleFunc) Handle(ctx context.Context, msg kafka.Message) error {
+	return h(ctx, msg)
+}
+
+type Handler interface {
+	Handle(ctx context.Context, msg kafka.Message) error
+}
+
+type Subscriber struct {
+	reader      *kafka.Reader
+	handler     Handler
 	parallelism int
 }
 
-// RunOnce 执行一次fetch-handle-commit。如果handle出错不会返回error，fetch或commit出错会返回error。
-// 可以套在RunGroup里并行消费
-func (s *sub) runOnce(ctx context.Context, fn HandleFunc) error {
-	msg, err := s.FetchMessage(ctx)
-	carrier := s.getCarrier(&msg)
-	spanContext, _ := s.tracer.Extract(opentracing.TextMap, carrier)
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, s.tracer, s.opName, opentracing.FollowsFrom(spanContext))
-	defer span.Finish()
-	ext.SpanKind.Set(span, ext.SpanKindConsumerEnum)
-	ext.PeerAddress.Set(span, strings.Join(s.Reader.Config().Brokers, ","))
-	ext.PeerService.Set(span, "kafka")
-	span.SetTag("topic", s.Reader.Config().Topic)
-	span.SetTag("partition", s.Reader.Config().Partition)
-	span.SetTag("offset", s.Reader.Offset())
-	span.SetTag("lag", s.Reader.Lag())
+func (s *Subscriber) ServeOnce(ctx context.Context) error {
+	msg, err := s.reader.ReadMessage(ctx)
 	if err != nil {
-		span.LogKV("fetch.error", err.Error())
-		ext.Error.Set(span, true)
 		return err
 	}
-	err = fn(ctx, msg)
-	if err != nil {
-		span.LogKV("handle.error", err.Error())
-		ext.Error.Set(span, true)
-		// This is user's fault, so we are not returning any error here
-		return nil
-	}
-	err = s.CommitMessages(ctx, msg)
-	if err != nil {
-		span.LogKV("commit.error", err.Error())
-		ext.Error.Set(span, true)
-		return err
-	}
+	// User space error will not result in a transport error
+	_ = s.handler.Handle(ctx, msg)
 	return nil
 }
 
-func (s *sub) Subscribe(ctx context.Context, fn HandleFunc) error {
-	var g run.Group
+func (s *Subscriber) Serve(ctx context.Context) error {
+	var (
+		g  run.Group
+		ch chan kafka.Message
+	)
 	ctx, cancel := context.WithCancel(ctx)
+	g.Add(func() error {
+		for {
+			msg, err := s.reader.ReadMessage(ctx)
+			if err != nil {
+				return err
+			}
+			ch <- msg
+		}
+	}, func(err error) {
+		cancel()
+	})
+
 	for i := 0; i < s.parallelism; i++ {
 		g.Add(func() error {
-			return s.runOnce(ctx, fn)
+			for {
+				select {
+				case msg := <-ch:
+					_ = s.handler.Handle(ctx, msg)
+				case <-ctx.Done():
+					return nil
+				}
+			}
 		}, func(err error) {
 			cancel()
 		})
@@ -98,7 +101,71 @@ func (s *sub) Subscribe(ctx context.Context, fn HandleFunc) error {
 	return g.Run()
 }
 
-func (s *sub) getCarrier(msg *kafka.Message) opentracing.TextMapCarrier {
+type Middleware func(h Handler) Handler
+
+func TracingConsumerMiddleware(tracer opentracing.Tracer, opName string) Middleware {
+	return func(h Handler) Handler {
+		return HandleFunc(func(ctx context.Context, msg kafka.Message) error {
+			carrier := getCarrier(&msg)
+			spanContext, err := tracer.Extract(opentracing.TextMap, carrier)
+			span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, tracer, opName, opentracing.FollowsFrom(spanContext))
+			defer span.Finish()
+
+			ext.SpanKind.Set(span, ext.SpanKindConsumerEnum)
+			ext.PeerService.Set(span, "kafka")
+			span.SetTag("topic", msg.Topic)
+			span.SetTag("partition", msg.Partition)
+			span.SetTag("offset", msg.Offset)
+
+			err = h.Handle(ctx, msg)
+			if err != nil {
+				span.LogKV("error", err.Error())
+				ext.Error.Set(span, true)
+				// This is user's fault, so we are not returning any error here
+				return err
+			}
+			return nil
+		})
+	}
+}
+
+func TracingProducerMiddleware(tracer opentracing.Tracer, opName string) Middleware {
+	return func(h Handler) Handler {
+		return HandleFunc(func(ctx context.Context, msg kafka.Message) error {
+			span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, tracer, opName)
+			defer span.Finish()
+			ext.SpanKind.Set(span, ext.SpanKindProducerEnum)
+			ext.MessageBusDestination.Set(span, msg.Topic)
+			ext.PeerService.Set(span, "kafka")
+
+			carrier := make(opentracing.TextMapCarrier)
+			err := tracer.Inject(span.Context(), opentracing.TextMap, carrier)
+			if err != nil {
+				return errors.Wrap(err, "unable to inject tracing context")
+			}
+
+			var header kafka.Header
+			for k, v := range carrier {
+				header.Key = k
+				header.Value = []byte(v)
+			}
+			msg.Headers = append(msg.Headers, header)
+
+			err = h.Handle(ctx, msg)
+			if err != nil {
+				span.LogKV("error", err.Error())
+				ext.Error.Set(span, true)
+				// This is user's fault, so we are not returning any error here
+				return err
+			}
+
+			return nil
+		})
+	}
+}
+
+func getCarrier(msg *kafka.Message) opentracing.TextMapCarrier {
+
 	var mapCarrier = make(opentracing.TextMapCarrier)
 	if msg.Headers != nil {
 		for _, v := range msg.Headers {
@@ -110,28 +177,8 @@ func (s *sub) getCarrier(msg *kafka.Message) opentracing.TextMapCarrier {
 
 type pub struct {
 	*kafka.Writer
-	topic  string
-	tracer opentracing.Tracer
-	opName string
 }
 
-func (p *pub) Publish(ctx context.Context, msgs ...kafka.Message) error {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, p.tracer, p.opName)
-	defer span.Finish()
-	ext.SpanKind.Set(span, ext.SpanKindProducerEnum)
-	ext.MessageBusDestination.Set(span, p.topic)
-	carrier := make(opentracing.TextMapCarrier)
-	err := p.tracer.Inject(span.Context(), opentracing.TextMap, carrier)
-	if err != nil {
-		return errors.Wrap(err, "unable to inject tracing context")
-	}
-	var header kafka.Header
-	for k, v := range carrier {
-		header.Key = k
-		header.Value = []byte(v)
-	}
-	for i := range msgs {
-		msgs[i].Headers = append(msgs[i].Headers, header)
-	}
-	return p.Writer.WriteMessages(ctx, msgs...)
+func (p *pub) Handle(ctx context.Context, msg kafka.Message) error {
+	return p.Writer.WriteMessages(ctx, msg)
 }

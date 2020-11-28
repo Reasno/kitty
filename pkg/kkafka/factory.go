@@ -1,7 +1,6 @@
 package kkafka
 
 import (
-	"context"
 	"sync"
 
 	"github.com/go-kit/kit/log"
@@ -19,15 +18,7 @@ type KafkaFactory struct {
 	logger  log.Logger
 }
 
-func NewKafkaProducerFactory(brokers []string, logger log.Logger) *KafkaFactory {
-	return &KafkaFactory{
-		brokers: brokers,
-		closers: []func() error{},
-		logger:  logger,
-	}
-}
-
-func NewKafkaProducerFactoryWithTracer(brokers []string, logger log.Logger, tracer opentracing.Tracer) *KafkaFactory {
+func NewKafkaFactory(brokers []string, logger log.Logger, tracer opentracing.Tracer) *KafkaFactory {
 	return &KafkaFactory{
 		tracer:  tracer,
 		brokers: brokers,
@@ -36,7 +27,7 @@ func NewKafkaProducerFactoryWithTracer(brokers []string, logger log.Logger, trac
 	}
 }
 
-func (k *KafkaFactory) Writer(topic string) Publisher {
+func (k *KafkaFactory) MakeHandler(topic string) Handler {
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
 
@@ -46,6 +37,7 @@ func (k *KafkaFactory) Writer(topic string) Publisher {
 		Balancer:    &kafka.LeastBytes{},
 		Logger:      klog.KafkaLogAdapter{Logging: level.Debug(k.logger)},
 		ErrorLogger: klog.KafkaLogAdapter{Logging: level.Warn(k.logger)},
+		BatchSize:   1,
 	}
 
 	k.closers = append(k.closers, writer.Close)
@@ -54,9 +46,6 @@ func (k *KafkaFactory) Writer(topic string) Publisher {
 	}
 	return &pub{
 		Writer: writer,
-		topic:  topic,
-		tracer: k.tracer,
-		opName: "kafka.publish",
 	}
 }
 
@@ -79,7 +68,7 @@ func WithParallelism(parallelism int) readerOpt {
 	}
 }
 
-func (k *KafkaFactory) Reader(topic string, opt ...readerOpt) Subscriber {
+func (k *KafkaFactory) MakeSub(topic string, handler Handler, opt ...readerOpt) *Subscriber {
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
 
@@ -100,16 +89,10 @@ func (k *KafkaFactory) Reader(topic string, opt ...readerOpt) Subscriber {
 
 	k.closers = append(k.closers, reader.Close)
 
-	snk := wrap(reader, k.tracer, config.parallelism)
-	return snk
-}
-
-func wrap(reader *kafka.Reader, tracer opentracing.Tracer, parallelism int) *sub {
-	return &sub{
-		Reader:      reader,
-		tracer:      tracer,
-		opName:      "kafka",
-		parallelism: parallelism,
+	return &Subscriber{
+		reader:      reader,
+		handler:     handler,
+		parallelism: config.parallelism,
 	}
 }
 
@@ -123,12 +106,4 @@ func (k *KafkaFactory) Close() error {
 		}
 	}
 	return nil
-}
-
-type Subscriber interface {
-	Subscribe(ctx context.Context, fn HandleFunc) error
-}
-
-type Publisher interface {
-	Publish(ctx context.Context, msg ...kafka.Message) error
 }
