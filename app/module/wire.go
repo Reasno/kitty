@@ -11,6 +11,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
+	kclient "glab.tagtic.cn/ad_gains/kitty/pkg/kkafka/client"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/otredis"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/sms"
@@ -44,7 +45,6 @@ var AppServerSet = wire.NewSet(
 	ProvideHttpClient,
 	ProvideUploadManager,
 	ProvideRedis,
-	provideKafkaMiddleware,
 	provideWechatConfig,
 	wechat.NewWechaterFactory,
 	wechat.NewWechaterFacade,
@@ -70,13 +70,15 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	panic(wire.Build(
 		AppServerSet,
 		ProvideKafkaFactory,
-		provideUserBus,
-		provideEventBus,
 		ProvideSecurityConfig,
 		ProvideHistogramMetrics,
 		provideEndpointsMiddleware,
+		provideProducerMiddleware,
 		provideModule,
-		wire.Bind(new(handlers.EventBus), new(*eventBus)),
-		wire.Bind(new(handlers.UserBus), new(*userBus)),
+		providePublisherOptions,
+		provideEventBus,
+		provideUserBus,
+		wire.Bind(new(handlers.EventBus), new(*kclient.EventStore)),
+		wire.Bind(new(handlers.UserBus), new(*kclient.DataStore)),
 	))
 }

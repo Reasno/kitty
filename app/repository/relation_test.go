@@ -103,7 +103,7 @@ func TestRelationRepo_UpdateRelations(t *testing.T) {
 		t.Run(cc.name, func(t *testing.T) {
 			repo.AddRelations(ctx, entity.NewRelation(&cc.apprentice, &cc.master, nil))
 			repo.UpdateRelations(ctx, &cc.apprentice, func(relations []entity.Relation) error {
-				for i, _ := range relations {
+				for i := range relations {
 					relations[i].RewardClaimed = cc.claimed
 				}
 				return nil
@@ -284,6 +284,12 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 			user(2),
 			true,
 		},
+		{
+			"3to2",
+			user(3),
+			user(2),
+			true,
+		},
 	}
 
 	for _, c := range cases {
@@ -299,8 +305,19 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 			}))
 			var rel entity.Relation
 			db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", cc.master.ID, cc.apprentice.ID)
+
+			fmt.Println(rel.OrientationSteps)
 			assert.Equal(t, "foo", rel.OrientationSteps[0].Name)
 			assert.Equal(t, "bar", rel.OrientationSteps[1].Name)
+			repo.UpdateRelations(ctx, &cc.apprentice, func(relations []entity.Relation) error {
+				for i := range relations {
+					relations[i].CompleteStep(entity.OrientationStep{Name: "foo"})
+					relations[i].CompleteStep(entity.OrientationStep{Name: "bar"})
+				}
+				return nil
+			})
+			db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", cc.master.ID, cc.apprentice.ID)
+			assert.Equal(t, true, rel.OrientationCompleted)
 		})
 	}
 }

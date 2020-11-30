@@ -44,9 +44,10 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	histogram := ProvideHistogramMetrics(appName, env)
 	moduleOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer, env, appName)
 	kafkaFactory, cleanup3 := ProvideKafkaFactory(reader, logger)
-	middleware := provideKafkaMiddleware(tracer, logger)
-	moduleUserBus := provideUserBus(kafkaFactory, reader, middleware)
-	moduleEventBus := provideEventBus(kafkaFactory, reader, middleware)
+	v := providePublisherOptions(tracer, logger)
+	moduleProducerMiddleware := provideProducerMiddleware(tracer, logger)
+	dataStore := provideUserBus(kafkaFactory, reader, v, moduleProducerMiddleware)
+	eventStore := provideEventBus(kafkaFactory, reader, v, moduleProducerMiddleware)
 	client := ProvideHttpClient(tracer)
 	manager := ProvideUploadManager(tracer, reader, client)
 	fileRepo := repository.NewFileRepo(manager, client)
@@ -59,7 +60,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	wechaterFactory := wechat.NewWechaterFactory(reader, client)
 	wechaterFacade := wechat.NewWechaterFacade(wechaterFactory, dynConf)
 	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, senderFacade, wechaterFacade)
-	appServer := handlers.ProvideAppServer(moduleUserBus, moduleEventBus, appService)
+	appServer := handlers.ProvideAppServer(dataStore, eventStore, appService)
 	module := provideModule(db, tracer, logger, moduleOverallMiddleware, appServer, appName)
 	return module, func() {
 		cleanup4()
@@ -93,6 +94,5 @@ var AppServerSet = wire.NewSet(
 	ProvideHttpClient,
 	ProvideUploadManager,
 	ProvideRedis,
-	provideKafkaMiddleware,
 	provideWechatConfig, wechat.NewWechaterFactory, wechat.NewWechaterFacade, sms.NewTransportFactory, sms.NewSenderFacade, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, handlers.NewAppService, handlers.ProvideAppServer, wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(wechat.Wechater), new(*wechat.WechaterFacade)), wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)),
 )

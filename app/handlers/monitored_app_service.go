@@ -2,12 +2,9 @@ package handlers
 
 import (
 	"context"
-	"time"
 
-	stdjwt "github.com/dgrijalva/jwt-go"
-	"github.com/opentracing/opentracing-go"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
@@ -21,7 +18,7 @@ type UserBus interface {
 	Emit(ctx context.Context, info contract.Marshaller) error
 }
 type EventBus interface {
-	Emit(ctx context.Context, event string, claim *kjwt.Claim) error
+	Emit(ctx context.Context, event string, tenant *config.Tenant) error
 }
 
 func (m MonitoredAppService) Login(ctx context.Context, request *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
@@ -30,27 +27,18 @@ func (m MonitoredAppService) Login(ctx context.Context, request *pb.UserLoginReq
 		return resp, err
 	}
 	// emit new user registration event
-	span := opentracing.SpanFromContext(ctx)
-	go func() {
-		ctx := opentracing.ContextWithSpan(context.Background(), span)
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
 
-		claim := kjwt.Claim{
-			StandardClaims: stdjwt.StandardClaims{},
-			PackageName:    request.PackageName,
-			UserId:         resp.Data.Id,
-			Suuid:          request.Device.Suuid,
-			Channel:        request.Channel,
-			VersionCode:    request.VersionCode,
-			Wechat:         request.Wechat,
-			Mobile:         request.Mobile,
-		}
+	claim := config.Tenant{
+		PackageName: request.PackageName,
+		UserId:      resp.Data.Id,
+		Suuid:       request.Device.Suuid,
+		Channel:     request.Channel,
+		VersionCode: request.VersionCode,
+	}
 
-		if resp.Data.IsNew {
-			_ = m.eventBus.Emit(ctx, "new_user", &claim)
-		}
-	}()
+	if resp.Data.IsNew {
+		_ = m.eventBus.Emit(ctx, "new_user", &claim)
+	}
 
 	// emit User
 	m.emitUser(ctx, resp)
@@ -94,11 +82,5 @@ func (m MonitoredAppService) Refresh(ctx context.Context, request *pb.UserRefres
 }
 
 func (m MonitoredAppService) emitUser(ctx context.Context, resp *pb.UserInfoReply) {
-	span := opentracing.SpanFromContext(ctx)
-	go func() {
-		ctx := opentracing.ContextWithSpan(context.Background(), span)
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
-		_ = m.userBus.Emit(ctx, resp.Data)
-	}()
+	_ = m.userBus.Emit(ctx, resp.Data)
 }

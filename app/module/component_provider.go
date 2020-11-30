@@ -5,13 +5,16 @@ import (
 	"io"
 	"net/url"
 	"sync"
+	"time"
 
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-kit/kit/metrics"
 	"github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-redis/redis/v8"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
@@ -20,6 +23,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
+	kclient "glab.tagtic.cn/ad_gains/kitty/pkg/kkafka/client"
 	logging "glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kmiddleware"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/otgorm"
@@ -59,28 +63,30 @@ func ProvideHttpClient(tracer opentracing.Tracer) *kittyhttp.Client {
 	return kittyhttp.NewClient(tracer)
 }
 
-type userBus struct {
-	kkafka.DataStore
+func providePublisherOptions(tracer opentracing.Tracer, logger log.Logger) []kkafka.PublisherOption {
+	return []kkafka.PublisherOption{
+		kkafka.PublisherBefore(kkafka.ContextToKafka(tracer, logger)),
+	}
 }
 
-func provideUserBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, mw kkafka.Middleware) *userBus {
-	return &userBus{kkafka.DataStore{
-		Factory: factory,
-		Topic:   conf.String("kafka.userBus"),
-		MW:      mw,
-	}}
+type producerMiddleware func(operationName string) endpoint.Middleware
+
+func provideProducerMiddleware(tracer opentracing.Tracer, logger log.Logger) producerMiddleware {
+	return func(operationName string) endpoint.Middleware {
+		return endpoint.Chain(
+			kmiddleware.NewAsyncMiddleware(logger),
+			kmiddleware.TraceProducer(tracer, operationName, ext.SpanKindProducerEnum),
+			kmiddleware.NewTimeoutMiddleware(time.Second),
+		)
+	}
 }
 
-type eventBus struct {
-	kkafka.EventStore
+func provideEventBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, option []kkafka.PublisherOption, mw producerMiddleware) *kclient.EventStore {
+	return kclient.NewEventStore(conf.String("kafka.eventBus"), factory, option, mw("kafka.Event"))
 }
 
-func provideEventBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, mw kkafka.Middleware) *eventBus {
-	return &eventBus{kkafka.EventStore{
-		Factory: factory,
-		Topic:   conf.String("kafka.eventBus"),
-		MW:      mw,
-	}}
+func provideUserBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, option []kkafka.PublisherOption, mw producerMiddleware) *kclient.DataStore {
+	return kclient.NewDataStore(conf.String("kafka.userBus"), factory, option, mw("kafka.User"))
 }
 
 func ProvideKafkaFactory(conf contract.ConfigReader, logger log.Logger) (*kkafka.KafkaFactory, func()) {
@@ -88,10 +94,6 @@ func ProvideKafkaFactory(conf contract.ConfigReader, logger log.Logger) (*kkafka
 	return factory, func() {
 		_ = factory.Close()
 	}
-}
-
-func provideKafkaMiddleware(tracer opentracing.Tracer, logger log.Logger) kkafka.Middleware {
-	return kkafka.Chain(kkafka.TracingProducerMiddleware(tracer, "kafka.producer"), kkafka.ErrorLogMiddleware(logger))
 }
 
 func ProvideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader, client contract.HttpDoer) *ots3.Manager {
