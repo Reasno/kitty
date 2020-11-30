@@ -85,33 +85,7 @@
         ]
       }
     },
-    "/list": {
-      "get": {
-        "summary": "获取邀请列表",
-        "operationId": "Share_ListFriend",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ShareListFriendReply"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "depth",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          }
-        ],
-        "tags": [
-          "分享"
-        ]
-      }
-    },
-    "/sign-event": {
+    "/event/sign": {
       "post": {
         "summary": "手动推送签到事件",
         "operationId": "Share_PushSignEvent",
@@ -138,7 +112,7 @@
         ]
       }
     },
-    "/task-event": {
+    "/event/task": {
       "post": {
         "summary": "手动推送任务事件",
         "operationId": "Share_PushTaskEvent",
@@ -158,6 +132,32 @@
             "schema": {
               "$ref": "#/definitions/v1TaskEvent"
             }
+          }
+        ],
+        "tags": [
+          "分享"
+        ]
+      }
+    },
+    "/list": {
+      "get": {
+        "summary": "获取邀请列表",
+        "operationId": "Share_ListFriend",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ShareListFriendReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "depth",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [

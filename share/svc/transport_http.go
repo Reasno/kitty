@@ -90,14 +90,14 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		serverOptions...,
 	))
 
-	m.Methods("POST").Path("/sign-event").Handler(httptransport.NewServer(
+	m.Methods("POST").Path("/event/sign").Handler(httptransport.NewServer(
 		endpoints.PushSignEventEndpoint,
 		DecodeHTTPPushSignEventZeroRequest,
 		EncodeHTTPGenericResponse,
 		serverOptions...,
 	))
 
-	m.Methods("POST").Path("/task-event").Handler(httptransport.NewServer(
+	m.Methods("POST").Path("/event/task").Handler(httptransport.NewServer(
 		endpoints.PushTaskEventEndpoint,
 		DecodeHTTPPushTaskEventZeroRequest,
 		EncodeHTTPGenericResponse,

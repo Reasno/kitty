@@ -104,7 +104,7 @@ service Share {
       tags: "分享"
     };
     option (google.api.http) = {
-      post: "/sign-event"
+      post: "/event/sign"
       body: "*"
     };
   }
@@ -115,7 +115,7 @@ service Share {
       tags: "分享"
     };
     option (google.api.http) = {
-      post: "/task-event"
+      post: "/event/task"
       body: "*"
     };
   }

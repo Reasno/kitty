@@ -104,7 +104,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.ShareServer
 	{
 		PushSignEventZeroEndpoint = httptransport.NewClient(
 			"POST",
-			copyURL(u, "/sign-event"),
+			copyURL(u, "/event/sign"),
 			EncodeHTTPPushSignEventZeroRequest,
 			DecodeHTTPPushSignEventResponse,
 			options...,
@@ -114,7 +114,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.ShareServer
 	{
 		PushTaskEventZeroEndpoint = httptransport.NewClient(
 			"POST",
-			copyURL(u, "/task-event"),
+			copyURL(u, "/event/task"),
 			EncodeHTTPPushTaskEventZeroRequest,
 			DecodeHTTPPushTaskEventResponse,
 			options...,
@@ -552,7 +552,8 @@ func EncodeHTTPPushSignEventZeroRequest(_ context.Context, r *http.Request, requ
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"sign-event",
+		"event",
+		"sign",
 	}, "/")
 	u, err := url.Parse(path)
 	if err != nil {
@@ -617,7 +618,8 @@ func EncodeHTTPPushTaskEventZeroRequest(_ context.Context, r *http.Request, requ
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"task-event",
+		"event",
+		"task",
 	}, "/")
 	u, err := url.Parse(path)
 	if err != nil {
