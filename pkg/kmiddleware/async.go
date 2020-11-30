@@ -16,7 +16,9 @@ func NewAsyncMiddleware(logger log.Logger) endpoint.Middleware {
 			go func() {
 				ctx := opentracing.ContextWithSpan(context.Background(), span)
 				_, err = next(ctx, request)
-				level.Warn(logger).Log("err", err.Error())
+				if err != nil {
+					level.Warn(logger).Log("err", err.Error())
+				}
 			}()
 			return nil, nil
 		}
