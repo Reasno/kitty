@@ -91,6 +91,6 @@ func NewEventStore(topic string, factory *kkafka.KafkaFactory, options []kkafka.
 }
 
 func (e *EventStore) Emit(ctx context.Context, event string, tenant *config.Tenant) error {
-	_, err := e.e(ctx, Event{Name: event, Tenant: tenant})
+	_, err := e.e(ctx, &Event{Name: event, Tenant: tenant})
 	return err
 }
