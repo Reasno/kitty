@@ -12,15 +12,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
-	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
-
-func MakeDataInfoEndpoint(store kkafka.DataStore) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*pb.UserInfo)
-		return nil, store.Emit(ctx, req)
-	}
-}
 
 func encodeUserInfoRequest(_ context.Context, msg *kafka.Message, request interface{}) error {
 	marshaller := request.(contract.Marshaller)
