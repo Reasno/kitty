@@ -98,7 +98,7 @@ service Share {
     };
   }
 
-  // 测试
+  // 手动推送签到事件
   rpc PushSignEvent (SignEvent) returns (ShareGenericReply) {
     option (options.openapiv2_operation) = {
       tags: "分享"
@@ -109,6 +109,7 @@ service Share {
     };
   }
 
+  // 手动推送任务事件
   rpc PushTaskEvent (TaskEvent) returns (ShareGenericReply) {
     option (options.openapiv2_operation) = {
       tags: "分享"

@@ -113,7 +113,7 @@
     },
     "/sign-event": {
       "post": {
-        "summary": "AdvanceStep",
+        "summary": "手动推送签到事件",
         "operationId": "Share_PushSignEvent",
         "responses": {
           "200": {
@@ -140,6 +140,7 @@
     },
     "/task-event": {
       "post": {
+        "summary": "手动推送任务事件",
         "operationId": "Share_PushTaskEvent",
         "responses": {
           "200": {

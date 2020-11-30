@@ -1189,8 +1189,9 @@ type ShareClient interface {
 	ListFriend(ctx context.Context, in *ShareListFriendRequest, opts ...grpc.CallOption) (*ShareListFriendReply, error)
 	// 领取邀请后的奖励
 	ClaimReward(ctx context.Context, in *ShareClaimRewardRequest, opts ...grpc.CallOption) (*ShareGenericReply, error)
-	// AdvanceStep
+	// 手动推送签到事件
 	PushSignEvent(ctx context.Context, in *SignEvent, opts ...grpc.CallOption) (*ShareGenericReply, error)
+	// 手动推送任务事件
 	PushTaskEvent(ctx context.Context, in *TaskEvent, opts ...grpc.CallOption) (*ShareGenericReply, error)
 }
 
@@ -1277,8 +1278,9 @@ type ShareServer interface {
 	ListFriend(context.Context, *ShareListFriendRequest) (*ShareListFriendReply, error)
 	// 领取邀请后的奖励
 	ClaimReward(context.Context, *ShareClaimRewardRequest) (*ShareGenericReply, error)
-	// AdvanceStep
+	// 手动推送签到事件
 	PushSignEvent(context.Context, *SignEvent) (*ShareGenericReply, error)
+	// 手动推送任务事件
 	PushTaskEvent(context.Context, *TaskEvent) (*ShareGenericReply, error)
 }
 
