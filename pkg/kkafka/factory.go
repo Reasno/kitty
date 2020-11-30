@@ -5,22 +5,19 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/opentracing/opentracing-go"
 	"github.com/segmentio/kafka-go"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 )
 
 type KafkaFactory struct {
-	tracer  opentracing.Tracer
 	mutex   sync.Mutex
 	brokers []string
 	closers []func() error
 	logger  log.Logger
 }
 
-func NewKafkaFactory(brokers []string, logger log.Logger, tracer opentracing.Tracer) *KafkaFactory {
+func NewKafkaFactory(brokers []string, logger log.Logger) *KafkaFactory {
 	return &KafkaFactory{
-		tracer:  tracer,
 		brokers: brokers,
 		closers: []func() error{},
 		logger:  logger,
@@ -41,9 +38,6 @@ func (k *KafkaFactory) MakeHandler(topic string) Handler {
 	}
 
 	k.closers = append(k.closers, writer.Close)
-	if k.tracer != nil {
-		writer.Transport = NewTransport(kafka.DefaultTransport, k.tracer, topic)
-	}
 	return &pub{
 		Writer: writer,
 	}
@@ -68,7 +62,7 @@ func WithParallelism(parallelism int) readerOpt {
 	}
 }
 
-func (k *KafkaFactory) MakeSub(topic string, handler Handler, opt ...readerOpt) *Subscriber {
+func (k *KafkaFactory) MakeKafkaServer(topic string, handler Handler, opt ...readerOpt) *sub {
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
 
@@ -85,11 +79,13 @@ func (k *KafkaFactory) MakeSub(topic string, handler Handler, opt ...readerOpt) 
 		GroupID:     config.groupId,
 		Logger:      klog.KafkaLogAdapter{Logging: level.Debug(k.logger)},
 		ErrorLogger: klog.KafkaLogAdapter{Logging: level.Warn(k.logger)},
+		MinBytes:    1,
+		MaxBytes:    10 * 1024 * 1024,
 	})
 
 	k.closers = append(k.closers, reader.Close)
 
-	return &Subscriber{
+	return &sub{
 		reader:      reader,
 		handler:     handler,
 		parallelism: config.parallelism,

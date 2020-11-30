@@ -69,7 +69,6 @@ func Middleware(logger log.Logger, env contract.Env, config *kmiddleware.Securit
 
 func provideSecurityConfig(conf contract.ConfigReader) *kmiddleware.SecurityConfig {
 	return &kmiddleware.SecurityConfig{
-		Enable: conf.Bool("security.enable"),
 		JwtKey: conf.String("security.key"),
 		JwtId:  conf.String("security.kid"),
 	}

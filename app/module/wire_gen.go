@@ -43,7 +43,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	env := config.ProvideEnv(reader)
 	histogram := ProvideHistogramMetrics(appName, env)
 	moduleOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer, env, appName)
-	kafkaFactory, cleanup3 := ProvideKafkaFactory(reader, logger, tracer)
+	kafkaFactory, cleanup3 := ProvideKafkaFactory(reader, logger)
 	middleware := provideKafkaMiddleware(tracer, logger)
 	moduleUserBus := provideUserBus(kafkaFactory, reader, middleware)
 	moduleEventBus := provideEventBus(kafkaFactory, reader, middleware)

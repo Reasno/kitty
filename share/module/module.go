@@ -9,17 +9,17 @@ import (
 	"github.com/oklog/run"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
-	"glab.tagtic.cn/ad_gains/kitty/share/consumer"
 	"google.golang.org/grpc"
 )
 
 type Module struct {
-	appName       contract.AppName
-	cleanup       func()
-	handler       http.Handler
-	grpcServer    GrpcShareServer
-	eventReciever consumer.EventReceiver
+	appName     contract.AppName
+	cleanup     func()
+	handler     http.Handler
+	grpcServer  GrpcShareServer
+	kafkaServer kkafka.Server
 }
 
 func New(appModuleConfig contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) *Module {
@@ -44,21 +44,11 @@ func (a *Module) ProvideHttp(router *mux.Router) {
 }
 
 func (a *Module) ProvideRunGroup(group *run.Group) {
-	{
-		ctx, cancel := context.WithCancel(context.Background())
-		group.Add(func() error {
-			return a.eventReciever.ReceiveTask(ctx)
-		}, func(err error) {
-			cancel()
-		})
-	}
+	ctx, cancel := context.WithCancel(context.Background())
+	group.Add(func() error {
+		return a.kafkaServer.Serve(ctx)
+	}, func(err error) {
+		cancel()
+	})
 
-	{
-		ctx, cancel := context.WithCancel(context.Background())
-		group.Add(func() error {
-			return a.eventReciever.ReceiveSign(ctx)
-		}, func(err error) {
-			cancel()
-		})
-	}
 }

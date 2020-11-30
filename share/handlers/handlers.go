@@ -4,6 +4,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
@@ -157,5 +158,24 @@ func (s shareService) InviteByToken(ctx context.Context, in *pb.ShareEmptyReques
 			Code: code,
 		},
 	}
+	return &resp, nil
+}
+
+func (s shareService) PushSignEvent(ctx context.Context, in *pb.SignEvent) (*pb.ShareGenericReply, error) {
+	err := s.manager.CompleteStep(ctx, in.UserId, "sign:"+in.EventName)
+	if err != nil {
+		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
+	}
+	var resp pb.ShareGenericReply
+	return &resp, nil
+}
+
+func (s shareService) PushTaskEvent(ctx context.Context, in *pb.TaskEvent) (*pb.ShareGenericReply, error) {
+	fmt.Printf("%+v\n", in)
+	err := s.manager.CompleteStep(ctx, in.UserId, "task:"+in.EventName)
+	if err != nil {
+		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
+	}
+	var resp pb.ShareGenericReply
 	return &resp, nil
 }

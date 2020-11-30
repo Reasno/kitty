@@ -17,21 +17,22 @@ type Claim struct {
 }
 
 type SecurityConfig struct {
-	Enable bool
 	JwtKey string
 	JwtId  string
 }
 
+var TrustedTransportKey = struct{}{}
+
 func NewAuthenticationMiddleware(securityConfig *SecurityConfig) endpoint.Middleware {
-	return func(e endpoint.Endpoint) endpoint.Endpoint {
-		if !securityConfig.Enable {
-			return e
-		}
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		kf := func(token *stdjwt.Token) (interface{}, error) {
 			return []byte(securityConfig.JwtKey), nil
 		}
-		e = jwt.NewParser(kf, stdjwt.SigningMethodHS256, kittyjwt.ClaimFactory)(e)
+		e := jwt.NewParser(kf, stdjwt.SigningMethodHS256, kittyjwt.ClaimFactory)(next)
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			if b, ok := ctx.Value(TrustedTransportKey).(bool); ok && b {
+				return next(ctx, request)
+			}
 			response, err = e(ctx, request)
 			return response, wrap(err)
 		}

@@ -1,6 +1,7 @@
 package module
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-kit/kit/auth/jwt"
@@ -15,7 +16,6 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
 	kitty "glab.tagtic.cn/ad_gains/kitty/proto"
-	"glab.tagtic.cn/ad_gains/kitty/share/consumer"
 	"glab.tagtic.cn/ad_gains/kitty/share/internal"
 	"glab.tagtic.cn/ad_gains/kitty/share/svc"
 )
@@ -30,12 +30,12 @@ func provideEndpoints(middleware overallMiddleware, server kitty.ShareServer) sv
 
 type overallMiddleware func(endpoints svc.Endpoints) svc.Endpoints
 
-func provideModule(server GrpcShareServer, handler http.Handler, eventReceiver consumer.EventReceiver, appName contract.AppName) *Module {
+func provideModule(server GrpcShareServer, handler http.Handler, kafkaServer kkafka.Server, appName contract.AppName) *Module {
 	return &Module{
-		appName:       appName,
-		grpcServer:    server,
-		handler:       handler,
-		eventReciever: eventReceiver,
+		appName:     appName,
+		grpcServer:  server,
+		handler:     handler,
+		kafkaServer: kafkaServer,
 	}
 }
 
@@ -63,8 +63,11 @@ func provideGrpc(endpoints svc.Endpoints, tracer stdopentracing.Tracer, logger l
 	)
 }
 
-func provideKafkaMiddleware(tracer stdopentracing.Tracer, logger log.Logger) kkafka.Middleware {
-	t := kkafka.TracingConsumerMiddleware(tracer, "kafka.consumer")
-	l := kkafka.ErrorLogMiddleware(logger)
-	return kkafka.Chain(l, t)
+func provideKafkaServer(endpoints svc.Endpoints, factory *kkafka.KafkaFactory, conf contract.ConfigReader, tracer stdopentracing.Tracer, env contract.Env, logger log.Logger) kkafka.Server {
+	serverOptions := []kkafka.SubscriberOption{
+		kkafka.SubscriberBefore(kkafka.KafkaToContext(tracer, fmt.Sprintf("kafka(%s)", env.String()), logger)),
+		kkafka.SubscriberBefore(kkafka.Trust()),
+		kkafka.SubscriberErrorHandler(kkafka.ErrHandler(logger)),
+	}
+	return svc.MakeKafkaServer(endpoints, factory, conf, serverOptions...)
 }

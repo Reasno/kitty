@@ -83,8 +83,8 @@ func provideEventBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, m
 	}}
 }
 
-func ProvideKafkaFactory(conf contract.ConfigReader, logger log.Logger, tracer opentracing.Tracer) (*kkafka.KafkaFactory, func()) {
-	factory := kkafka.NewKafkaFactory(conf.Strings("kafka.brokers"), logger, tracer)
+func ProvideKafkaFactory(conf contract.ConfigReader, logger log.Logger) (*kkafka.KafkaFactory, func()) {
+	factory := kkafka.NewKafkaFactory(conf.Strings("kafka.brokers"), logger)
 	return factory, func() {
 		_ = factory.Close()
 	}
@@ -115,7 +115,6 @@ func ProvideUploadManager(tracer opentracing.Tracer, conf contract.ConfigReader,
 
 func ProvideSecurityConfig(conf contract.ConfigReader) *kmiddleware.SecurityConfig {
 	return &kmiddleware.SecurityConfig{
-		Enable: conf.Bool("security.enable"),
 		JwtKey: conf.String("security.key"),
 		JwtId:  conf.String("security.kid"),
 	}

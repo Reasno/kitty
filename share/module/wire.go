@@ -11,7 +11,6 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
-	"glab.tagtic.cn/ad_gains/kitty/share/consumer"
 	"glab.tagtic.cn/ad_gains/kitty/share/handlers"
 	"glab.tagtic.cn/ad_gains/kitty/share/internal"
 )
@@ -32,14 +31,11 @@ var ShareServiceSet = wire.NewSet(
 	internal.NewXTaskRequester,
 	handlers.NewShareService,
 	handlers.ProvideShareServer,
-	provideKafkaMiddleware,
 	wire.Struct(new(internal.InvitationManagerFactory), "*"),
 	wire.Struct(new(internal.InvitationManagerFacade), "*"),
-	wire.Struct(new(consumer.EventReceiver), "*"),
 	wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)),
 	wire.Bind(new(internal.RelationRepository), new(*repository.RelationRepo)),
 	wire.Bind(new(handlers.InvitationManager), new(*internal.InvitationManagerFacade)),
-	wire.Bind(new(consumer.InvitationManager), new(*internal.InvitationManagerFacade)),
 	wire.Bind(new(contract.Uploader), new(*ots3.Manager)),
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
 	wire.Bind(new(internal.EncodeDecoder), new(*internal.Tokenizer)),
@@ -52,6 +48,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 		provideEndpoints,
 		provideHttp,
 		provideGrpc,
+		provideKafkaServer,
 		provideModule,
 	))
 }

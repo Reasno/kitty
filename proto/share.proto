@@ -97,6 +97,27 @@ service Share {
       body: "*"
     };
   }
+
+  // 测试
+  rpc PushSignEvent (SignEvent) returns (ShareGenericReply) {
+    option (options.openapiv2_operation) = {
+      tags: "分享"
+    };
+    option (google.api.http) = {
+      post: "/sign-event"
+      body: "*"
+    };
+  }
+
+  rpc PushTaskEvent (TaskEvent) returns (ShareGenericReply) {
+    option (options.openapiv2_operation) = {
+      tags: "分享"
+    };
+    option (google.api.http) = {
+      post: "/task-event"
+      body: "*"
+    };
+  }
 }
 
 message ShareClaimRewardRequest {

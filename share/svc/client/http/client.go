@@ -100,6 +100,26 @@ func New(instance string, options ...httptransport.ClientOption) (pb.ShareServer
 			options...,
 		).Endpoint()
 	}
+	var PushSignEventZeroEndpoint endpoint.Endpoint
+	{
+		PushSignEventZeroEndpoint = httptransport.NewClient(
+			"POST",
+			copyURL(u, "/sign-event"),
+			EncodeHTTPPushSignEventZeroRequest,
+			DecodeHTTPPushSignEventResponse,
+			options...,
+		).Endpoint()
+	}
+	var PushTaskEventZeroEndpoint endpoint.Endpoint
+	{
+		PushTaskEventZeroEndpoint = httptransport.NewClient(
+			"POST",
+			copyURL(u, "/task-event"),
+			EncodeHTTPPushTaskEventZeroRequest,
+			DecodeHTTPPushTaskEventResponse,
+			options...,
+		).Endpoint()
+	}
 
 	return svc.Endpoints{
 		InviteByUrlEndpoint:       InviteByUrlZeroEndpoint,
@@ -107,6 +127,8 @@ func New(instance string, options ...httptransport.ClientOption) (pb.ShareServer
 		AddInvitationCodeEndpoint: AddInvitationCodeZeroEndpoint,
 		ListFriendEndpoint:        ListFriendZeroEndpoint,
 		ClaimRewardEndpoint:       ClaimRewardZeroEndpoint,
+		PushSignEventEndpoint:     PushSignEventZeroEndpoint,
+		PushTaskEventEndpoint:     PushTaskEventZeroEndpoint,
 	}, nil
 }
 
@@ -247,6 +269,60 @@ func DecodeHTTPListFriendResponse(_ context.Context, r *http.Response) (interfac
 // error and attempt to decode the specific error message from the response
 // body. Primarily useful in a client.
 func DecodeHTTPClaimRewardResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.ShareGenericReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
+// DecodeHTTPPushSignEventResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded ShareGenericReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPPushSignEventResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.ShareGenericReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
+// DecodeHTTPPushTaskEventResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded ShareGenericReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPPushTaskEventResponse(_ context.Context, r *http.Response) (interface{}, error) {
 	defer r.Body.Close()
 	buf, err := ioutil.ReadAll(r.Body)
 	if err == io.EOF {
@@ -451,6 +527,140 @@ func EncodeHTTPClaimRewardZeroRequest(_ context.Context, r *http.Request, reques
 	toRet := request.(*pb.ShareClaimRewardRequest)
 
 	toRet.ApprenticeId = req.ApprenticeId
+
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(toRet); err != nil {
+		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
+	}
+	r.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// EncodeHTTPPushSignEventZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a pushsignevent request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPPushSignEventZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.SignEvent)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"sign-event",
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	r.URL.RawQuery = values.Encode()
+	// Set the body parameters
+	var buf bytes.Buffer
+	toRet := request.(*pb.SignEvent)
+
+	toRet.Id = req.Id
+
+	toRet.UserId = req.UserId
+
+	toRet.PackageName = req.PackageName
+
+	toRet.Channel = req.Channel
+
+	toRet.Name = req.Name
+
+	toRet.EventName = req.EventName
+
+	toRet.Score = req.Score
+
+	toRet.DateTime = req.DateTime
+
+	toRet.ThirdPartyId = req.ThirdPartyId
+
+	toRet.IsDouble = req.IsDouble
+
+	toRet.Ext = req.Ext
+
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(toRet); err != nil {
+		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
+	}
+	r.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// EncodeHTTPPushTaskEventZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a pushtaskevent request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPPushTaskEventZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.TaskEvent)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"task-event",
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	r.URL.RawQuery = values.Encode()
+	// Set the body parameters
+	var buf bytes.Buffer
+	toRet := request.(*pb.TaskEvent)
+
+	toRet.Id = req.Id
+
+	toRet.UserId = req.UserId
+
+	toRet.PackageName = req.PackageName
+
+	toRet.Channel = req.Channel
+
+	toRet.Name = req.Name
+
+	toRet.EventName = req.EventName
+
+	toRet.Score = req.Score
+
+	toRet.DateTime = req.DateTime
+
+	toRet.ThirdPartyId = req.ThirdPartyId
+
+	toRet.DoneNum = req.DoneNum
+
+	toRet.TotalNum = req.TotalNum
+
+	toRet.IsDone = req.IsDone
+
+	toRet.Ext = req.Ext
 
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)

@@ -81,7 +81,7 @@ var serveCmd = &cobra.Command{
 		// Graceful shutdown
 		{
 			c := make(chan os.Signal, 1)
-			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 			g.Add(func() error {
 				terminateError := fmt.Errorf("%s", <-c)
 				return terminateError

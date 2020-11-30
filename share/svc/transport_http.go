@@ -89,6 +89,20 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		EncodeHTTPGenericResponse,
 		serverOptions...,
 	))
+
+	m.Methods("POST").Path("/sign-event").Handler(httptransport.NewServer(
+		endpoints.PushSignEventEndpoint,
+		DecodeHTTPPushSignEventZeroRequest,
+		EncodeHTTPGenericResponse,
+		serverOptions...,
+	))
+
+	m.Methods("POST").Path("/task-event").Handler(httptransport.NewServer(
+		endpoints.PushTaskEventEndpoint,
+		DecodeHTTPPushTaskEventZeroRequest,
+		EncodeHTTPGenericResponse,
+		serverOptions...,
+	))
 	return m
 }
 
@@ -301,6 +315,78 @@ func DecodeHTTPListFriendZeroRequest(_ context.Context, r *http.Request) (interf
 func DecodeHTTPClaimRewardZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	defer r.Body.Close()
 	var req pb.ShareClaimRewardRequest
+	buf, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read body of http request")
+	}
+	if len(buf) > 0 {
+		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
+		unmarshaller := jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		}
+		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
+			const size = 8196
+			if len(buf) > size {
+				buf = buf[:size]
+			}
+			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
+				http.StatusBadRequest,
+				nil,
+			}
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := r.URL.Query()
+	_ = queryParams
+
+	return &req, err
+}
+
+// DecodeHTTPPushSignEventZeroRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded pushsignevent request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPPushSignEventZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	defer r.Body.Close()
+	var req pb.SignEvent
+	buf, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read body of http request")
+	}
+	if len(buf) > 0 {
+		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
+		unmarshaller := jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		}
+		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
+			const size = 8196
+			if len(buf) > size {
+				buf = buf[:size]
+			}
+			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
+				http.StatusBadRequest,
+				nil,
+			}
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := r.URL.Query()
+	_ = queryParams
+
+	return &req, err
+}
+
+// DecodeHTTPPushTaskEventZeroRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded pushtaskevent request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPPushTaskEventZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	defer r.Body.Close()
+	var req pb.TaskEvent
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot read body of http request")

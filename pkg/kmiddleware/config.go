@@ -13,18 +13,47 @@ import (
 func NewConfigMiddleware() endpoint.Middleware {
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			var tenant config.Tenant
+
 			if claim, ok := ctx.Value(jwt.JWTClaimsContextKey).(*kittyjwt.Claim); ok {
-				t := NewTenantFromClaim(claim)
-				t.Ip, _ = ctx.Value(contract.IpKey).(string)
-				ctx = context.WithValue(ctx, config.TenantKey, t)
+				tenant = NewTenantFromClaim(claim)
 			}
+			if ip, ok := ctx.Value(contract.IpKey).(string); ok {
+				tenant.Ip = ip
+			}
+			if t, ok := request.(interface {
+				GetChannel() string
+			}); ok {
+				tenant.Channel = t.GetChannel()
+			}
+			if t, ok := request.(interface {
+				GetUserId() uint64
+			}); ok {
+				tenant.UserId = t.GetUserId()
+			}
+			if t, ok := request.(interface {
+				GetSuuid() string
+			}); ok {
+				tenant.Suuid = t.GetSuuid()
+			}
+			if t, ok := request.(interface {
+				GetPackageName() string
+			}); ok {
+				tenant.PackageName = t.GetPackageName()
+			}
+			if t, ok := request.(interface {
+				GetVersionCode() string
+			}); ok {
+				tenant.PackageName = t.GetVersionCode()
+			}
+			ctx = context.WithValue(ctx, config.TenantKey, &tenant)
 			return e(ctx, request)
 		}
 	}
 }
 
-func NewTenantFromClaim(claim *kittyjwt.Claim) *config.Tenant {
-	return &config.Tenant{
+func NewTenantFromClaim(claim *kittyjwt.Claim) config.Tenant {
+	return config.Tenant{
 		Channel:     claim.Channel,
 		VersionCode: claim.VersionCode,
 		Suuid:       claim.Suuid,

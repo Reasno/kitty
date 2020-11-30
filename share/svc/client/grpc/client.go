@@ -101,12 +101,40 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.ShareServer, error)
 		).Endpoint()
 	}
 
+	var pushsigneventEndpoint endpoint.Endpoint
+	{
+		pushsigneventEndpoint = grpctransport.NewClient(
+			conn,
+			"kitty.Share",
+			"PushSignEvent",
+			EncodeGRPCPushSignEventRequest,
+			DecodeGRPCPushSignEventResponse,
+			pb.ShareGenericReply{},
+			clientOptions...,
+		).Endpoint()
+	}
+
+	var pushtaskeventEndpoint endpoint.Endpoint
+	{
+		pushtaskeventEndpoint = grpctransport.NewClient(
+			conn,
+			"kitty.Share",
+			"PushTaskEvent",
+			EncodeGRPCPushTaskEventRequest,
+			DecodeGRPCPushTaskEventResponse,
+			pb.ShareGenericReply{},
+			clientOptions...,
+		).Endpoint()
+	}
+
 	return svc.Endpoints{
 		InviteByUrlEndpoint:       invitebyurlEndpoint,
 		InviteByTokenEndpoint:     invitebytokenEndpoint,
 		AddInvitationCodeEndpoint: addinvitationcodeEndpoint,
 		ListFriendEndpoint:        listfriendEndpoint,
 		ClaimRewardEndpoint:       claimrewardEndpoint,
+		PushSignEventEndpoint:     pushsigneventEndpoint,
+		PushTaskEventEndpoint:     pushtaskeventEndpoint,
 	}, nil
 }
 
@@ -147,6 +175,20 @@ func DecodeGRPCClaimRewardResponse(_ context.Context, grpcReply interface{}) (in
 	return reply, nil
 }
 
+// DecodeGRPCPushSignEventResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC pushsignevent reply to a user-domain pushsignevent response. Primarily useful in a client.
+func DecodeGRPCPushSignEventResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.ShareGenericReply)
+	return reply, nil
+}
+
+// DecodeGRPCPushTaskEventResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC pushtaskevent reply to a user-domain pushtaskevent response. Primarily useful in a client.
+func DecodeGRPCPushTaskEventResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.ShareGenericReply)
+	return reply, nil
+}
+
 // GRPC Client Encode
 
 // EncodeGRPCInviteByUrlRequest is a transport/grpc.EncodeRequestFunc that converts a
@@ -181,6 +223,20 @@ func EncodeGRPCListFriendRequest(_ context.Context, request interface{}) (interf
 // user-domain claimreward request to a gRPC claimreward request. Primarily useful in a client.
 func EncodeGRPCClaimRewardRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.ShareClaimRewardRequest)
+	return req, nil
+}
+
+// EncodeGRPCPushSignEventRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain pushsignevent request to a gRPC pushsignevent request. Primarily useful in a client.
+func EncodeGRPCPushSignEventRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.SignEvent)
+	return req, nil
+}
+
+// EncodeGRPCPushTaskEventRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain pushtaskevent request to a gRPC pushtaskevent request. Primarily useful in a client.
+func EncodeGRPCPushTaskEventRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.TaskEvent)
 	return req, nil
 }
 

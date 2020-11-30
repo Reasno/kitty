@@ -5,10 +5,11 @@ package internal
 import (
 	"context"
 	"fmt"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"net/url"
 	"strconv"
+
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 
 	"github.com/pkg/errors"
 	"github.com/rs/xid"
@@ -129,14 +130,15 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 func (im *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error {
 
 	if !in(eventName, im.conf.OrientationEvents) {
+		level.Info(im.logger).Log("msg", fmt.Sprintf("invalid event name %s, want %s", eventName, im.conf.OrientationEvents))
 		return nil
 	}
 
 	apprentice := user(uint(apprenticeId))
 
 	return im.rr.UpdateRelations(ctx, &apprentice, func(relations []entity.Relation) error {
-		for _, rel := range relations {
-			rel.CompleteStep(entity.OrientationStep{Name: eventName})
+		for i := range relations {
+			relations[i].CompleteStep(entity.OrientationStep{Name: eventName})
 		}
 		return nil
 	})
@@ -152,7 +154,7 @@ func (im *InvitationManager) ListApprentices(ctx context.Context, masterId uint6
 		return nil, errors.Wrap(err, "error querying relations")
 	}
 	amount := im.conf.reward(depth)
-	for i, _ := range rels {
+	for i := range rels {
 		out = append(out, RelationWithRewardAmount{
 			Relation: &rels[i],
 			Amount:   amount,

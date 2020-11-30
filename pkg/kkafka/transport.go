@@ -3,46 +3,9 @@ package kkafka
 import (
 	"context"
 
-	"net"
-
 	"github.com/oklog/run"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/segmentio/kafka-go"
-	"github.com/segmentio/kafka-go/protocol"
 )
-
-type Transport struct {
-	underlying kafka.RoundTripper
-	tracer     opentracing.Tracer
-	topic      string
-}
-
-func NewTransport(underlying kafka.RoundTripper, tracer opentracing.Tracer, topic string) *Transport {
-	return &Transport{
-		underlying: underlying,
-		tracer:     tracer,
-		topic:      topic,
-	}
-}
-
-func (t *Transport) RoundTrip(ctx context.Context, addr net.Addr, request kafka.Request) (kafka.Response, error) {
-	if request.ApiKey() != protocol.Metadata {
-		return t.underlying.RoundTrip(ctx, addr, request)
-	}
-	span, ctx := opentracing.StartSpanFromContextWithTracer(ctx, t.tracer, "kafka.transport")
-	defer span.Finish()
-	ext.SpanKind.Set(span, ext.SpanKindProducerEnum)
-	ext.PeerAddress.Set(span, addr.String())
-	ext.MessageBusDestination.Set(span, t.topic)
-	span.LogKV("api", request.ApiKey())
-	resp, err := t.underlying.RoundTrip(ctx, addr, request)
-	if err != nil {
-		span.LogKV("error", err.Error())
-		ext.Error.Set(span, true)
-	}
-	return resp, err
-}
 
 type HandleFunc func(ctx context.Context, msg kafka.Message) error
 
@@ -54,13 +17,17 @@ type Handler interface {
 	Handle(ctx context.Context, msg kafka.Message) error
 }
 
-type Subscriber struct {
+type Server interface {
+	Serve(ctx context.Context) error
+}
+
+type sub struct {
 	reader      *kafka.Reader
 	handler     Handler
 	parallelism int
 }
 
-func (s *Subscriber) ServeOnce(ctx context.Context) error {
+func (s *sub) ServeOnce(ctx context.Context) error {
 	msg, err := s.reader.ReadMessage(ctx)
 	if err != nil {
 		return err
@@ -70,11 +37,12 @@ func (s *Subscriber) ServeOnce(ctx context.Context) error {
 	return nil
 }
 
-func (s *Subscriber) Serve(ctx context.Context) error {
+func (s *sub) Serve(ctx context.Context) error {
 	var (
 		g  run.Group
 		ch chan kafka.Message
 	)
+	ch = make(chan kafka.Message)
 	ctx, cancel := context.WithCancel(ctx)
 	g.Add(func() error {
 		for {
@@ -98,6 +66,28 @@ func (s *Subscriber) Serve(ctx context.Context) error {
 					return nil
 				}
 			}
+		}, func(err error) {
+			cancel()
+		})
+	}
+	return g.Run()
+}
+
+type Mux struct {
+	servers []Server
+}
+
+func NewMux(servers ...Server) Mux {
+	return Mux{servers}
+}
+
+func (m Mux) Serve(ctx context.Context) error {
+	var g run.Group
+	ctx, cancel := context.WithCancel(ctx)
+	for _, server := range m.servers {
+		s := server
+		g.Add(func() error {
+			return s.Serve(ctx)
 		}, func(err error) {
 			cancel()
 		})

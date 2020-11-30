@@ -3,34 +3,75 @@ package kmiddleware
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/tracing/opentracing"
 	stdtracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
-	pb "glab.tagtic.cn/ad_gains/kitty/proto"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 )
 
 type LabeledMiddleware func(string, endpoint.Endpoint) endpoint.Endpoint
 
-func NewTraceMiddleware(tracer stdtracing.Tracer, env string) LabeledMiddleware {
+func NewTraceServerMiddleware(tracer stdtracing.Tracer, env string) LabeledMiddleware {
 	return func(s string, endpoint endpoint.Endpoint) endpoint.Endpoint {
-		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-			name := fmt.Sprintf("%s(%s)", s, env)
-			e := opentracing.TraceServer(tracer, name)(endpoint)
-			span := stdtracing.SpanFromContext(ctx)
-			claim := kjwt.ClaimFromContext(ctx)
-			if r, ok := request.(pb.UserLoginRequest); ok {
-				claim.Suuid = r.Device.Suuid
+		name := fmt.Sprintf("%s(%s)", s, env)
+		return TraceConsumer(tracer, name, ext.SpanKindRPCServerEnum)(endpoint)
+	}
+}
+
+// TraceConsumer returns a Middleware that wraps the `next` Endpoint in an
+// OpenTracing Span called `operationName`.
+//
+// If `ctx` already has a Span, it is re-used and the operation name is
+// overwritten. If `ctx` does not yet have a Span, one is created here.
+func TraceConsumer(tracer stdtracing.Tracer, operationName string, kind ext.SpanKindEnum) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (interface{}, error) {
+			serverSpan := stdtracing.SpanFromContext(ctx)
+			if serverSpan == nil {
+				// All we can do is create a new root span.
+				serverSpan = tracer.StartSpan(operationName)
+			} else {
+				serverSpan.SetOperationName(operationName)
 			}
-			span.SetTag("env", env)
-			span.SetTag("package.name", claim.PackageName)
-			span.SetTag("suuid", claim.Suuid)
-			span.SetTag("user.id", claim.UserId)
-			resp, err := e(ctx, request)
+			defer serverSpan.Finish()
+			ext.SpanKindConsumer.Set(serverSpan)
+			tenant := config.GetTenant(ctx)
+			serverSpan.SetTag("package.name", tenant.PackageName)
+			serverSpan.SetTag("suuid", tenant.Suuid)
+			serverSpan.SetTag("user.id", tenant.UserId)
+			ctx = stdtracing.ContextWithSpan(ctx, serverSpan)
+			resp, err := next(ctx, request)
 			if err != nil {
-				ext.Error.Set(span, true)
-				span.LogKV("error", err.Error())
+				ext.Error.Set(serverSpan, true)
+				serverSpan.LogKV("error", err.Error())
+			}
+			return resp, err
+		}
+	}
+}
+
+// TraceProducer returns a Middleware that wraps the `next` Endpoint in an
+// OpenTracing Span called `operationName`.
+func TraceProducer(tracer stdtracing.Tracer, operationName string, kind ext.SpanKindEnum) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (interface{}, error) {
+			var clientSpan stdtracing.Span
+			if parentSpan := stdtracing.SpanFromContext(ctx); parentSpan != nil {
+				clientSpan = tracer.StartSpan(
+					operationName,
+					stdtracing.ChildOf(parentSpan.Context()),
+				)
+			} else {
+				clientSpan = tracer.StartSpan(operationName)
+			}
+			defer clientSpan.Finish()
+			ext.SpanKindConsumer.Set(clientSpan)
+			ctx = stdtracing.ContextWithSpan(ctx, clientSpan)
+			resp, err := next(ctx, request)
+			if err != nil {
+				ext.Error.Set(clientSpan, true)
+				clientSpan.LogKV("error", err.Error())
 			}
 			return resp, err
 		}

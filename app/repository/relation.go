@@ -115,6 +115,7 @@ func (r *RelationRepo) UpdateRelations(
 		}
 
 		// save new relations
+		tx.FullSaveAssociations = true
 		err = tx.WithContext(ctx).Save(&updated).Error
 		if err != nil {
 			return errors.Wrap(err, "unable to save relations")

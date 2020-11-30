@@ -38,6 +38,8 @@ type Endpoints struct {
 	AddInvitationCodeEndpoint endpoint.Endpoint
 	ListFriendEndpoint        endpoint.Endpoint
 	ClaimRewardEndpoint       endpoint.Endpoint
+	PushSignEventEndpoint     endpoint.Endpoint
+	PushTaskEventEndpoint     endpoint.Endpoint
 }
 
 func NewEndpoints(service pb.ShareServer) Endpoints {
@@ -49,6 +51,8 @@ func NewEndpoints(service pb.ShareServer) Endpoints {
 		addinvitationcodeEndpoint = MakeAddInvitationCodeEndpoint(service)
 		listfriendEndpoint        = MakeListFriendEndpoint(service)
 		claimrewardEndpoint       = MakeClaimRewardEndpoint(service)
+		pushsigneventEndpoint     = MakePushSignEventEndpoint(service)
+		pushtaskeventEndpoint     = MakePushTaskEventEndpoint(service)
 	)
 
 	endpoints := Endpoints{
@@ -57,6 +61,8 @@ func NewEndpoints(service pb.ShareServer) Endpoints {
 		AddInvitationCodeEndpoint: addinvitationcodeEndpoint,
 		ListFriendEndpoint:        listfriendEndpoint,
 		ClaimRewardEndpoint:       claimrewardEndpoint,
+		PushSignEventEndpoint:     pushsigneventEndpoint,
+		PushTaskEventEndpoint:     pushtaskeventEndpoint,
 	}
 
 	return endpoints
@@ -98,6 +104,22 @@ func (e Endpoints) ListFriend(ctx context.Context, in *pb.ShareListFriendRequest
 
 func (e Endpoints) ClaimReward(ctx context.Context, in *pb.ShareClaimRewardRequest) (*pb.ShareGenericReply, error) {
 	response, err := e.ClaimRewardEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.ShareGenericReply), nil
+}
+
+func (e Endpoints) PushSignEvent(ctx context.Context, in *pb.SignEvent) (*pb.ShareGenericReply, error) {
+	response, err := e.PushSignEventEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.ShareGenericReply), nil
+}
+
+func (e Endpoints) PushTaskEvent(ctx context.Context, in *pb.TaskEvent) (*pb.ShareGenericReply, error) {
+	response, err := e.PushTaskEventEndpoint(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +183,28 @@ func MakeClaimRewardEndpoint(s pb.ShareServer) endpoint.Endpoint {
 	}
 }
 
+func MakePushSignEventEndpoint(s pb.ShareServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.SignEvent)
+		v, err := s.PushSignEvent(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
+func MakePushTaskEventEndpoint(s pb.ShareServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.TaskEvent)
+		v, err := s.PushTaskEvent(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 // WrapAllExcept wraps each Endpoint field of struct Endpoints with a
 // go-kit/kit/endpoint.Middleware.
 // Use this for applying a set of middlewares to every endpoint in the service.
@@ -173,6 +217,8 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		"AddInvitationCode": {},
 		"ListFriend":        {},
 		"ClaimReward":       {},
+		"PushSignEvent":     {},
+		"PushTaskEvent":     {},
 	}
 
 	for _, ex := range excluded {
@@ -198,6 +244,12 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		if inc == "ClaimReward" {
 			e.ClaimRewardEndpoint = middleware(e.ClaimRewardEndpoint)
 		}
+		if inc == "PushSignEvent" {
+			e.PushSignEventEndpoint = middleware(e.PushSignEventEndpoint)
+		}
+		if inc == "PushTaskEvent" {
+			e.PushTaskEventEndpoint = middleware(e.PushTaskEventEndpoint)
+		}
 	}
 }
 
@@ -217,6 +269,8 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		"AddInvitationCode": {},
 		"ListFriend":        {},
 		"ClaimReward":       {},
+		"PushSignEvent":     {},
+		"PushTaskEvent":     {},
 	}
 
 	for _, ex := range excluded {
@@ -241,6 +295,12 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		}
 		if inc == "ClaimReward" {
 			e.ClaimRewardEndpoint = middleware("ClaimReward", e.ClaimRewardEndpoint)
+		}
+		if inc == "PushSignEvent" {
+			e.PushSignEventEndpoint = middleware("PushSignEvent", e.PushSignEventEndpoint)
+		}
+		if inc == "PushTaskEvent" {
+			e.PushTaskEventEndpoint = middleware("PushTaskEvent", e.PushTaskEventEndpoint)
 		}
 	}
 }

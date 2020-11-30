@@ -22,7 +22,7 @@ func createRelation(db *gorm.DB, masterId int, apprenticeId int) error {
 		OrientationCompleted: false,
 		OrientationSteps: []entity.OrientationStep{
 			{
-				Name: "say_hello",
+				Name: "sign:say_hello",
 			},
 		},
 		RewardClaimed: false,
