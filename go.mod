@@ -10,7 +10,7 @@ replace (
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.0.0 // indirect
-	github.com/Reasno/trs v0.6.1
+	github.com/Reasno/trs v0.7.0
 	github.com/antonmedv/expr v1.8.9
 	github.com/aws/aws-sdk-go v1.29.5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -30,7 +30,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.0.0
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/knadh/koanf v0.14.0
-	github.com/magiconair/properties v1.8.1
 	github.com/oklog/run v1.0.0
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.1.0
