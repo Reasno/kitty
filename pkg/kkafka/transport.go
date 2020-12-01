@@ -84,6 +84,7 @@ func NewMux(servers ...Server) Mux {
 func (m Mux) Serve(ctx context.Context) error {
 	var g run.Group
 	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	for _, server := range m.servers {
 		s := server
 		g.Add(func() error {
