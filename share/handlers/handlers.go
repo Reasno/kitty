@@ -163,7 +163,7 @@ func (s shareService) InviteByToken(ctx context.Context, in *pb.ShareEmptyReques
 func (s shareService) PushSignEvent(ctx context.Context, in *pb.SignEvent) (*pb.ShareGenericReply, error) {
 	var event internal.ReceivedEvent
 	event.Id = int(in.Id)
-	event.Type = "task"
+	event.Type = "sign"
 
 	err := s.manager.CompleteStep(ctx, in.UserId, event)
 	if err != nil {
