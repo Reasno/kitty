@@ -2,43 +2,33 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/go-kit/kit/log"
-	"github.com/knadh/koanf"
-	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/file"
-	"github.com/spf13/cobra"
-	"glab.tagtic.cn/ad_gains/kitty/app/module"
+	"github.com/go-kit/kit/log/level"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
+
+	app "glab.tagtic.cn/ad_gains/kitty/app/module"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/container"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
-	kitty_log "glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
-	"glab.tagtic.cn/ad_gains/kitty/rule"
 	"glab.tagtic.cn/ad_gains/kitty/rule/client"
+	rule "glab.tagtic.cn/ad_gains/kitty/rule/module"
+	share "glab.tagtic.cn/ad_gains/kitty/share/module"
 )
 
 var moduleContainer container.ModuleContainer
 
 func initModules() {
 	moduleContainer = container.NewModuleContainer()
-	ruleModuleConfig := conf.Cut("rule")
-	ruleModule := rule.New(ruleModuleConfig, logger)
+	ruleModule := rule.New(name("rule"))
+	engine, _ := client.NewRuleEngine(client.WithRepository(ruleModule.GetRepository()))
+
+	moduleContainer.Register(coreModule)
 	moduleContainer.Register(ruleModule)
-
-	dynConf, err := client.NewRuleEngine(client.WithRepository(ruleModule.GetRepository()))
-	if err != nil {
-		panic(err)
-	}
-
-	appModuleConfig := conf.Cut("app")
-	appModuleDynConfig := dynConf.Of(
-		fmt.Sprintf("%s-%s",
-			appModuleConfig.String("name"),
-			appModuleConfig.String("env")),
-	)
-	moduleContainer.Register(module.New(appModuleConfig, logger, appModuleDynConfig))
-	moduleContainer.Register(ots3.New(conf.Cut("global"), logger))
+	moduleContainer.Register(app.New(nameD("app", engine)))
+	moduleContainer.Register(share.New(nameD("app", engine)))
+	moduleContainer.Register(ots3.New(name("s3")))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Doc))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.HealthCheck))
 	moduleContainer.Register(container.HttpFunc(kittyhttp.Metrics))
@@ -52,23 +42,46 @@ func shutdownModules() {
 	}
 }
 
-func initConfig(_ *cobra.Command, _ []string) error {
-	k := koanf.New(".")
-	if cfgFile == "" {
-		cfgFile = "./config/kitty.yaml"
-	}
-
-	err := k.Load(file.Provider("./config/kitty.yaml"), yaml.Parser())
-	if err != nil {
-		panic(err)
-	}
-
-	conf = config.NewKoanfAdapter(k)
-	return nil
+func warn(msg string) {
+	_ = level.Warn(coreModule.Logger).Log("msg", msg)
 }
 
-func initLogger(cmd *cobra.Command, _ []string) error {
-	logger = kitty_log.NewLogger(config.Env(conf.String("global.env")))
-	logger = log.With(logger, "subcommand", cmd.Use)
-	return nil
+func er(err error) {
+	_ = level.Error(coreModule.Logger).Log("err", err)
+}
+
+func debug(msg string) {
+	_ = level.Debug(coreModule.Logger).Log("msg", msg)
+}
+
+func info(msg string) {
+	_ = level.Info(coreModule.Logger).Log("msg", msg)
+}
+
+func conf() contract.ConfigReader {
+	return coreModule.Conf
+}
+
+// name unpacks the core module to several dependencies for other modules
+func name(name string) (contract.ConfigReader, log.Logger) {
+	m := coreModule
+	conf := m.Conf.Cut(name)
+	logger := log.With(m.Logger, "module", conf.String("name"))
+	logger = level.NewFilter(logger, klog.LevelFilter(conf.String("level")))
+	return conf, logger
+}
+
+// nameD like name, but also provide config.DynamicConfigReader
+func nameD(name string, client *client.RuleEngine) (contract.ConfigReader, log.Logger, config.DynamicConfigReader) {
+	m := coreModule
+	conf := m.Conf.Cut(name)
+	logger := log.With(m.Logger, "module", conf.String("name"))
+	logger = level.NewFilter(logger, klog.LevelFilter(conf.String("level")))
+	dyn := client.Of(
+		fmt.Sprintf("%s-%s",
+			conf.String("name"),
+			conf.String("env"),
+		),
+	)
+	return conf, logger, dyn
 }

@@ -14,6 +14,7 @@ import (
 func injectModule(conf contract.ConfigReader, logger log.Logger) *Module {
 	panic(wire.Build(
 		provideUploadManager,
+		provideSecurityConfig,
 		MakeUploadEndpoint,
 		MakeHttpHandler,
 		Middleware,

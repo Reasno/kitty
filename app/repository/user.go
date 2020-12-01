@@ -22,7 +22,7 @@ var ErrRecordNotFound = errors.New("record not found")
 const emsg = "UserRepo"
 
 func (r *UserRepo) Save(ctx context.Context, user *entity.User) error {
-	if err := r.db.Save(user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
 		if err, ok := err.(*mysql.MySQLError); ok {
 			if err.Number == 1062 {
 				return ErrAlreadyBind
@@ -53,6 +53,32 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 	return &u, nil
 }
 
+func (r *UserRepo) UpdateCallback(ctx context.Context, id uint, f func(user *entity.User) error) (err error) {
+	var u entity.User
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		tx = tx.WithContext(ctx)
+		err := tx.Model(entity.User{}).Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", id).First(&u).Error
+		if err != nil {
+			return errors.Wrap(err, emsg)
+		}
+		err = f(&u)
+		if err != nil {
+			return err
+		}
+
+		err = tx.Save(u).Error
+		if err != nil {
+			if err, ok := err.(*mysql.MySQLError); ok {
+				if err.Number == 1062 {
+					return ErrAlreadyBind
+				}
+			}
+			return errors.Wrap(err, emsg)
+		}
+		return nil
+	})
+}
+
 func NewUserRepo(db *gorm.DB, fr *FileRepo) *UserRepo {
 	return &UserRepo{fr, db}
 }
@@ -64,7 +90,7 @@ func (r *UserRepo) GetFromWechat(ctx context.Context, packageName, wechat string
 
 	wechatUser.CommonSUUID = device.Suuid
 	wechatUser.PackageName = packageName
-	wechatUser.WechatOpenId = sql.NullString{wechat, true}
+	wechatUser.WechatOpenId = sql.NullString{String: wechat, Valid: true}
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		defer func() {
@@ -100,7 +126,7 @@ func (r *UserRepo) GetFromMobile(ctx context.Context, packageName, mobile string
 	var (
 		u entity.User
 	)
-	err := r.db.WithContext(ctx).Where("package_name = ? and mobile = ?", packageName, mobile).Attrs(entity.User{CommonSUUID: device.Suuid, PackageName: packageName, Mobile: sql.NullString{mobile, true}}).FirstOrCreate(&u).Error
+	err := r.db.WithContext(ctx).Where("package_name = ? and mobile = ?", packageName, mobile).Attrs(entity.User{CommonSUUID: device.Suuid, PackageName: packageName, Mobile: sql.NullString{String: mobile, Valid: true}}).FirstOrCreate(&u).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.Wrap(err, emsg)
 	}
@@ -135,4 +161,17 @@ func (r *UserRepo) Get(ctx context.Context, id uint) (*entity.User, error) {
 		return nil, errors.Wrap(err, emsg)
 	}
 	return &u, nil
+}
+
+func (r *UserRepo) GetAll(ctx context.Context, ids ...uint) ([]entity.User, error) {
+	var (
+		u []entity.User
+	)
+	if err := r.db.WithContext(ctx).Find(&u, ids).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, ErrRecordNotFound
+		}
+		return nil, errors.Wrap(err, emsg)
+	}
+	return u, nil
 }

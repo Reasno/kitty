@@ -5,61 +5,94 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/opentracing/opentracing-go"
 	"github.com/segmentio/kafka-go"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/klog"
 )
 
-type KafkaProducerFactory struct {
-	tracer  opentracing.Tracer
+type KafkaFactory struct {
 	mutex   sync.Mutex
-	cache   map[string]*kafka.Writer
 	brokers []string
 	closers []func() error
 	logger  log.Logger
 }
 
-func NewKafkaProducerFactory(brokers []string, logger log.Logger) *KafkaProducerFactory {
-	return &KafkaProducerFactory{
-		cache:   map[string]*kafka.Writer{},
+func NewKafkaFactory(brokers []string, logger log.Logger) *KafkaFactory {
+	return &KafkaFactory{
 		brokers: brokers,
 		closers: []func() error{},
 		logger:  logger,
 	}
 }
 
-func NewKafkaProducerFactoryWithTracer(brokers []string, logger log.Logger, tracer opentracing.Tracer) *KafkaProducerFactory {
-	return &KafkaProducerFactory{
-		tracer:  tracer,
-		cache:   map[string]*kafka.Writer{},
-		brokers: brokers,
-		closers: []func() error{},
-		logger:  logger,
-	}
-}
-
-func (k *KafkaProducerFactory) Writer(topic string) *kafka.Writer {
+func (k *KafkaFactory) MakeHandler(topic string) Handler {
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
-	if w, ok := k.cache[topic]; ok {
-		return w
-	}
+
 	writer := &kafka.Writer{
 		Addr:        kafka.TCP(k.brokers...),
 		Topic:       topic,
 		Balancer:    &kafka.LeastBytes{},
-		Logger:      klog.KafkaLogAdapter{level.Debug(k.logger)},
-		ErrorLogger: klog.KafkaLogAdapter{level.Warn(k.logger)},
+		Logger:      klog.KafkaLogAdapter{Logging: level.Debug(k.logger)},
+		ErrorLogger: klog.KafkaLogAdapter{Logging: level.Warn(k.logger)},
+		BatchSize:   1,
 	}
-	if k.tracer != nil {
-		writer.Transport = NewTransport(kafka.DefaultTransport, k.tracer)
-	}
-	k.cache[topic] = writer
+
 	k.closers = append(k.closers, writer.Close)
-	return writer
+	return &pub{
+		Writer: writer,
+	}
 }
 
-func (k *KafkaProducerFactory) Close() error {
+type readerConfig struct {
+	groupId     string
+	parallelism int
+}
+
+type readerOpt func(config *readerConfig)
+
+func WithGroup(group string) readerOpt {
+	return func(config *readerConfig) {
+		config.groupId = group
+	}
+}
+
+func WithParallelism(parallelism int) readerOpt {
+	return func(config *readerConfig) {
+		config.parallelism = parallelism
+	}
+}
+
+func (k *KafkaFactory) MakeKafkaServer(topic string, handler Handler, opt ...readerOpt) *sub {
+	k.mutex.Lock()
+	defer k.mutex.Unlock()
+
+	var config = readerConfig{
+		groupId:     "",
+		parallelism: 1,
+	}
+	for _, o := range opt {
+		o(&config)
+	}
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:     k.brokers,
+		Topic:       topic,
+		GroupID:     config.groupId,
+		Logger:      klog.KafkaLogAdapter{Logging: level.Debug(k.logger)},
+		ErrorLogger: klog.KafkaLogAdapter{Logging: level.Warn(k.logger)},
+		MinBytes:    1,
+		MaxBytes:    10 * 1024 * 1024,
+	})
+
+	k.closers = append(k.closers, reader.Close)
+
+	return &sub{
+		reader:      reader,
+		handler:     handler,
+		parallelism: config.parallelism,
+	}
+}
+
+func (k *KafkaFactory) Close() error {
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
 	for _, v := range k.closers {

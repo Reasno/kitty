@@ -144,7 +144,7 @@ func (m *TaobaoExtra) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Userid
+	// no validation rules for UserId
 
 	// no validation rules for OpenSid
 
@@ -328,10 +328,17 @@ func (m *UserRefreshRequest) Validate() error {
 
 	// no validation rules for Channel
 
-	if utf8.RuneCountInString(m.GetVersionCode()) < 1 {
+	if utf8.RuneCountInString(m.GetVersionCode()) < 4 {
 		return UserRefreshRequestValidationError{
 			field:  "VersionCode",
-			reason: "value length must be at least 1 runes",
+			reason: "value length must be at least 4 runes",
+		}
+	}
+
+	if !_UserRefreshRequest_VersionCode_Pattern.MatchString(m.GetVersionCode()) {
+		return UserRefreshRequestValidationError{
+			field:  "VersionCode",
+			reason: "value does not match regex pattern \"^[\\\\d]+$\"",
 		}
 	}
 
@@ -393,6 +400,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserRefreshRequestValidationError{}
+
+var _UserRefreshRequest_VersionCode_Pattern = regexp.MustCompile("^[\\d]+$")
 
 // Validate checks the field values on UserUnbindRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -505,6 +514,13 @@ func (m *UserLoginRequest) Validate() error {
 		}
 	}
 
+	if !_UserLoginRequest_VersionCode_Pattern.MatchString(m.GetVersionCode()) {
+		return UserLoginRequestValidationError{
+			field:  "VersionCode",
+			reason: "value does not match regex pattern \"^[\\\\d]+$\"",
+		}
+	}
+
 	if utf8.RuneCountInString(m.GetPackageName()) < 1 {
 		return UserLoginRequestValidationError{
 			field:  "PackageName",
@@ -513,8 +529,6 @@ func (m *UserLoginRequest) Validate() error {
 	}
 
 	// no validation rules for ThirdPartyId
-
-	// no validation rules for InviteCode
 
 	return nil
 }
@@ -574,6 +588,8 @@ var _ interface {
 } = UserLoginRequestValidationError{}
 
 var _UserLoginRequest_Mobile_Pattern = regexp.MustCompile("(^$|^[\\d]{11}$)")
+
+var _UserLoginRequest_VersionCode_Pattern = regexp.MustCompile("^[\\d]+$")
 
 // Validate checks the field values on Device with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -779,6 +795,8 @@ func (m *UserInfoReply) Validate() error {
 		}
 	}
 
+	// no validation rules for Msg
+
 	return nil
 }
 
@@ -835,6 +853,92 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserInfoReplyValidationError{}
+
+// Validate checks the field values on UserInfoBatchReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UserInfoBatchReply) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UserInfoBatchReplyValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Msg
+
+	return nil
+}
+
+// UserInfoBatchReplyValidationError is the validation error returned by
+// UserInfoBatchReply.Validate if the designated constraints aren't met.
+type UserInfoBatchReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoBatchReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoBatchReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoBatchReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoBatchReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoBatchReplyValidationError) ErrorName() string {
+	return "UserInfoBatchReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserInfoBatchReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfoBatchReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoBatchReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoBatchReplyValidationError{}
 
 // Validate checks the field values on GetCodeRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
@@ -911,6 +1015,77 @@ var _ interface {
 } = GetCodeRequestValidationError{}
 
 var _GetCodeRequest_Mobile_Pattern = regexp.MustCompile("\\d{11}")
+
+// Validate checks the field values on UserInfoBatchRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UserInfoBatchRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Wechat
+
+	// no validation rules for Taobao
+
+	return nil
+}
+
+// UserInfoBatchRequestValidationError is the validation error returned by
+// UserInfoBatchRequest.Validate if the designated constraints aren't met.
+type UserInfoBatchRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoBatchRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoBatchRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoBatchRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoBatchRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoBatchRequestValidationError) ErrorName() string {
+	return "UserInfoBatchRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserInfoBatchRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfoBatchRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoBatchRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoBatchRequestValidationError{}
 
 // Validate checks the field values on UserInfoRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -1155,6 +1330,8 @@ func (m *GenericReply) Validate() error {
 	// no validation rules for Code
 
 	// no validation rules for Message
+
+	// no validation rules for Msg
 
 	return nil
 }

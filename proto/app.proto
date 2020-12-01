@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package app.v1;
+package app.v2;
 
 import "google/api/annotations.proto";
 import "protoc-gen-validate/validate/validate.proto";
@@ -12,13 +12,13 @@ option go_package = "kitty";
 option (options.openapiv2_swagger) = {
   info: {
     title: "商业化中台用户中心";
-    version: "0.1.0";
+    version: "2.0.0";
     contact: {
       name: "谷溪";
       email: "guxi@infinities.com.cn";
     };
   };
-  base_path: "/app"
+  base_path: "/app/v2"
   security_definitions: {
     security: {
       key: "JWT",
@@ -37,6 +37,10 @@ option (options.openapiv2_swagger) = {
   }
   consumes: "application/json";
   produces: "application/json";
+  external_docs: {
+    description: "商业化中台文档"
+    url: "http://monetization-docs.xg.tagtic.cn/#/"
+  }
 };
 
 // 用户中心
@@ -47,7 +51,7 @@ service App {
       tags: "登录"
     };
     option (google.api.http) = {
-      post: "/v1/login"
+      post: "/login"
       body: "*"
     };
   }
@@ -57,13 +61,23 @@ service App {
       tags: "登录"
     };
     option (google.api.http) = {
-      get: "/v1/code"
+      get: "/code"
     };
   }
   // 获取任意用户信息，填0获取本人信息
   rpc GetInfo (UserInfoRequest) returns (UserInfoReply) {
     option (google.api.http) = {
-      get: "/v1/info/{id}"
+      get: "/info/{id}"
+    };
+    option (options.openapiv2_operation) = {
+      tags: "用户信息"
+    };
+  }
+
+  // 批量获取用户信息接口。如果一个或多个用户ID在数据库中不存在，不会报错，在返回结果中只会包含存在的数据。
+  rpc GetInfoBatch (UserInfoBatchRequest) returns (UserInfoBatchReply) {
+    option (google.api.http) = {
+      get: "/batch/info"
     };
     option (options.openapiv2_operation) = {
       tags: "用户信息"
@@ -76,7 +90,7 @@ service App {
       tags: "用户信息"
     };
     option (google.api.http) = {
-      post: "/v1/info"
+      post: "/info"
       body: "*"
     };
   }
@@ -87,7 +101,7 @@ service App {
       tags: "用户信息"
     };
     option (google.api.http) = {
-      post: "/v1/bind"
+      post: "/bind"
       body: "*"
     };
   }
@@ -98,7 +112,7 @@ service App {
       tags: "用户信息"
     };
     option (google.api.http) = {
-      post: "/v1/unbind"
+      post: "/unbind"
       body: "*"
     };
   }
@@ -111,11 +125,12 @@ service App {
       tags: "登录"
     };
     option (google.api.http) = {
-      post: "/v1/refresh"
+      post: "/refresh"
       body: "*"
     };
   }
 }
+
 
 message UserBindRequest {
   // 手机号
@@ -136,7 +151,7 @@ message UserBindRequest {
 }
 
 message TaobaoExtra {
-  string userid = 1;
+  string user_id = 1;
   string open_sid = 2;
   string top_access_token = 3;
   string avatar_url = 4;
@@ -149,7 +164,7 @@ message TaobaoExtra {
 
 message WechatExtra {
   string access_token = 1;
-  int64 expiresIn = 2;
+  int64 expires_in = 2;
   string refresh_token = 3;
   string open_id = 4;
   string scope = 5;
@@ -176,8 +191,9 @@ message UserRefreshRequest {
   string channel = 5;
   // 版本号
   string version_code = 6 [
-    (options.openapiv2_field) = {required: "true"},
-    (validate.rules).string.min_len = 1
+    (options.openapiv2_field) = {required: "true", pattern: "^[\\d]+$"},
+    (validate.rules).string.min_len = 4,
+    (validate.rules).string.pattern = "^[\\d]+$"
   ];
 }
 
@@ -206,8 +222,9 @@ message UserLoginRequest {
   string channel = 5;
   // 版本号
   string version_code = 6 [
-    (options.openapiv2_field) = {required: "true"},
-    (validate.rules).string.min_len = 4
+    (options.openapiv2_field) = {required: "true", pattern: "^[\\d]+$"},
+    (validate.rules).string.min_len = 4,
+    (validate.rules).string.pattern = "^[\\d]+$"
   ];
   // 包名
   string package_name = 7 [
@@ -216,8 +233,6 @@ message UserLoginRequest {
   ];
   // 第三方ID
   string third_party_id = 8;
-  // 邀请码
-  string invite_code = 9;
 }
 
 message Device {
@@ -262,10 +277,17 @@ message UserInfo {
 
 message UserInfoReply {
   int32 code = 1 [(gogoproto.jsontag) = "code"];
+  // deprecated
   string message = 2;
   UserInfo data = 3;
+  string msg = 4;
 }
 
+message UserInfoBatchReply {
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  repeated UserInfo data = 3;
+  string msg = 4;
+}
 
 
 message GetCodeRequest {
@@ -274,6 +296,14 @@ message GetCodeRequest {
     (validate.rules).string = {pattern: "\\d{11}"}
   ];
   string packageName = 2;
+}
+
+message UserInfoBatchRequest {
+  repeated uint64 id = 1;
+  // 同时获得微信相关信息
+  bool wechat = 2;
+  // 同时获得淘宝相关信息
+  bool taobao = 3;
 }
 
 message UserInfoRequest {
@@ -313,6 +343,8 @@ message EmptyRequest {
 
 message GenericReply {
   int32 code = 1 [(gogoproto.jsontag) = "code"];
+  // deprecated
   string message = 2;
+  string msg = 3;
 }
 

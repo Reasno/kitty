@@ -91,7 +91,7 @@ func NewManager(accessKey, accessSecret, endpoint, region, bucket string, opts .
 }
 
 func (m *Manager) Upload(ctx context.Context, reader io.Reader) (newUrl string, err error) {
-	packageName := kjwt.GetClaim(ctx).PackageName
+	packageName := kjwt.ClaimFromContext(ctx).PackageName
 	if packageName != "" {
 		packageName = packageName + "/"
 	}

@@ -1,6 +1,5 @@
 //go:generate mockery --name=CodeRepository
 //go:generate mockery --name=UserRepository
-//go:generate mockery --name=ExtraRepository
 
 package handlers
 
@@ -50,6 +49,7 @@ type UserRepository interface {
 	GetFromDevice(ctx context.Context, packageName, suuid string, device *entity.Device) (user *entity.User, err error)
 	Update(ctx context.Context, id uint, user entity.User) (newUser *entity.User, err error)
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
+	GetAll(ctx context.Context, ids ...uint) (user []entity.User, err error)
 	Save(ctx context.Context, user *entity.User) error
 }
 
@@ -71,7 +71,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 	u, err = s.loginFrom(ctx, in, device)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
 	// 再存一些信息
@@ -95,14 +95,14 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.GenericReply, error) {
 	code, err := s.cr.AddCode(ctx, in.Mobile)
 	if err == repository.ErrTooFrequent {
-		return nil, kerr.ResourceExhaustedErr(err)
+		return nil, kerr.ResourceExhaustedErr(err, msg.ErrorTooFrequent)
 	}
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorGetCode))
+		return nil, kerr.InternalErr(err, msg.ErrorGetCode)
 	}
 	err = s.sender.Send(ctx, in.Mobile, code)
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorSendCode))
+		return nil, kerr.InternalErr(err, msg.ErrorSendCode)
 	}
 	var resp = pb.GenericReply{
 		Code: 0,
@@ -112,12 +112,12 @@ func (s appService) GetCode(ctx context.Context, in *pb.GetCodeRequest) (*pb.Gen
 
 func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.UserInfoReply, error) {
 	if in.Id == 0 {
-		claim := kittyjwt.GetClaim(ctx)
+		claim := kittyjwt.ClaimFromContext(ctx)
 		in.Id = claim.UserId
 	}
 	u, err := s.ur.Get(ctx, uint(in.Id))
 	if errors.Is(err, repository.ErrRecordNotFound) {
-		return nil, kerr.NotFoundErr(errors.Wrap(err, msg.ErrorRecordNotFound))
+		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
 	}
 	if err != nil {
 		return nil, dbErr(err)
@@ -136,7 +136,7 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 }
 
 func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 	device := &entity.Device{
 		Os:        uint8(in.Device.Os),
 		Imei:      in.Device.Imei,
@@ -172,13 +172,13 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	})
 
 	if err != nil {
-		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
+		err = kerr.InternalErr(err, msg.ErrorJwtFailure)
 	}
 	return reply, nil
 }
 
 func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
 		UserName:     in.UserName,
 		HeadImg:      in.HeadImg,
@@ -187,15 +187,16 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 		ThirdPartyId: in.ThirdPartyId,
 	})
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+		return nil, dbErr(err)
 	}
 
 	var resp = toReply(u)
 	return resp, nil
+
 }
 
 func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 
 	var (
 		toUpdate entity.User
@@ -212,7 +213,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		if ok, err := s.verify(ctx, in.Mobile, in.Code); err != nil {
 			return nil, dbErr(err)
 		} else if !ok {
-			return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
+			return nil, kerr.UnauthenticatedErr(err, msg.ErrorMobileCode)
 		}
 		toUpdate.Mobile = ns(in.Mobile)
 	}
@@ -222,11 +223,11 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		var wechatExtra *pb.WechatExtra
 		wechatExtra, err = s.getWechatInfo(ctx, in.Wechat)
 		if err != nil {
-			return nil, kerr.UnauthorizedErr(err)
+			return nil, kerr.UnauthenticatedErr(err, msg.ErrorWechatFailure)
 		}
 		wechatExtraBytes, err := wechatExtra.Marshal()
 		if err != nil {
-			return nil, kerr.InternalErr(err)
+			return nil, kerr.InternalErr(err, msg.ErrorLogin)
 		}
 		toUpdate.WechatOpenId = ns(wechatExtra.OpenId)
 		toUpdate.WechatUnionId = ns(wechatExtra.Unionid)
@@ -237,7 +238,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	if in.TaobaoExtra != nil && len(in.TaobaoExtra.OpenId) > 0 {
 		taobaoExtraBytes, err := in.TaobaoExtra.Marshal()
 		if err != nil {
-			return nil, kerr.InternalErr(err)
+			return nil, kerr.InternalErr(err, msg.ErrorCorruptedData)
 		}
 		toUpdate.TaobaoOpenId = ns(in.TaobaoExtra.OpenId)
 		toUpdate.TaobaoExtra = taobaoExtraBytes
@@ -247,7 +248,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	if in.WechatExtra != nil && len(in.WechatExtra.OpenId) > 0 {
 		wechatExtraBytes, err := in.WechatExtra.Marshal()
 		if err != nil {
-			return nil, kerr.InternalErr(err)
+			return nil, kerr.InternalErr(err, msg.ErrorCorruptedData)
 		}
 		toUpdate.WechatOpenId = ns(in.WechatExtra.OpenId)
 		toUpdate.WechatExtra = wechatExtraBytes
@@ -256,7 +257,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	// 更新用户
 	newUser, err := s.ur.Update(ctx, uint(claim.UserId), toUpdate)
 	if errors.Is(err, repository.ErrAlreadyBind) {
-		return nil, kerr.FailedPreconditionErr(errors.Wrap(err, msg.ErrorAlreadyBind))
+		return nil, kerr.FailedPreconditionErr(err, msg.ErrorAlreadyBind)
 	}
 	if err != nil {
 		return nil, dbErr(err)
@@ -274,14 +275,14 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		newUser.PackageName,
 	})
 	if err != nil {
-		err = kerr.InternalErr(errors.Wrap(err, msg.ErrorJwtFailure))
+		err = kerr.InternalErr(err, msg.ErrorJwtFailure)
 	}
 
 	return reply, err
 }
 
 func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
-	claim := kittyjwt.GetClaim(ctx)
+	claim := kittyjwt.ClaimFromContext(ctx)
 	user, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
 		return nil, dbErr(err)
@@ -332,12 +333,12 @@ func (s appService) error(err error) {
 		level.Error(s.logger).Log("err", err)
 	}
 }
-
 func (s appService) warn(err error) {
 	if err != nil {
 		level.Warn(s.logger).Log("err", err)
 	}
 }
+
 func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.WechatExtra, error) {
 	wxRes, err := s.wechat.GetLoginResponse(ctx, wechat)
 	if err != nil {
@@ -372,11 +373,11 @@ func (s appService) getWechatInfo(ctx context.Context, wechat string) (*pb.Wecha
 func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat string, device *entity.Device) (*entity.User, error) {
 	wxInfo, err := s.getWechatInfo(ctx, wechat)
 	if err != nil {
-		return nil, kerr.UnauthorizedErr(err)
+		return nil, kerr.UnauthenticatedErr(err, msg.ErrorWechatFailure)
 	}
 	extra, err := wxInfo.Marshal()
 	if err != nil {
-		return nil, kerr.InternalErr(errors.Wrap(err, msg.ErrorWechatLogin))
+		return nil, kerr.InternalErr(err, msg.ErrorCorruptedData)
 	}
 
 	wechatUser := entity.User{
@@ -397,12 +398,12 @@ func (s appService) handleWechatLogin(ctx context.Context, packageName, wechat s
 
 func (s appService) handleMobileLogin(ctx context.Context, packageName, mobile, code string, device *entity.Device) (*entity.User, error) {
 	if len(code) == 0 {
-		return nil, kerr.InvalidArgumentErr(errors.New(msg.InvalidParams))
+		return nil, kerr.InvalidArgumentErr(errors.New("code cannot be 0"), msg.InvalidParams)
 	}
 	if ok, err := s.verify(ctx, mobile, code); err != nil {
 		return nil, err
 	} else if !ok {
-		return nil, kerr.UnauthorizedErr(errors.New(msg.ErrorMobileCode))
+		return nil, kerr.UnauthenticatedErr(errors.Errorf("cannot verify %s with %s", mobile, code), msg.ErrorMobileCode)
 	}
 	u, err := s.ur.GetFromMobile(ctx, packageName, mobile, device)
 	if err != nil {
@@ -452,10 +453,6 @@ func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 		u.VersionCode = in.VersionCode
 		hasExtra = true
 	}
-	if in.InviteCode != "" && u.InviteCode == "" {
-		u.InviteCode = in.InviteCode
-		hasExtra = true
-	}
 
 	if hasExtra {
 		err = s.ur.Save(ctx, u)
@@ -477,7 +474,7 @@ func (s appService) verify(ctx context.Context, mobile string, code string) (boo
 }
 
 func dbErr(err error) kerr.ServerError {
-	return kerr.InternalErr(errors.Wrap(err, msg.ErrorDatabaseFailure))
+	return kerr.InternalErr(err, msg.ErrorDatabaseFailure)
 }
 
 func ns(s string) sql.NullString {
@@ -516,4 +513,35 @@ func toReply(user *entity.User) *pb.UserInfoReply {
 			TaobaoExtra:  &taobaoExtra,
 		},
 	}
+}
+
+func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchRequest) (*pb.UserInfoBatchReply, error) {
+	var args []uint
+	for _, v := range in.Id {
+		args = append(args, uint(v))
+	}
+	users, err := s.ur.GetAll(ctx, args...)
+	if errors.Is(err, repository.ErrRecordNotFound) {
+		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
+	}
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	var resp = pb.UserInfoBatchReply{
+		Code: 0,
+		Data: []*pb.UserInfo{},
+	}
+
+	for _, v := range users {
+		tmp := toReply(&v).Data
+		if !in.Taobao {
+			tmp.TaobaoExtra = nil
+		}
+		if !in.Wechat {
+			tmp.WechatExtra = nil
+		}
+		resp.Data = append(resp.Data, tmp)
+	}
+
+	return &resp, nil
 }

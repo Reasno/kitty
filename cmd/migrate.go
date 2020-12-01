@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/go-kit/kit/log/level"
 	"github.com/spf13/cobra"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"os"
@@ -26,9 +25,9 @@ var migrateCommand = &cobra.Command{
 		initModules()
 		defer shutdownModules()
 
-		env := config.ProvideEnv(conf)
+		env := config.ProvideEnv(coreModule.Conf)
 		if env.IsProd() {
-			level.Error(logger).Log("err", "migrations and rollback in production requires force flag to be set")
+			er(fmt.Errorf("migrations and rollback in production requires force flag to be set"))
 			os.Exit(1)
 			return
 		}
@@ -36,22 +35,22 @@ var migrateCommand = &cobra.Command{
 		if rollbackId != "" {
 			for _, f := range moduleContainer.MigrationProvider {
 				if err := f.Rollback(rollbackId); err != nil {
-					level.Error(logger).Log("err", fmt.Sprintf("Unable to rollback: %s", err.Error()))
+					er(fmt.Errorf("unable to rollback: %w", err))
 					os.Exit(1)
 				}
 			}
 
-			level.Info(logger).Log("msg", "rollback successfully completed")
+			info("rollback successfully completed")
 			return
 		}
 
 		for _, f := range moduleContainer.MigrationProvider {
 			if err := f.Migrate(); err != nil {
-				level.Error(logger).Log("err", fmt.Sprintf("Unable to migrate: %s", err.Error()))
+				er(fmt.Errorf("unable to migrate: %w", err))
 				os.Exit(1)
 			}
 		}
 
-		level.Info(logger).Log("msg", "migration successfully completed")
+		info("migration successfully completed")
 	},
 }

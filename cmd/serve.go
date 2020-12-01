@@ -34,15 +34,18 @@ var serveCmd = &cobra.Command{
 
 		// Start HTTP Server
 		{
-			httpAddr := conf.String("global.http.addr")
+			httpAddr := conf().String("global.http.addr")
 			ln, err := net.Listen("tcp", httpAddr)
 			if err != nil {
-				_ = level.Error(logger).Log("err", err)
+				er(err)
 				os.Exit(1)
 			}
 			h := getHttpHandler(ln, moduleContainer.HttpProviders...)
 			srv := &http.Server{
-				Handler: h,
+				Handler:      h,
+				IdleTimeout:  2 * time.Second,
+				ReadTimeout:  2 * time.Second,
+				WriteTimeout: 2 * time.Second,
 			}
 			g.Add(func() error {
 				return srv.Serve(ln)
@@ -50,7 +53,7 @@ var serveCmd = &cobra.Command{
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 				if err := srv.Shutdown(ctx); err != nil {
-					_ = level.Warn(logger).Log("err", err)
+					_ = level.Warn(coreModule.Logger).Log("err", err)
 					os.Exit(1)
 				}
 				_ = ln.Close()
@@ -60,10 +63,10 @@ var serveCmd = &cobra.Command{
 
 		// Start gRPC server
 		{
-			grpcAddr := conf.String("global.grpc.addr")
+			grpcAddr := conf().String("global.grpc.addr")
 			ln, err := net.Listen("tcp", grpcAddr)
 			if err != nil {
-				_ = level.Error(logger).Log("err", err)
+				_ = level.Error(coreModule.Logger).Log("err", err)
 				os.Exit(1)
 			}
 			s := getGRPCServer(ln, moduleContainer.GrpcProviders...)
@@ -78,7 +81,7 @@ var serveCmd = &cobra.Command{
 		// Graceful shutdown
 		{
 			c := make(chan os.Signal, 1)
-			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 			g.Add(func() error {
 				terminateError := fmt.Errorf("%s", <-c)
 				return terminateError
@@ -95,15 +98,15 @@ var serveCmd = &cobra.Command{
 		// Add Cronjob etc. here
 
 		if err := g.Run(); err != nil {
-			level.Warn(logger).Log("err", err)
+			er(err)
 		}
 
-		level.Info(logger).Log("msg", "graceful shutdown complete; see you next time")
+		info("graceful shutdown complete; see you next time")
 	},
 }
 
 func getHttpHandler(ln net.Listener, providers ...func(*mux.Router)) http.Handler {
-	_ = level.Info(logger).Log("transport", "HTTP", "addr", ln.Addr())
+	_ = level.Info(coreModule.Logger).Log("transport", "HTTP", "addr", ln.Addr())
 
 	var handler http.Handler
 	var router = mux.NewRouter()
@@ -115,9 +118,9 @@ func getHttpHandler(ln net.Listener, providers ...func(*mux.Router)) http.Handle
 }
 
 func getGRPCServer(ln net.Listener, providers ...func(s *grpc.Server)) *grpc.Server {
-	_ = level.Info(logger).Log("transport", "gRPC", "addr", ln.Addr())
+	_ = level.Info(coreModule.Logger).Log("transport", "gRPC", "addr", ln.Addr())
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.ConnectionTimeout(time.Second))
 	for _, p := range providers {
 		p(s)
 	}

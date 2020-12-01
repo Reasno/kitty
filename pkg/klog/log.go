@@ -9,8 +9,8 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-kit/kit/log/term"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
-	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"gorm.io/gorm/logger"
 )
 
@@ -49,14 +49,10 @@ func NewLogger(env contract.Env) (logger log.Logger) {
 }
 
 func WithContext(logger log.Logger, ctx context.Context) log.Logger {
-	claim := jwt2.GetClaim(ctx)
-	transport, _ := ctx.Value("transport").(string)
-	requestUrl, _ := ctx.Value("request-url").(string)
+	claim := config.GetTenant(ctx)
 
 	return log.With(
 		logger,
-		"transport", transport,
-		"requestUrl", requestUrl,
 		"userId", claim.UserId,
 		"suuid", claim.Suuid,
 	)

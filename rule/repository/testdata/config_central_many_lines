@@ -1,0 +1,21 @@
+style: basic
+rule:
+  list:
+    - name: 商业化平台
+      icon: home2
+      children:
+        - name: 用户体系
+          path: /kitty
+          id: user
+        - name: 积分体系
+          path: /score
+          id: score
+    - name: 活动
+      icon: material
+      children:
+        - name: 砸金蛋
+          path: /egg
+          id: egg
+        - name: 惊喜福利砸中你
+          path: /surprise
+          id: surprise

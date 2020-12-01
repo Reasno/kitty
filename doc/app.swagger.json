@@ -2,13 +2,13 @@
   "swagger": "2.0",
   "info": {
     "title": "商业化中台用户中心",
-    "version": "0.1.0",
+    "version": "2.0.0",
     "contact": {
       "name": "谷溪",
       "email": "guxi@infinities.com.cn"
     }
   },
-  "basePath": "/app",
+  "basePath": "/app/v2",
   "consumes": [
     "application/json"
   ],
@@ -16,7 +16,51 @@
     "application/json"
   ],
   "paths": {
-    "/v1/bind": {
+    "/batch/info": {
+      "get": {
+        "summary": "批量获取用户信息接口。如果一个或多个用户ID在数据库中不存在，不会报错，在返回结果中只会包含存在的数据。",
+        "operationId": "App_GetInfoBatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v2UserInfoBatchReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uint64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "wechat",
+            "description": "同时获得微信相关信息.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "taobao",
+            "description": "同时获得淘宝相关信息.",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "用户信息"
+        ]
+      }
+    },
+    "/bind": {
       "post": {
         "summary": "用户已登录后，绑定额外的手机号或微信号。\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
         "operationId": "App_Bind",
@@ -24,13 +68,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -40,7 +78,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserBindRequest"
+              "$ref": "#/definitions/v2UserBindRequest"
             }
           }
         ],
@@ -49,7 +87,7 @@
         ]
       }
     },
-    "/v1/code": {
+    "/code": {
       "get": {
         "summary": "获得验证码",
         "operationId": "App_GetCode",
@@ -57,13 +95,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GenericReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/v2GenericReply"
             }
           }
         },
@@ -86,7 +118,7 @@
         ]
       }
     },
-    "/v1/info": {
+    "/info": {
       "post": {
         "summary": "更新个人信息\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
         "operationId": "App_UpdateInfo",
@@ -94,13 +126,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -110,7 +136,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserInfoUpdateRequest"
+              "$ref": "#/definitions/v2UserInfoUpdateRequest"
             }
           }
         ],
@@ -119,7 +145,7 @@
         ]
       }
     },
-    "/v1/info/{id}": {
+    "/info/{id}": {
       "get": {
         "summary": "获取任意用户信息，填0获取本人信息",
         "operationId": "App_GetInfo",
@@ -127,13 +153,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -165,7 +185,7 @@
         ]
       }
     },
-    "/v1/login": {
+    "/login": {
       "post": {
         "summary": "用户从未登录状态注册或登录时调用。如果用户已登录，需要绑定手机号或微信号，请使用bind接口。",
         "operationId": "App_Login",
@@ -173,13 +193,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -189,7 +203,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserLoginRequest"
+              "$ref": "#/definitions/v2UserLoginRequest"
             }
           }
         ],
@@ -198,7 +212,7 @@
         ]
       }
     },
-    "/v1/refresh": {
+    "/refresh": {
       "post": {
         "summary": "JWT Token续期，需要在每次升级系统或每次冷启动前调用，\n避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，\n后续请求务必请将老JWT替换为新JWT。",
         "operationId": "App_Refresh",
@@ -206,13 +220,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -222,7 +230,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserRefreshRequest"
+              "$ref": "#/definitions/v2UserRefreshRequest"
             }
           }
         ],
@@ -231,7 +239,7 @@
         ]
       }
     },
-    "/v1/unbind": {
+    "/unbind": {
       "post": {
         "summary": "针对已登录用户，取消绑定手机或微信登录方式\n本接口会返回新的token，后续请求务必请将老JWT替换为新token。",
         "operationId": "App_Unbind",
@@ -239,13 +247,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UserInfoReply"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/v2UserInfoReply"
             }
           }
         },
@@ -255,7 +257,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UserUnbindRequest"
+              "$ref": "#/definitions/v2UserUnbindRequest"
             }
           }
         ],
@@ -275,37 +277,7 @@
       ],
       "default": "OS_UNKNOWN"
     },
-    "protobufAny": {
-      "type": "object",
-      "properties": {
-        "typeUrl": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "rpcStatus": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "message": {
-          "type": "string"
-        },
-        "details": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protobufAny"
-          }
-        }
-      }
-    },
-    "v1Device": {
+    "v2Device": {
       "type": "object",
       "properties": {
         "imei": {
@@ -314,7 +286,7 @@
         "idfa": {
           "type": "string"
         },
-        "androidId": {
+        "android_id": {
           "type": "string"
         },
         "suuid": {
@@ -333,7 +305,7 @@
         }
       }
     },
-    "v1Gender": {
+    "v2Gender": {
       "type": "string",
       "enum": [
         "GENDER_UNKNOWN",
@@ -342,7 +314,7 @@
       ],
       "default": "GENDER_UNKNOWN"
     },
-    "v1GenericReply": {
+    "v2GenericReply": {
       "type": "object",
       "properties": {
         "code": {
@@ -350,43 +322,47 @@
           "format": "int32"
         },
         "message": {
+          "type": "string",
+          "title": "deprecated"
+        },
+        "msg": {
           "type": "string"
         }
       }
     },
-    "v1TaobaoExtra": {
+    "v2TaobaoExtra": {
       "type": "object",
       "properties": {
-        "userid": {
+        "user_id": {
           "type": "string"
         },
-        "openSid": {
+        "open_sid": {
           "type": "string"
         },
-        "topAccessToken": {
+        "top_access_token": {
           "type": "string"
         },
-        "avatarUrl": {
+        "avatar_url": {
           "type": "string"
         },
-        "havanaSsoToken": {
+        "havana_sso_token": {
           "type": "string"
         },
         "nick": {
           "type": "string"
         },
-        "openId": {
+        "open_id": {
           "type": "string"
         },
-        "topAuthCode": {
+        "top_auth_code": {
           "type": "string"
         },
-        "topExpireTime": {
+        "top_expire_time": {
           "type": "string"
         }
       }
     },
-    "v1UserBindRequest": {
+    "v2UserBindRequest": {
       "type": "object",
       "properties": {
         "mobile": {
@@ -406,35 +382,35 @@
           "type": "string",
           "title": "废弃，请使用wechat_extra.openId"
         },
-        "taobaoExtra": {
-          "$ref": "#/definitions/v1TaobaoExtra",
+        "taobao_extra": {
+          "$ref": "#/definitions/v2TaobaoExtra",
           "title": "绑定淘宝"
         },
-        "wechatExtra": {
-          "$ref": "#/definitions/v1WechatExtra",
+        "wechat_extra": {
+          "$ref": "#/definitions/v2WechatExtra",
           "title": "如果有openId 就直接走openId，不用再填微信官方下发的临时code码"
         }
       }
     },
-    "v1UserInfo": {
+    "v2UserInfo": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string",
           "format": "uint64"
         },
-        "userName": {
+        "user_name": {
           "type": "string"
         },
         "wechat": {
           "type": "string"
         },
-        "headImg": {
+        "head_img": {
           "type": "string",
           "title": "头像地址"
         },
         "gender": {
-          "$ref": "#/definitions/v1Gender"
+          "$ref": "#/definitions/v2Gender"
         },
         "birthday": {
           "type": "string"
@@ -442,25 +418,43 @@
         "token": {
           "type": "string"
         },
-        "thirdPartyId": {
+        "third_party_id": {
           "type": "string",
           "title": "第三方ID"
         },
-        "isNew": {
+        "is_new": {
           "type": "boolean"
         },
-        "wechatExtra": {
-          "$ref": "#/definitions/v1WechatExtra"
+        "wechat_extra": {
+          "$ref": "#/definitions/v2WechatExtra"
         },
-        "taobaoExtra": {
-          "$ref": "#/definitions/v1TaobaoExtra"
+        "taobao_extra": {
+          "$ref": "#/definitions/v2TaobaoExtra"
         },
         "mobile": {
           "type": "string"
         }
       }
     },
-    "v1UserInfoReply": {
+    "v2UserInfoBatchReply": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v2UserInfo"
+          }
+        },
+        "msg": {
+          "type": "string"
+        }
+      }
+    },
+    "v2UserInfoReply": {
       "type": "object",
       "properties": {
         "code": {
@@ -468,29 +462,33 @@
           "format": "int32"
         },
         "message": {
-          "type": "string"
+          "type": "string",
+          "title": "deprecated"
         },
         "data": {
-          "$ref": "#/definitions/v1UserInfo"
+          "$ref": "#/definitions/v2UserInfo"
+        },
+        "msg": {
+          "type": "string"
         }
       }
     },
-    "v1UserInfoUpdateRequest": {
+    "v2UserInfoUpdateRequest": {
       "type": "object",
       "properties": {
-        "userName": {
+        "user_name": {
           "type": "string",
           "title": "用户名",
           "maximum": 10,
           "minimum": 2
         },
-        "headImg": {
+        "head_img": {
           "type": "string",
           "title": "头像地址",
           "pattern": "^(|https?://.*)$"
         },
         "gender": {
-          "$ref": "#/definitions/v1Gender",
+          "$ref": "#/definitions/v2Gender",
           "title": "性别"
         },
         "birthday": {
@@ -498,13 +496,13 @@
           "title": "生日",
           "pattern": "^(|\\d{4}-\\d{1,2}-\\d{1,2})$"
         },
-        "thirdPartyId": {
+        "third_party_id": {
           "type": "string",
           "title": "第三方ID"
         }
       }
     },
-    "v1UserLoginRequest": {
+    "v2UserLoginRequest": {
       "type": "object",
       "properties": {
         "mobile": {
@@ -521,49 +519,47 @@
           "title": "手机发起微信登录的token，非openid"
         },
         "device": {
-          "$ref": "#/definitions/v1Device"
+          "$ref": "#/definitions/v2Device"
         },
         "channel": {
           "type": "string",
           "title": "渠道"
         },
-        "versionCode": {
+        "version_code": {
           "type": "string",
           "title": "版本号",
+          "pattern": "^[\\d]+$",
           "required": [
             "true"
           ]
         },
-        "packageName": {
+        "package_name": {
           "type": "string",
           "title": "包名",
           "required": [
             "true"
           ]
         },
-        "thirdPartyId": {
+        "third_party_id": {
           "type": "string",
           "title": "第三方ID"
-        },
-        "inviteCode": {
-          "type": "string",
-          "title": "邀请码"
         }
       }
     },
-    "v1UserRefreshRequest": {
+    "v2UserRefreshRequest": {
       "type": "object",
       "properties": {
         "device": {
-          "$ref": "#/definitions/v1Device"
+          "$ref": "#/definitions/v2Device"
         },
         "channel": {
           "type": "string",
           "title": "渠道号"
         },
-        "versionCode": {
+        "version_code": {
           "type": "string",
           "title": "版本号",
+          "pattern": "^[\\d]+$",
           "required": [
             "true"
           ]
@@ -571,7 +567,7 @@
       },
       "title": "Token续期"
     },
-    "v1UserUnbindRequest": {
+    "v2UserUnbindRequest": {
       "type": "object",
       "properties": {
         "mobile": {
@@ -588,26 +584,26 @@
         }
       }
     },
-    "v1WechatExtra": {
+    "v2WechatExtra": {
       "type": "object",
       "properties": {
-        "accessToken": {
+        "access_token": {
           "type": "string"
         },
-        "expiresIn": {
+        "expires_in": {
           "type": "string",
           "format": "int64"
         },
-        "refreshToken": {
+        "refresh_token": {
           "type": "string"
         },
-        "openId": {
+        "open_id": {
           "type": "string"
         },
         "scope": {
           "type": "string"
         },
-        "nickName": {
+        "nick_name": {
           "type": "string"
         },
         "sex": {
@@ -649,5 +645,9 @@
     {
       "JWT": []
     }
-  ]
+  ],
+  "externalDocs": {
+    "description": "商业化中台文档",
+    "url": "http://monetization-docs.xg.tagtic.cn/#/"
+  }
 }

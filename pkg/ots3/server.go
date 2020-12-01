@@ -49,7 +49,7 @@ func MakeUploadEndpoint(uploader contract.Uploader) endpoint.Endpoint {
 		req := request.(*Request)
 		resp, err := uploader.Upload(ctx, req.data)
 		if err != nil {
-			return nil, kerr.InternalErr(err)
+			return nil, kerr.InternalErr(err, "上传失败")
 		}
 		return &Response{
 			Code: 0,
@@ -60,10 +60,18 @@ func MakeUploadEndpoint(uploader contract.Uploader) endpoint.Endpoint {
 	}
 }
 
-func Middleware(logger log.Logger, env contract.Env) endpoint.Middleware {
+func Middleware(logger log.Logger, env contract.Env, config *kmiddleware.SecurityConfig) endpoint.Middleware {
 	l := kmiddleware.NewLoggingMiddleware(logger, env.IsLocal())
 	e := kmiddleware.NewErrorMarshallerMiddleware()
-	return endpoint.Chain(e, l)
+	a := kmiddleware.NewAuthenticationMiddleware(config)
+	return endpoint.Chain(e, l, a)
+}
+
+func provideSecurityConfig(conf contract.ConfigReader) *kmiddleware.SecurityConfig {
+	return &kmiddleware.SecurityConfig{
+		JwtKey: conf.String("security.key"),
+		JwtId:  conf.String("security.kid"),
+	}
 }
 
 func MakeHttpHandler(endpoint endpoint.Endpoint, middleware endpoint.Middleware) http.Handler {

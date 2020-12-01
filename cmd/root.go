@@ -1,30 +1,22 @@
 package cmd
 
 import (
-	"github.com/go-kit/kit/log"
 	"github.com/spf13/cobra"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	core "glab.tagtic.cn/ad_gains/kitty/core/module"
 )
 
 var (
 	// Used for flags.
 	cfgFile string
 
-	logger log.Logger
-	conf   contract.ConfigReader
+	coreModule *core.Module
 
 	rootCmd = &cobra.Command{
 		Use:   "kitty",
 		Short: "A Pragmatic and Opinionated Go Application",
 		Long:  `Kitty is a starting point to write 12-factor Go Applications.`,
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := initConfig(cmd, args); err != nil {
-				return err
-			}
-			if err := initLogger(cmd, args); err != nil {
-				return err
-			}
-			return nil
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			coreModule = core.New(cfgFile)
 		},
 	}
 )
@@ -35,5 +27,5 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/kitty.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is .config/kitty.yaml)")
 }

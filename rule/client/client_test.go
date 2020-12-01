@@ -5,7 +5,8 @@ import (
 	"flag"
 	"testing"
 
-	"glab.tagtic.cn/ad_gains/kitty/rule"
+	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
+	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
 	"go.etcd.io/etcd/clientv3"
 )
 
@@ -25,7 +26,7 @@ func TestClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	client.Put(context.Background(), rule.OtherConfigPathPrefix+"/kitty-testing", `
+	client.Put(context.Background(), repository2.OtherConfigPathPrefix+"/kitty-testing", `
 style: basic
 rule:
   foo: bar
@@ -34,7 +35,7 @@ rule:
 	if err != nil {
 		t.Fatal(err)
 	}
-	reader, err := dynConf.Of("kitty-testing").Payload(&rule.Payload{})
+	reader, err := dynConf.Of("kitty-testing").Payload(&dto.Payload{})
 	if err != nil {
 		t.Fatal(err)
 	}

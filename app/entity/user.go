@@ -47,6 +47,7 @@ func (user *User) AddNewDevice(device *Device) {
 	user.Devices = append(user.Devices, *device)
 }
 
+// AfterCreate is a gorm hook
 func (u *User) AfterCreate(tx *gorm.DB) (err error) {
 	u.IsNew = true
 	return

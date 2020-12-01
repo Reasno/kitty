@@ -14,13 +14,13 @@ func TestNewErrorMarshallerMiddleware(t *testing.T) {
 		return nil, errors.New("foo")
 	}
 	e2 := func(ctx context.Context, request interface{}) (interface{}, error) {
-		return nil, kerr.NotFoundErr(errors.New("bar"))
+		return nil, kerr.NotFoundErr(errors.New("bar"), "")
 	}
 	e3 := func(ctx context.Context, request interface{}) (interface{}, error) {
-		return nil, kerr.NotFoundErr(kerr.InvalidArgumentErr(errors.New("bar")))
+		return nil, kerr.NotFoundErr(kerr.InvalidArgumentErr(errors.New("bar"), ""), "")
 	}
 	e4 := func(ctx context.Context, request interface{}) (interface{}, error) {
-		return nil, errors.Wrap(kerr.NotFoundErr(errors.New("foo")), "bar")
+		return nil, errors.Wrap(kerr.NotFoundErr(errors.New("foo"), ""), "bar")
 	}
 	cases := []endpoint.Endpoint{e1, e2, e3, e4}
 	for _, c := range cases {

@@ -3,52 +3,49 @@ package kerr
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"strings"
+
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"net/http"
-	"strings"
 )
 
-func err(code codes.Code, e error) ServerError {
-	return ServerError{e, status.New(code, redact(e)), uint32(code)}
+func err(code codes.Code, e error, msg string) ServerError {
+	return ServerError{errors.Wrap(e, msg), msg, uint32(code)}
 }
 
 func UnknownErr(e error) ServerError {
-	s, ok := status.FromError(e)
-	if !ok {
-		s = status.New(codes.Unknown, redact(e))
-	}
-	return ServerError{e, s, uint32(s.Code())}
+	return ServerError{e, redact(e), uint32(codes.Unknown)}
 }
 
-func InvalidArgumentErr(e error) ServerError {
-	return err(codes.InvalidArgument, e)
+func InvalidArgumentErr(e error, msg string) ServerError {
+	return err(codes.InvalidArgument, e, msg)
 }
 
-func NotFoundErr(e error) ServerError {
-	return err(codes.NotFound, e)
+func NotFoundErr(e error, msg string) ServerError {
+	return err(codes.NotFound, e, msg)
 }
 
-func InternalErr(e error) ServerError {
-	return err(codes.Internal, e)
+func InternalErr(e error, msg string) ServerError {
+	return err(codes.Internal, e, msg)
 }
 
-func UnauthorizedErr(e error) ServerError {
-	return err(codes.Unauthenticated, e)
+func UnauthenticatedErr(e error, msg string) ServerError {
+	return err(codes.Unauthenticated, e, msg)
 }
 
-func ResourceExhaustedErr(e error) ServerError {
-	return err(codes.ResourceExhausted, e)
+func ResourceExhaustedErr(e error, msg string) ServerError {
+	return err(codes.ResourceExhausted, e, msg)
 }
 
-func FailedPreconditionErr(e error) ServerError {
-	return err(codes.FailedPrecondition, e)
+func FailedPreconditionErr(e error, msg string) ServerError {
+	return err(codes.FailedPrecondition, e, msg)
 }
 
-func CustomErr(code uint32, e error) ServerError {
-	return ServerError{e, status.New(codes.Internal, redact(e)), code}
+func CustomErr(code uint32, e error, msg string) ServerError {
+	return ServerError{e, msg, code}
 }
 
 func redact(err error) string {
@@ -57,21 +54,20 @@ func redact(err error) string {
 
 type ServerError struct {
 	err        error
-	status     *status.Status
+	msg        string
 	customCode uint32
 }
 
-type jsonRep struct {
-	Code    uint32      `json:"code"`
-	Message string      `json:"message"`
-	Details interface{} `json:"details"`
-}
-
 func (e ServerError) MarshalJSON() ([]byte, error) {
+	type jsonRep struct {
+		Code    uint32 `json:"code"`
+		Message string `json:"message"`
+		Msg     string `json:"msg"`
+	}
 	r := jsonRep{
 		e.customCode,
-		e.status.Message(),
-		e.status.Details(),
+		e.msg,
+		e.msg,
 	}
 	return json.Marshal(r)
 }
@@ -81,7 +77,10 @@ func (e ServerError) Error() string {
 }
 
 func (e ServerError) GRPCStatus() *status.Status {
-	return e.status
+	if e.customCode >= 17 {
+		return status.New(codes.Unknown, e.msg)
+	}
+	return status.New(codes.Code(e.customCode), e.msg)
 }
 
 // StatusCode Implements https status
