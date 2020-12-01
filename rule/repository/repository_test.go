@@ -208,6 +208,9 @@ func TestRepository_WatchConfigUpdate(t *testing.T) {
 }
 
 func TestRepository_IsNewest(t *testing.T) {
+	if !useEtcd {
+		t.Skip("test dynamic config requires etcd")
+	}
 	var (
 		foobar = readFiles("foobar")
 		foobaz = readFiles("foobaz")
@@ -249,6 +252,9 @@ func TestRepository_IsNewest(t *testing.T) {
 }
 
 func TestRepository_GetRaw(t *testing.T) {
+	if !useEtcd {
+		t.Skip("test dynamic config requires etcd")
+	}
 	var (
 		foobar                = readFiles("foobar")
 		foobaz                = readFiles("foobaz")
@@ -299,6 +305,9 @@ func TestRepository_GetRaw(t *testing.T) {
 }
 
 func TestRepository_SetRaw(t *testing.T) {
+	if !useEtcd {
+		t.Skip("test dynamic config requires etcd")
+	}
 	var (
 		foobar                = readFiles("foobar")
 		configCentralFewLines = readFiles("config_central_few_lines")
@@ -340,6 +349,9 @@ func TestRepository_SetRaw(t *testing.T) {
 }
 
 func TestRepository_ValidateRules(t *testing.T) {
+	if !useEtcd {
+		t.Skip("test dynamic config requires etcd")
+	}
 	var (
 		foobar                = readFiles("foobar")
 		configCentralFewLines = readFiles("config_central_few_lines")
