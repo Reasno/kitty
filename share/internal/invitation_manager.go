@@ -114,7 +114,7 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 	return im.rr.UpdateRelations(ctx, &apprentice, func(relations []entity.Relation) error {
 		for _, rel := range relations {
 			if rel.MasterID == uint(masterId) {
-				// TODO： 真正发奖
+
 				if err := rel.ClaimReward(); err != nil {
 					return err
 				} else {

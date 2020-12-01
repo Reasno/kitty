@@ -133,7 +133,6 @@ type OrientationStep struct {
 	RelationID    uint `gorm:"index"`
 	EventId       int
 	ChineseName   string
-	EventName     string
 	EventType     string
 	StepCompleted bool
 }
