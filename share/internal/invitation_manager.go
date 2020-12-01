@@ -35,7 +35,7 @@ type RelationRepository interface {
 type OrientationEvent struct {
 	Id          int    `yaml:"id"`
 	Type        string `yaml:"type"`
-	ChineseName string `yaml:"display"`
+	ChineseName string `yaml:"chineseName"`
 }
 
 type ReceivedEvent struct {
