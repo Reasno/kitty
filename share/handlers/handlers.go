@@ -4,7 +4,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
@@ -25,7 +24,7 @@ type shareService struct {
 type InvitationManager interface {
 	AddToken(ctx context.Context, userId uint64, token string) error
 	ClaimReward(ctx context.Context, masterId uint64, apprenticeId uint64) error
-	CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error
+	CompleteStep(ctx context.Context, apprenticeId uint64, event internal.ReceivedEvent) error
 	ListApprentices(ctx context.Context, masterId uint64, depth int) ([]internal.RelationWithRewardAmount, error)
 	GetToken(ctx context.Context, id uint) string
 	GetUrl(ctx context.Context, claim *kittyjwt.Claim) string
@@ -118,7 +117,7 @@ func (s shareService) ListFriend(ctx context.Context, in *pb.ShareListFriendRequ
 		item.ClaimStatus = status(&rel, &countNotReady)
 
 		for _, step := range rel.OrientationSteps {
-			item.Steps[step.Name] = step.StepCompleted
+			item.Steps[step.ChineseName] = step.StepCompleted
 		}
 		resp.Data.Items = append(resp.Data.Items, item)
 	}
@@ -162,7 +161,11 @@ func (s shareService) InviteByToken(ctx context.Context, in *pb.ShareEmptyReques
 }
 
 func (s shareService) PushSignEvent(ctx context.Context, in *pb.SignEvent) (*pb.ShareGenericReply, error) {
-	err := s.manager.CompleteStep(ctx, in.UserId, "sign:"+in.EventName)
+	var event internal.ReceivedEvent
+	event.Id = int(in.Id)
+	event.Type = "task"
+
+	err := s.manager.CompleteStep(ctx, in.UserId, event)
 	if err != nil {
 		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
 	}
@@ -171,8 +174,12 @@ func (s shareService) PushSignEvent(ctx context.Context, in *pb.SignEvent) (*pb.
 }
 
 func (s shareService) PushTaskEvent(ctx context.Context, in *pb.TaskEvent) (*pb.ShareGenericReply, error) {
-	fmt.Printf("%+v\n", in)
-	err := s.manager.CompleteStep(ctx, in.UserId, "task:"+in.EventName)
+
+	var event internal.ReceivedEvent
+	event.Id = int(in.Id)
+	event.Type = "task"
+
+	err := s.manager.CompleteStep(ctx, in.UserId, event)
 	if err != nil {
 		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
 	}

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 )
 
@@ -14,8 +15,7 @@ type InvitationManagerFactory struct {
 
 func (i *InvitationManagerFactory) NewManager(conf contract.ConfigReader) *InvitationManager {
 	sc := ShareConfig{
-		OrientationEvents: conf.Strings("orientation_events"),
-		Url:               conf.String("url"),
+		Url: conf.String("url"),
 		Reward: struct {
 			Level1 int `yaml:"level1"`
 			Level2 int `yaml:"level2"`
@@ -24,6 +24,10 @@ func (i *InvitationManagerFactory) NewManager(conf contract.ConfigReader) *Invit
 			conf.Int("reward.level2"),
 		},
 		TaskId: conf.String("task_id"),
+	}
+	err := conf.Unmarshal("orientation_events", &sc.OrientationEvents)
+	if err != nil {
+		level.Warn(i.Logger).Log("err", err.Error())
 	}
 	return &InvitationManager{conf: &sc, rr: i.Rr, tokenizer: i.T, xtaskClient: i.C, logger: i.Logger}
 }

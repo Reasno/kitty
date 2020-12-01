@@ -179,5 +179,31 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 				return db.Migrator().DropTable(&Relation{}, &OrientationStep{})
 			},
 		},
+		{
+			ID: "202012010100",
+			Migrate: func(db *gorm.DB) error {
+				type OrientationStep struct {
+					gorm.Model
+					RelationID    uint `gorm:"index"`
+					EventId       int
+					ChineseName   string
+					EventType     string
+					StepCompleted bool
+				}
+				db.Migrator().DropColumn(&OrientationStep{}, "Name")
+				return db.AutoMigrate(
+					&OrientationStep{},
+				)
+			},
+			Rollback: func(db *gorm.DB) error {
+				type Relation struct{}
+				type OrientationStep struct{}
+				db.Migrator().DropColumn(&OrientationStep{}, "EventId")
+				db.Migrator().DropColumn(&OrientationStep{}, "ChineseName")
+				db.Migrator().DropColumn(&OrientationStep{}, "EventType")
+				db.Migrator().AddColumn(&OrientationStep{}, "Name")
+				return nil
+			},
+		},
 	})
 }

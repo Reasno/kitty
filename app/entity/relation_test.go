@@ -12,19 +12,19 @@ func TestRelation_CompleteStep(t *testing.T) {
 	var u2 = User{Model: gorm.Model{ID: 2}}
 	rel := NewRelation(&u1, &u2, []OrientationStep{
 		{
-			Name:          "hello",
+			EventName:     "hello",
 			StepCompleted: false,
 		},
 		{
-			Name:          "world",
+			EventName:     "world",
 			StepCompleted: false,
 		},
 	})
 	rel.CompleteStep(OrientationStep{
-		Name: "hello",
+		EventName: "hello",
 	})
 	rel.CompleteStep(OrientationStep{
-		Name: "world",
+		EventName: "world",
 	})
 	if !rel.OrientationCompleted {
 		t.Fatal("orientation should be completed by now")
@@ -36,12 +36,12 @@ func TestRelation_ClaimReward(t *testing.T) {
 	var u2 = User{Model: gorm.Model{ID: 2}}
 	rel := NewRelation(&u1, &u2, []OrientationStep{
 		{
-			Name:          "hello",
+			EventName:     "hello",
 			StepCompleted: false,
 		},
 	})
 	rel.CompleteStep(OrientationStep{
-		Name: "hello",
+		EventName: "hello",
 	})
 	assert.False(t, rel.RewardClaimed)
 	err := rel.ClaimReward()

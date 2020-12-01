@@ -31,12 +31,12 @@ func (im *InvitationManagerFacade) ClaimReward(ctx context.Context, masterId uin
 	return m.ClaimReward(ctx, masterId, apprenticeId)
 }
 
-func (im *InvitationManagerFacade) CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error {
+func (im *InvitationManagerFacade) CompleteStep(ctx context.Context, apprenticeId uint64, event ReceivedEvent) error {
 	m, err := im.getManager(ctx)
 	if err != nil {
 		return err
 	}
-	return m.CompleteStep(ctx, apprenticeId, eventName)
+	return m.CompleteStep(ctx, apprenticeId, event)
 }
 
 func (im *InvitationManagerFacade) ListApprentices(ctx context.Context, masterId uint64, depth int) ([]RelationWithRewardAmount, error) {

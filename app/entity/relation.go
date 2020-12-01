@@ -2,6 +2,7 @@ package entity
 
 import (
 	"errors"
+
 	"glab.tagtic.cn/ad_gains/kitty/app/msg"
 	"gorm.io/gorm"
 )
@@ -54,7 +55,7 @@ func (r *Relation) CompleteStep(step OrientationStep) {
 	var orientationCompleted = true
 	for n := range r.OrientationSteps {
 		// update step status
-		if r.OrientationSteps[n].Name == step.Name {
+		if r.OrientationSteps[n].Equals(step) {
 			r.OrientationSteps[n].StepCompleted = true
 		}
 		// update orientationCompleted flag
@@ -130,6 +131,13 @@ func in(user *User, descendants []Relation) bool {
 type OrientationStep struct {
 	gorm.Model
 	RelationID    uint `gorm:"index"`
-	Name          string
+	EventId       int
+	ChineseName   string
+	EventName     string
+	EventType     string
 	StepCompleted bool
+}
+
+func (o OrientationStep) Equals(other OrientationStep) bool {
+	return o.EventId == other.EventId && o.EventType == other.EventType
 }
