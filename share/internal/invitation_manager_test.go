@@ -237,7 +237,7 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 							Depth:                1,
 							OrientationCompleted: false,
 							OrientationSteps: []entity.OrientationStep{{
-								EventName:     "say_hello",
+								EventId:       1,
 								StepCompleted: false,
 							}},
 							RewardClaimed: false,
