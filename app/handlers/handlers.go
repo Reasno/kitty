@@ -33,8 +33,8 @@ type appService struct {
 }
 
 type tokenParam struct {
-	userId                                                   uint64
-	suuid, channel, versionCode, wechat, mobile, packageName string
+	userId                                                                 uint64
+	suuid, channel, versionCode, wechat, mobile, packageName, thirdPartyId string
 }
 
 type CodeRepository interface {
@@ -80,7 +80,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 
 	// Create jwt token
-	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), u.CommonSUUID, u.Channel, u.VersionCode, u.WechatOpenId.String, u.Mobile.String, u.PackageName})
+	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), u.CommonSUUID, u.Channel, u.VersionCode, u.WechatOpenId.String, u.Mobile.String, u.PackageName, u.ThirdPartyId})
 	if err != nil {
 		s.warn(err)
 	}
@@ -169,6 +169,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		u.WechatOpenId.String,
 		u.Mobile.String,
 		u.PackageName,
+		u.ThirdPartyId,
 	})
 
 	if err != nil {
@@ -273,6 +274,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		newUser.WechatOpenId.String,
 		newUser.Mobile.String,
 		newUser.PackageName,
+		newUser.ThirdPartyId,
 	})
 	if err != nil {
 		err = kerr.InternalErr(err, msg.ErrorJwtFailure)
@@ -314,7 +316,7 @@ func (s appService) getToken(param *tokenParam) (string, error) {
 		kittyjwt.NewClaim(
 			param.userId,
 			s.conf.String("name"),
-			param.suuid, param.channel, param.versionCode, param.wechat, param.mobile, param.packageName,
+			param.suuid, param.channel, param.versionCode, param.wechat, param.mobile, param.packageName, param.thirdPartyId,
 			time.Hour*24*30,
 		),
 	)

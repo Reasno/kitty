@@ -419,7 +419,6 @@ func TestInvitationManager_ListApprentice(t *testing.T) {
 				assert.Equal(t, uint(1+i), r.ApprenticeID)
 				assert.Equal(t, cc.depth, r.Depth)
 				assert.Equal(t, cc.amount, r.Amount)
-
 			}
 		})
 	}
