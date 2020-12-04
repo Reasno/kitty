@@ -297,22 +297,24 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 		t.Run(cc.name, func(t *testing.T) {
 			repo.AddRelations(ctx, entity.NewRelation(&cc.apprentice, &cc.master, []entity.OrientationStep{
 				{
-					Name: "foo",
+					EventType: "foo",
+					EventId:   1,
 				},
 				{
-					Name: "bar",
+					EventType: "bar",
+					EventId:   1,
 				},
 			}))
 			var rel entity.Relation
 			db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", cc.master.ID, cc.apprentice.ID)
 
 			fmt.Println(rel.OrientationSteps)
-			assert.Equal(t, "foo", rel.OrientationSteps[0].Name)
-			assert.Equal(t, "bar", rel.OrientationSteps[1].Name)
+			assert.Equal(t, "foo", rel.OrientationSteps[0].EventType)
+			assert.Equal(t, "bar", rel.OrientationSteps[1].EventType)
 			repo.UpdateRelations(ctx, &cc.apprentice, func(relations []entity.Relation) error {
 				for i := range relations {
-					relations[i].CompleteStep(entity.OrientationStep{Name: "foo"})
-					relations[i].CompleteStep(entity.OrientationStep{Name: "bar"})
+					relations[i].CompleteStep(entity.OrientationStep{EventType: "foo", EventId: 1})
+					relations[i].CompleteStep(entity.OrientationStep{EventType: "bar", EventId: 1})
 				}
 				return nil
 			})

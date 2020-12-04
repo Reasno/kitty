@@ -115,3 +115,17 @@ func (_m *ConfigReader) Strings(_a0 string) []string {
 
 	return r0
 }
+
+// Unmarshal provides a mock function with given fields: path, o
+func (_m *ConfigReader) Unmarshal(path string, o interface{}) error {
+	ret := _m.Called(path, o)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, interface{}) error); ok {
+		r0 = rf(path, o)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}

@@ -45,13 +45,13 @@ func (_m *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 	return r0
 }
 
-// CompleteStep provides a mock function with given fields: ctx, apprenticeId, eventName
-func (_m *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error {
-	ret := _m.Called(ctx, apprenticeId, eventName)
+// CompleteStep provides a mock function with given fields: ctx, apprenticeId, event
+func (_m *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, event internal.ReceivedEvent) error {
+	ret := _m.Called(ctx, apprenticeId, event)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, string) error); ok {
-		r0 = rf(ctx, apprenticeId, eventName)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, internal.ReceivedEvent) error); ok {
+		r0 = rf(ctx, apprenticeId, event)
 	} else {
 		r0 = ret.Error(0)
 	}

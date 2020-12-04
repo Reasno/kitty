@@ -2,23 +2,25 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/spf13/cobra"
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
-	"os"
-	"time"
 )
 
 type signParam struct {
-	id          uint64
-	suuid       string
-	openid      string
-	channel     string
-	versionCode string
-	mobile      string
-	packageName string
-	ttl         time.Duration
-	issuer      string
+	id           uint64
+	suuid        string
+	openid       string
+	channel      string
+	versionCode  string
+	mobile       string
+	packageName  string
+	thirdPartyId string
+	ttl          time.Duration
+	issuer       string
 }
 
 var s signParam
@@ -31,6 +33,7 @@ func init() {
 	signCmd.Flags().StringVar(&s.versionCode, "versionCode", "", "the channel in the token")
 	signCmd.Flags().StringVar(&s.mobile, "mobile", "", "the phone number in the token")
 	signCmd.Flags().StringVar(&s.packageName, "packageName", "com.donews.www", "the package name of the token")
+	signCmd.Flags().StringVar(&s.thirdPartyId, "thirdPartyId", "1", "the third party id of the token")
 	signCmd.Flags().DurationVar(&s.ttl, "ttl", 24*time.Hour, "the ttl in the token")
 	signCmd.Flags().StringVar(&s.issuer, "issuer", "signCmd", "the issuer in the token")
 	rootCmd.AddCommand(signCmd)
@@ -53,6 +56,7 @@ var signCmd = &cobra.Command{
 				s.openid,
 				s.mobile,
 				s.packageName,
+				s.thirdPartyId,
 				s.ttl,
 			),
 		)

@@ -77,3 +77,7 @@ func (k *KoanfAdapter) Get(s string) interface{} {
 func (k *KoanfAdapter) Float64(s string) float64 {
 	return k.k.Float64(s)
 }
+
+func (k *KoanfAdapter) Unmarshal(path string, o interface{}) error {
+	return k.k.Unmarshal(path, o)
+}

@@ -23,7 +23,7 @@ func TestEndpoints_Request(t *testing.T) {
 		t.Skip("need xtask to test enpoints")
 	}
 	conf := mocks.ConfigReader{}
-	conf.On("String", "xtask.url").Return("http://120.31.70.243:8989/xtasks/score/madd")
+	conf.On("String", "xtask.url").Return("https://xtasks.dev.tagtic.cn/xtasks/score/madd")
 
 	e, err := NewXTaskRequester(&conf, http.DefaultClient)
 	assert.NoError(t, err)

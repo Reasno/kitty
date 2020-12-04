@@ -9,6 +9,7 @@ type ConfigReader interface {
 	Get(string) interface{}
 	Float64(string) float64
 	Cut(string) ConfigReader
+	Unmarshal(path string, o interface{}) error
 }
 
 type Env interface {

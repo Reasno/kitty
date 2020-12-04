@@ -16,8 +16,11 @@ import (
 
 func getConf() *ShareConfig {
 	return &ShareConfig{
-		OrientationEvents: []string{"say_hello"},
-		Url:               "http://www.donews.com?%s",
+		OrientationEvents: []OrientationEvent{{
+			Id:   0,
+			Type: "task",
+		}},
+		Url: "http://www.donews.com?%s",
 		Reward: struct {
 			Level1 int `yaml:"level1"`
 			Level2 int `yaml:"level2"`
@@ -216,7 +219,7 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 		name         string
 		service      InvitationManager
 		apprenticeId uint64
-		eventName    string
+		eventName    ReceivedEvent
 		out          error
 	}{
 		{
@@ -234,7 +237,7 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 							Depth:                1,
 							OrientationCompleted: false,
 							OrientationSteps: []entity.OrientationStep{{
-								Name:          "say_hello",
+								EventId:       1,
 								StepCompleted: false,
 							}},
 							RewardClaimed: false,
@@ -246,7 +249,10 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 			},
 
 			1,
-			"say_hello",
+			ReceivedEvent{
+				Id:   0,
+				Type: "task",
+			},
 			nil,
 		},
 		{
@@ -264,7 +270,10 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 			},
 
 			1,
-			"say_hello",
+			ReceivedEvent{
+				Id:   0,
+				Type: "task",
+			},
 			nil,
 		},
 	}
@@ -410,7 +419,6 @@ func TestInvitationManager_ListApprentice(t *testing.T) {
 				assert.Equal(t, uint(1+i), r.ApprenticeID)
 				assert.Equal(t, cc.depth, r.Depth)
 				assert.Equal(t, cc.amount, r.Amount)
-
 			}
 		})
 	}

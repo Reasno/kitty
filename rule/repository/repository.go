@@ -213,12 +213,12 @@ func (r *repository) setRawRuleSetFromDbKey(ctx context.Context, dbKey string, v
 //}
 
 func (r *repository) ValidateRules(ruleName string, reader io.Reader) error {
-	byt, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return err
-	}
 	if ruleName == CentralConfigPath[1:] {
-		_, err := readCentralConfigBytes(byt)
+		byt, err := ioutil.ReadAll(reader)
+		if err != nil {
+			return err
+		}
+		_, err = readCentralConfigBytes(byt)
 		return err
 	}
 	return entity.ValidateRules(reader)

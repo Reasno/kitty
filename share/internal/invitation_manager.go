@@ -32,9 +32,20 @@ type RelationRepository interface {
 	) error
 }
 
+type OrientationEvent struct {
+	Id          int    `yaml:"id"`
+	Type        string `yaml:"type"`
+	ChineseName string `yaml:"chineseName"`
+}
+
+type ReceivedEvent struct {
+	Id   int    `yaml:"id"`
+	Type string `yaml:"type"`
+}
+
 type ShareConfig struct {
-	OrientationEvents []string `yaml:"orientation_events"`
-	Url               string   `yaml:"url"`
+	OrientationEvents []OrientationEvent `yaml:"orientation_events"`
+	Url               string             `yaml:"url"`
 	Reward            struct {
 		Level1 int `yaml:"level1"`
 		Level2 int `yaml:"level2"`
@@ -103,7 +114,7 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 	return im.rr.UpdateRelations(ctx, &apprentice, func(relations []entity.Relation) error {
 		for _, rel := range relations {
 			if rel.MasterID == uint(masterId) {
-				// TODO： 真正发奖
+
 				if err := rel.ClaimReward(); err != nil {
 					return err
 				} else {
@@ -127,10 +138,10 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 	})
 }
 
-func (im *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, eventName string) error {
+func (im *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, event ReceivedEvent) error {
 
-	if !in(eventName, im.conf.OrientationEvents) {
-		level.Info(im.logger).Log("msg", fmt.Sprintf("invalid event name %s, want %s", eventName, im.conf.OrientationEvents))
+	if !in(event, im.conf.OrientationEvents) {
+		level.Info(im.logger).Log("msg", fmt.Sprintf("invalid event %+v, want %+v", event, im.conf.OrientationEvents))
 		return nil
 	}
 
@@ -138,7 +149,7 @@ func (im *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint
 
 	return im.rr.UpdateRelations(ctx, &apprentice, func(relations []entity.Relation) error {
 		for i := range relations {
-			relations[i].CompleteStep(entity.OrientationStep{Name: eventName})
+			relations[i].CompleteStep(entity.OrientationStep{EventType: event.Type, EventId: event.Id})
 		}
 		return nil
 	})
@@ -181,17 +192,17 @@ func (im *InvitationManager) GetUrl(ctx context.Context, claim *jwt2.Claim) stri
 	return fmt.Sprintf(im.conf.Url, argsStr)
 }
 
-func getSteps(names []string) []entity.OrientationStep {
+func getSteps(names []OrientationEvent) []entity.OrientationStep {
 	var steps []entity.OrientationStep
 	for _, s := range names {
-		steps = append(steps, entity.OrientationStep{Name: s})
+		steps = append(steps, entity.OrientationStep{EventId: s.Id, EventType: s.Type})
 	}
 	return steps
 }
 
-func in(name string, names []string) bool {
-	for _, n := range names {
-		if n == name {
+func in(event ReceivedEvent, events []OrientationEvent) bool {
+	for _, e := range events {
+		if e.Id == event.Id && e.Type == event.Type {
 			return true
 		}
 	}
