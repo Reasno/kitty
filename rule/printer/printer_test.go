@@ -10,7 +10,7 @@ import (
 var useEtcd bool
 
 func init() {
-	flag.BoolVar(&useEtcd, "etcd", false, "use local mysql for testing")
+	flag.BoolVar(&useEtcd, "etcd", false, "use local etcd for testing")
 }
 
 func TestPrinter_Sprintf(t *testing.T) {
