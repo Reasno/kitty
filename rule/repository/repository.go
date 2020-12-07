@@ -150,23 +150,25 @@ func readCentralConfigBytes(b []byte) (map[string]string, error) {
 		if strings.Count(v.Path, "/") >= 2 {
 			return nil, errors.Wrapf(err, "subpath are not allowed: %s", v.Path)
 		}
-		collect(activeContainers, v.Path, OtherConfigPathPrefix)
+		collect(activeContainers, v.Path, v.Tabs, OtherConfigPathPrefix)
 		for _, v := range v.Children {
 			if strings.Count(v.Path, "/") >= 2 {
 				return nil, errors.Wrapf(err, "subpath are not allowed: %s", v.Path)
 			}
-			collect(activeContainers, v.Path, OtherConfigPathPrefix)
+			collect(activeContainers, v.Path, v.Tabs, OtherConfigPathPrefix)
 		}
 	}
 	return activeContainers, nil
 }
 
-func collect(containers map[string]string, path string, p string) {
+func collect(containers map[string]string, path string, tabs []string, p string) {
+	if len(tabs) == 0 {
+		tabs = []string{"prod", "dev", "testing", "local"}
+	}
 	if len(path) > 1 && path[0] == '/' {
-		containers[path[1:]+"-prod"] = p + path + "-prod"
-		containers[path[1:]+"-dev"] = p + path + "-dev"
-		containers[path[1:]+"-testing"] = p + path + "-testing"
-		containers[path[1:]+"-local"] = p + path + "-local"
+		for _, t := range tabs {
+			containers[path[1:]+"-"+t] = p + path + "-" + t
+		}
 	}
 }
 
