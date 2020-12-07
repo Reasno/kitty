@@ -66,9 +66,15 @@ func decodePayload(payload *dto.Payload, r *http.Request) (err error) {
 		if err != nil {
 			return errors.Wrap(err, "cannot json unmarshal")
 		}
+		err = json.Unmarshal(buf, &payload.B)
+		if err != nil {
+			return errors.Wrap(err, "cannot json unmarshal")
+		}
 		return nil
 	}
 	err = decoder.Decode(payload, r.URL.Query())
+	// store extra queries here.
+	payload.Q = r.URL.Query()
 	if err != nil {
 		return errors.Wrap(err, "cannot decode payload in query")
 	}

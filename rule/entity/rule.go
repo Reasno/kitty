@@ -32,15 +32,17 @@ type CentralRules struct {
 	Style string `yaml:"style"`
 	Rule  struct {
 		List []struct {
-			Name     string `yaml:"name"`
-			Icon     string `yaml:"icon"`
-			Path     string `yaml:"path"`
-			ID       string `yaml:"id"`
+			Name     string   `yaml:"name"`
+			Icon     string   `yaml:"icon"`
+			Path     string   `yaml:"path"`
+			Tabs     []string `yaml:"tabs"`
+			ID       string   `yaml:"id"`
 			Children []struct {
 				Name     string        `yaml:"name"`
 				Icon     string        `yaml:"icon"`
 				Path     string        `yaml:"path"`
 				ID       string        `yaml:"id"`
+				Tabs     []string      `yaml:"tabs"`
 				Children []interface{} `yaml:"children"`
 			} `yaml:"children"`
 		} `yaml:"list"`

@@ -9,18 +9,20 @@ import (
 )
 
 type Payload struct {
-	Channel     string `json:"channel" schema:"channel"`
-	VersionCode int    `json:"version_code" schema:"version_code"`
-	Os          uint8  `json:"os" schema:"os"`
-	UserId      uint64 `json:"user_id" schema:"user_id"`
-	Imei        string `json:"imei" schema:"imei"`
-	Idfa        string `json:"idfa" schema:"idfa"`
-	Oaid        string `json:"oaid" schema:"oaid"`
-	Suuid       string `json:"suuid" schema:"suuid"`
-	Mac         string `json:"mac" schema:"mac"`
-	AndroidId   string `json:"android_id" schema:"android_id"`
-	PackageName string `json:"package_name" schema:"package_name"`
-	Ip          string `json:"ip" schema:"ip"`
+	Channel     string                 `json:"channel" schema:"channel"`
+	VersionCode int                    `json:"version_code" schema:"version_code"`
+	Os          uint8                  `json:"os" schema:"os"`
+	UserId      uint64                 `json:"user_id" schema:"user_id"`
+	Imei        string                 `json:"imei" schema:"imei"`
+	Idfa        string                 `json:"idfa" schema:"idfa"`
+	Oaid        string                 `json:"oaid" schema:"oaid"`
+	Suuid       string                 `json:"suuid" schema:"suuid"`
+	Mac         string                 `json:"mac" schema:"mac"`
+	AndroidId   string                 `json:"android_id" schema:"android_id"`
+	PackageName string                 `json:"package_name" schema:"package_name"`
+	Ip          string                 `json:"ip" schema:"ip"`
+	Q           map[string][]string    `json:"-" schema:"-"`
+	B           map[string]interface{} `json:"-" schema:"-"`
 }
 
 func FromClaim(claim jwt2.Claim) *Payload {
