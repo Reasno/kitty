@@ -64,6 +64,7 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)),
 	wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)),
 	wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)),
+	wire.Bind(new(handlers.FileRepository), new(*repository.FileRepo)),
 )
 
 func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {
