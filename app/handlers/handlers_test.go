@@ -886,43 +886,6 @@ func TestBind(t *testing.T) {
 			},
 		},
 		{
-			"错误绑定手机",
-			appService{
-				conf:   getConf(),
-				logger: log.NewNopLogger(),
-				ur: (func() UserRepository {
-					ur := &mocks.UserRepository{}
-					ur.On("Update", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint, user entity.User) *entity.User {
-						return &user
-					}, nil).Once()
-					return ur
-				})(),
-				cr: (func() CodeRepository {
-					cr := &mocks.CodeRepository{}
-					cr.On("CheckCode", mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
-					cr.On("DeleteCode", mock.Anything, mock.Anything).Return(nil)
-					return cr
-				})(),
-				sender: &mc.SmsSender{},
-				wechat: (func() wechat.Wechater {
-					m := &wm.Wechater{}
-					return m
-				})(),
-			},
-			pb.UserBindRequest{
-				Mobile: "000",
-				Code:   "66666",
-			},
-			pb.UserInfoReply{
-				Code: 0,
-				Data: &pb.UserInfo{
-					Mobile:      "000",
-					TaobaoExtra: &pb.TaobaoExtra{},
-					WechatExtra: &pb.WechatExtra{},
-				},
-			},
-		},
-		{
 			"同时绑定多个属性",
 			appService{
 				conf:   getConf(),
