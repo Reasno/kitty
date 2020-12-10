@@ -1,5 +1,6 @@
 //go:generate mockery --name=CodeRepository
 //go:generate mockery --name=UserRepository
+//go:generate mockery --name=FileRepository
 
 package handlers
 

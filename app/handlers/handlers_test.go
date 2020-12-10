@@ -726,7 +726,7 @@ func TestUnbind(t *testing.T) {
 }
 
 func TestBind(t *testing.T) {
-	t.Parallel()
+
 	cases := []struct {
 		name string
 		app  appService
@@ -804,6 +804,56 @@ func TestBind(t *testing.T) {
 			pb.UserInfoReply{
 				Code: 0,
 				Data: &pb.UserInfo{
+					Wechat:      "bar",
+					TaobaoExtra: &pb.TaobaoExtra{},
+					WechatExtra: &pb.WechatExtra{
+						OpenId: "bar",
+					},
+				},
+			},
+		},
+		{
+			"绑定微信并合并信息",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					ur.On("Update", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint, user entity.User) *entity.User {
+						return &user
+					}, nil).Once()
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					return cr
+				})(),
+				fr: (func() FileRepository {
+					fr := &mocks.FileRepository{}
+					fr.On("UploadFromUrl", mock.Anything, mock.Anything).Return("", nil)
+					return fr
+				})(),
+				sender: &mc.SmsSender{},
+				wechat: (func() wechat.Wechater {
+					m := &wm.Wechater{}
+					m.On("GetLoginResponse", mock.Anything, mock.Anything).Return(&wechat.WxLoginResult{
+						Openid: "bar",
+					}, nil)
+					m.On("GetUserInfoResult", mock.Anything, mock.Anything).Return(&wechat.WxUserInfoResult{
+						Openid:   "bar",
+						Nickname: "mr.Bar",
+					}, nil)
+					return m
+				})(),
+			},
+			pb.UserBindRequest{
+				Wechat:    "foo",
+				MergeInfo: true,
+			},
+			pb.UserInfoReply{
+				Code: 0,
+				Data: &pb.UserInfo{
+					UserName:    "mr.Bar",
 					Wechat:      "bar",
 					TaobaoExtra: &pb.TaobaoExtra{},
 					WechatExtra: &pb.WechatExtra{
@@ -942,9 +992,13 @@ func TestBind(t *testing.T) {
 	for _, c := range cases {
 		cc := c
 		t.Run(cc.name, func(t *testing.T) {
+			t.Parallel()
 			out, err := cc.app.Bind(context.Background(), &cc.in)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if out.Data.UserName != cc.out.Data.UserName {
+				t.Fatalf("want %s, got %s", cc.out.Data.UserName, out.Data.UserName)
 			}
 			if out.Code != cc.out.Code {
 				t.Fatalf("want %d, got %d", cc.out.Code, out.Code)
