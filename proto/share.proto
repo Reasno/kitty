@@ -141,8 +141,8 @@ message ShareListFriendReply {
 
 message ShareListFriendData {
   repeated ShareListFriendDataItem items = 1;
-  int32 count_all = 2;
-  int32 count_not_ready = 3;
+  int32 count_all = 2; // 获取激活数
+  int32 count_not_ready = 3; // 获取未激活数
 }
 
 enum ClaimStatus {
