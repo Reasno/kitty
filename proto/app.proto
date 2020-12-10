@@ -148,6 +148,8 @@ message UserBindRequest {
   TaobaoExtra taobao_extra = 5;
   // 如果有openId 就直接走openId，不用再填微信官方下发的临时code码
   WechatExtra wechat_extra = 6;
+  // 是否同步基础用户信息
+  bool mergeInfo = 7;
 }
 
 message TaobaoExtra {

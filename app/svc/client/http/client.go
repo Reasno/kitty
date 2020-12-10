@@ -659,6 +659,8 @@ func EncodeHTTPBindZeroRequest(_ context.Context, r *http.Request, request inter
 
 	toRet.WechatExtra = req.WechatExtra
 
+	toRet.MergeInfo = req.MergeInfo
+
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(toRet); err != nil {

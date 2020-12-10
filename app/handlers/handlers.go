@@ -28,6 +28,7 @@ type appService struct {
 	logger log.Logger
 	ur     UserRepository
 	cr     CodeRepository
+	fr     FileRepository
 	sender contract.SmsSender
 	wechat wechat.Wechater
 }
@@ -51,6 +52,10 @@ type UserRepository interface {
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
 	GetAll(ctx context.Context, ids ...uint) (user []entity.User, err error)
 	Save(ctx context.Context, user *entity.User) error
+}
+
+type FileRepository interface {
+	UploadFromUrl(ctx context.Context, url string) (newUrl string, err error)
 }
 
 func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.UserInfoReply, error) {
@@ -233,6 +238,11 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		toUpdate.WechatOpenId = ns(wechatExtra.OpenId)
 		toUpdate.WechatUnionId = ns(wechatExtra.Unionid)
 		toUpdate.WechatExtra = wechatExtraBytes
+		if in.MergeInfo {
+			toUpdate.UserName = wechatExtra.NickName
+			toUpdate.HeadImg, _ = s.fr.UploadFromUrl(ctx, wechatExtra.Headimgurl)
+			toUpdate.Gender = int(wechatExtra.Sex)
+		}
 	}
 
 	// 绑定淘宝openId
@@ -243,6 +253,10 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		}
 		toUpdate.TaobaoOpenId = ns(in.TaobaoExtra.OpenId)
 		toUpdate.TaobaoExtra = taobaoExtraBytes
+		if in.MergeInfo {
+			toUpdate.UserName = in.TaobaoExtra.Nick
+			toUpdate.HeadImg, _ = s.fr.UploadFromUrl(ctx, in.TaobaoExtra.AvatarUrl)
+		}
 	}
 
 	// 绑定微信openId

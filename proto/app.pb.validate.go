@@ -77,6 +77,8 @@ func (m *UserBindRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for MergeInfo
+
 	return nil
 }
 
