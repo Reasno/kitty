@@ -73,7 +73,10 @@ func (e ServerError) MarshalJSON() ([]byte, error) {
 }
 
 func (e ServerError) Error() string {
-	return e.err.Error()
+	if e.err != nil {
+		return e.err.Error()
+	}
+	return e.msg
 }
 
 func (e ServerError) GRPCStatus() *status.Status {

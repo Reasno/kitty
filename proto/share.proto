@@ -141,26 +141,26 @@ message ShareListFriendReply {
 
 message ShareListFriendData {
   repeated ShareListFriendDataItem items = 1;
-  int32 count_all = 2;
-  int32 count_not_ready = 3;
+  int32 count_all = 2; // 获取激活数
+  int32 count_not_ready = 3; // 获取未激活数
 }
 
 enum ClaimStatus {
   UNKNOWN_CLAIM_STATUS = 0;
-  DONE = 1;
-  READY = 2;
-  NOT_READY = 3;
+  DONE = 1; // 已领取
+  READY = 2; // 可领取
+  NOT_READY = 3; // 不可领取（任务未完成）
 }
 
 message ShareListFriendDataItem {
-  uint64 id = 1;
-  string user_name = 2;
-  string head_img = 4;
-  app.v2.Gender gender = 5;
-  map<string, bool> steps = 6;
-  ClaimStatus claim_status = 7;
-  int32 coin = 8;
-  int64 create_at = 9;
+  uint64 id = 1; // 用户ID
+  string user_name = 2; // 用户名称
+  string head_img = 4; // 头像
+  app.v2.Gender gender = 5; // 性别
+  map<string, bool> steps = 6; // 任务完成进度。可能有很多个子任务，true为子任务完成。
+  ClaimStatus claim_status = 7;  // 金币领取情况
+  int32 coin = 8; // 邀请改用户可获得的金币数量。
+  int64 create_at = 9; // 创建时间
 }
 
 message ShareDataUrlReply {

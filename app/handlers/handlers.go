@@ -214,7 +214,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 		if ok, err := s.verify(ctx, in.Mobile, in.Code); err != nil {
 			return nil, dbErr(err)
 		} else if !ok {
-			return nil, kerr.UnauthenticatedErr(err, msg.ErrorMobileCode)
+			return nil, kerr.UnauthenticatedErr(errors.Errorf("cannot verify %s with %s", in.Mobile, in.Code), msg.ErrorMobileCode)
 		}
 		toUpdate.Mobile = ns(in.Mobile)
 	}

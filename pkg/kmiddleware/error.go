@@ -14,11 +14,10 @@ func NewErrorMarshallerMiddleware() endpoint.Middleware {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			defer func() {
 				if er := recover(); er != nil {
-					err = fmt.Errorf("%s", er)
+					err = fmt.Errorf("panic: %s", er)
 				}
 			}()
 			response, err = e(ctx, request)
-
 			if err != nil {
 				var serverError kerr.ServerError
 				if !errors.As(err, &serverError) {

@@ -5,11 +5,13 @@ import (
 	"testing"
 
 	"github.com/go-kit/kit/log"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"glab.tagtic.cn/ad_gains/kitty/app/handlers/mocks"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	mc "glab.tagtic.cn/ad_gains/kitty/pkg/contract/mocks"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 	wm "glab.tagtic.cn/ad_gains/kitty/pkg/wechat/mocks"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
@@ -534,6 +536,195 @@ func TestLogin(t *testing.T) {
 	}
 }
 
+func TestBindFailure(t *testing.T) {
+
+	cases := []struct {
+		name string
+		app  appService
+		in   pb.UserBindRequest
+		err  error
+	}{
+		{
+			"错误绑定手机",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					ur.On("Update", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint, user entity.User) *entity.User {
+						return &user
+					}, nil).Once()
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					cr.On("CheckCode", mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+					cr.On("DeleteCode", mock.Anything, mock.Anything).Return(nil)
+					return cr
+				})(),
+				sender: &mc.SmsSender{},
+				wechat: (func() wechat.Wechater {
+					m := &wm.Wechater{}
+					return m
+				})(),
+			},
+			pb.UserBindRequest{
+				Mobile: "000",
+				Code:   "66666",
+			},
+			kerr.UnauthenticatedErr(nil, ""),
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			t.Parallel()
+			_, err := cc.app.Bind(context.Background(), &cc.in)
+			if err == nil {
+				t.Fatal("should err")
+			}
+			assert.Equal(t, cc.err.(kerr.ServerError).GRPCStatus().Code(), err.(kerr.ServerError).GRPCStatus().Code())
+		})
+	}
+}
+
+func TestUnbind(t *testing.T) {
+	t.Parallel()
+	app := appService{
+		conf:   getConf(),
+		logger: log.NewNopLogger(),
+		ur: (func() UserRepository {
+			ur := &mocks.UserRepository{}
+			ur.On("Save", mock.Anything, mock.Anything).Return(nil)
+			ur.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint) *entity.User {
+				taobao, _ := (&pb.TaobaoExtra{OpenId: "1"}).Marshal()
+				wc, _ := (&pb.WechatExtra{OpenId: "1"}).Marshal()
+				return &entity.User{
+					UserName:      "1",
+					WechatOpenId:  ns("1"),
+					WechatUnionId: ns("1"),
+					Mobile:        ns("1"),
+					TaobaoOpenId:  ns("1"),
+					WechatExtra:   wc,
+					TaobaoExtra:   taobao,
+				}
+			}, nil)
+			return ur
+		})(),
+		cr: (func() CodeRepository {
+			cr := &mocks.CodeRepository{}
+			return cr
+		})(),
+		sender: &mc.SmsSender{},
+		wechat: (func() wechat.Wechater {
+			m := &wm.Wechater{}
+			return m
+		})(),
+	}
+	cases := []struct {
+		name string
+		app  appService
+		in   pb.UserUnbindRequest
+		out  pb.UserInfoReply
+	}{
+		{
+			"解绑淘宝",
+			app,
+			pb.UserUnbindRequest{
+				Taobao: true,
+			},
+			pb.UserInfoReply{
+				Code: 0,
+				Data: &pb.UserInfo{
+					Mobile: "1",
+					Wechat: "1",
+					WechatExtra: &pb.WechatExtra{
+						OpenId: "1",
+					},
+					TaobaoExtra: &pb.TaobaoExtra{},
+				},
+			},
+		},
+		{
+			"解绑手机",
+			app,
+			pb.UserUnbindRequest{
+				Mobile: true,
+			},
+			pb.UserInfoReply{
+				Code: 0,
+				Data: &pb.UserInfo{
+					Wechat: "1",
+					WechatExtra: &pb.WechatExtra{
+						OpenId: "1",
+					},
+					TaobaoExtra: &pb.TaobaoExtra{
+						OpenId: "1",
+					},
+				},
+			},
+		},
+		{
+			"解绑微信",
+			app,
+			pb.UserUnbindRequest{
+				Wechat: true,
+			},
+			pb.UserInfoReply{
+				Code: 0,
+				Data: &pb.UserInfo{
+					Mobile:      "1",
+					WechatExtra: &pb.WechatExtra{},
+					TaobaoExtra: &pb.TaobaoExtra{
+						OpenId: "1",
+					},
+				},
+			},
+		},
+		{
+			"全解绑",
+			app,
+			pb.UserUnbindRequest{
+				Wechat: true,
+				Mobile: true,
+				Taobao: true,
+			},
+			pb.UserInfoReply{
+				Code: 0,
+				Data: &pb.UserInfo{
+					WechatExtra: &pb.WechatExtra{},
+					TaobaoExtra: &pb.TaobaoExtra{},
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			out, err := cc.app.Unbind(context.Background(), &cc.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if out.Code != cc.out.Code {
+				t.Fatalf("want %d, got %d", cc.out.Code, out.Code)
+			}
+			if out.Data.Wechat != cc.out.Data.Wechat {
+				t.Fatalf("want %s, got %s", cc.out.Data.Wechat, out.Data.Wechat)
+			}
+			if out.Data.WechatExtra.OpenId != cc.out.Data.WechatExtra.OpenId {
+				t.Fatalf("want %s, got %s", cc.out.Data.WechatExtra.OpenId, out.Data.WechatExtra.OpenId)
+			}
+			if out.Data.Mobile != redact(cc.out.Data.Mobile) {
+				t.Fatalf("want %s, got %s", redact(cc.out.Data.Mobile), out.Data.Mobile)
+			}
+			if out.Data.TaobaoExtra.OpenId != cc.out.Data.TaobaoExtra.OpenId {
+				t.Fatalf("want %s, got %s", cc.out.Data.TaobaoExtra.OpenId, out.Data.TaobaoExtra.OpenId)
+			}
+		})
+	}
+}
+
 func TestBind(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
@@ -695,6 +886,43 @@ func TestBind(t *testing.T) {
 			},
 		},
 		{
+			"错误绑定手机",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					ur.On("Update", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint, user entity.User) *entity.User {
+						return &user
+					}, nil).Once()
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					cr.On("CheckCode", mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
+					cr.On("DeleteCode", mock.Anything, mock.Anything).Return(nil)
+					return cr
+				})(),
+				sender: &mc.SmsSender{},
+				wechat: (func() wechat.Wechater {
+					m := &wm.Wechater{}
+					return m
+				})(),
+			},
+			pb.UserBindRequest{
+				Mobile: "000",
+				Code:   "66666",
+			},
+			pb.UserInfoReply{
+				Code: 0,
+				Data: &pb.UserInfo{
+					Mobile:      "000",
+					TaobaoExtra: &pb.TaobaoExtra{},
+					WechatExtra: &pb.WechatExtra{},
+				},
+			},
+		},
+		{
 			"同时绑定多个属性",
 			appService{
 				conf:   getConf(),
@@ -752,143 +980,6 @@ func TestBind(t *testing.T) {
 		cc := c
 		t.Run(cc.name, func(t *testing.T) {
 			out, err := cc.app.Bind(context.Background(), &cc.in)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if out.Code != cc.out.Code {
-				t.Fatalf("want %d, got %d", cc.out.Code, out.Code)
-			}
-			if out.Data.Wechat != cc.out.Data.Wechat {
-				t.Fatalf("want %s, got %s", cc.out.Data.Wechat, out.Data.Wechat)
-			}
-			if out.Data.WechatExtra.OpenId != cc.out.Data.WechatExtra.OpenId {
-				t.Fatalf("want %s, got %s", cc.out.Data.WechatExtra.OpenId, out.Data.WechatExtra.OpenId)
-			}
-			if out.Data.Mobile != redact(cc.out.Data.Mobile) {
-				t.Fatalf("want %s, got %s", redact(cc.out.Data.Mobile), out.Data.Mobile)
-			}
-			if out.Data.TaobaoExtra.OpenId != cc.out.Data.TaobaoExtra.OpenId {
-				t.Fatalf("want %s, got %s", cc.out.Data.TaobaoExtra.OpenId, out.Data.TaobaoExtra.OpenId)
-			}
-		})
-	}
-}
-
-func TestUnbind(t *testing.T) {
-	t.Parallel()
-	app := appService{
-		conf:   getConf(),
-		logger: log.NewNopLogger(),
-		ur: (func() UserRepository {
-			ur := &mocks.UserRepository{}
-			ur.On("Save", mock.Anything, mock.Anything).Return(nil)
-			ur.On("Get", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint) *entity.User {
-				taobao, _ := (&pb.TaobaoExtra{OpenId: "1"}).Marshal()
-				wc, _ := (&pb.WechatExtra{OpenId: "1"}).Marshal()
-				return &entity.User{
-					UserName:      "1",
-					WechatOpenId:  ns("1"),
-					WechatUnionId: ns("1"),
-					Mobile:        ns("1"),
-					TaobaoOpenId:  ns("1"),
-					WechatExtra:   wc,
-					TaobaoExtra:   taobao,
-				}
-			}, nil)
-			return ur
-		})(),
-		cr: (func() CodeRepository {
-			cr := &mocks.CodeRepository{}
-			return cr
-		})(),
-		sender: &mc.SmsSender{},
-		wechat: (func() wechat.Wechater {
-			m := &wm.Wechater{}
-			return m
-		})(),
-	}
-	cases := []struct {
-		name string
-		app  appService
-		in   pb.UserUnbindRequest
-		out  pb.UserInfoReply
-	}{
-		{
-			"解绑淘宝",
-			app,
-			pb.UserUnbindRequest{
-				Taobao: true,
-			},
-			pb.UserInfoReply{
-				Code: 0,
-				Data: &pb.UserInfo{
-					Mobile: "1",
-					Wechat: "1",
-					WechatExtra: &pb.WechatExtra{
-						OpenId: "1",
-					},
-					TaobaoExtra: &pb.TaobaoExtra{},
-				},
-			},
-		},
-		{
-			"解绑手机",
-			app,
-			pb.UserUnbindRequest{
-				Mobile: true,
-			},
-			pb.UserInfoReply{
-				Code: 0,
-				Data: &pb.UserInfo{
-					Wechat: "1",
-					WechatExtra: &pb.WechatExtra{
-						OpenId: "1",
-					},
-					TaobaoExtra: &pb.TaobaoExtra{
-						OpenId: "1",
-					},
-				},
-			},
-		},
-		{
-			"解绑微信",
-			app,
-			pb.UserUnbindRequest{
-				Wechat: true,
-			},
-			pb.UserInfoReply{
-				Code: 0,
-				Data: &pb.UserInfo{
-					Mobile:      "1",
-					WechatExtra: &pb.WechatExtra{},
-					TaobaoExtra: &pb.TaobaoExtra{
-						OpenId: "1",
-					},
-				},
-			},
-		},
-		{
-			"全解绑",
-			app,
-			pb.UserUnbindRequest{
-				Wechat: true,
-				Mobile: true,
-				Taobao: true,
-			},
-			pb.UserInfoReply{
-				Code: 0,
-				Data: &pb.UserInfo{
-					WechatExtra: &pb.WechatExtra{},
-					TaobaoExtra: &pb.TaobaoExtra{},
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		cc := c
-		t.Run(cc.name, func(t *testing.T) {
-			out, err := cc.app.Unbind(context.Background(), &cc.in)
 			if err != nil {
 				t.Fatal(err)
 			}
