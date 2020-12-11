@@ -205,5 +205,20 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 				return nil
 			},
 		},
+		{
+			ID: "202012110100",
+			Migrate: func(db *gorm.DB) error {
+				type User struct {
+					HeadImg string `gorm:"default:http://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png"`
+				}
+				return db.Migrator().AlterColumn(&User{}, "HeadImg")
+			},
+			Rollback: func(db *gorm.DB) error {
+				type User struct {
+					HeadImg string
+				}
+				return db.Migrator().AlterColumn(&User{}, "HeadImg")
+			},
+		},
 	})
 }
