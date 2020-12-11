@@ -15,7 +15,7 @@ type User struct {
 	UserName      string         `json:"user_name" gorm:"default:游客"`
 	WechatOpenId  sql.NullString `json:"wechat_openid" gorm:"type:varchar(255);uniqueIndex:wechat_openid_index"`
 	WechatUnionId sql.NullString `json:"wechat_unionid"`
-	HeadImg       string         `json:"head_img" gorm:"default:http://ad-static-xg.tagtic.cn/ad-material/file/0f89a4465af863e79d4bcaa1ef205efc.png"`
+	HeadImg       string         `json:"head_img" gorm:"default:http://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png"`
 	Gender        int            `json:"gender"`
 	Birthday      string         `json:"birthday" gorm:"default:2000-01-01"`
 	Mobile        sql.NullString `json:"mobile" gorm:"type:varchar(255);uniqueIndex:mobile_index"`

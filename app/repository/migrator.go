@@ -209,7 +209,7 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 			ID: "202012110100",
 			Migrate: func(db *gorm.DB) error {
 				type User struct {
-					HeadImg string `gorm:"default:http://ad-static-xg.tagtic.cn/ad-material/file/0f89a4465af863e79d4bcaa1ef205efc.png"`
+					HeadImg string `gorm:"default:http://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png"`
 				}
 				return db.Migrator().AlterColumn(&User{}, "HeadImg")
 			},
