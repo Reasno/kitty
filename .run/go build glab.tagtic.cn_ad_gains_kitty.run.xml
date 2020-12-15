@@ -2,7 +2,7 @@
   <configuration default="false" name="go build glab.tagtic.cn/ad_gains/kitty" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
     <module name="kitty" />
     <working_directory value="$PROJECT_DIR$" />
-    <parameters value="migrate" />
+    <parameters value="serve" />
     <EXTENSION ID="net.ashald.envfile">
       <option name="IS_ENABLED" value="false" />
       <option name="IS_SUBST" value="false" />

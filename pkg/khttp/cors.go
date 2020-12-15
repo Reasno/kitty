@@ -11,5 +11,7 @@ func AddCorsMiddleware() func(handler http.Handler) http.Handler {
 			return true
 		},
 		AllowCredentials: true,
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowedMethods:   []string{"GET", "PUT", "POST", "OPTIONS", "HEAD", "DELETE", "PATCH"},
 	}).Handler
 }
