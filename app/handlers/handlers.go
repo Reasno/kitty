@@ -22,6 +22,7 @@ import (
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
+	"gorm.io/gorm/clause"
 )
 
 type appService struct {
@@ -51,7 +52,7 @@ type UserRepository interface {
 	GetFromDevice(ctx context.Context, packageName, suuid string, device *entity.Device) (user *entity.User, err error)
 	Update(ctx context.Context, id uint, user entity.User) (newUser *entity.User, err error)
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
-	GetAll(ctx context.Context, ids ...uint) (user []entity.User, err error)
+	GetAll(ctx context.Context, where clause.Where) (user []entity.User, err error)
 	Save(ctx context.Context, user *entity.User) error
 }
 
@@ -533,11 +534,53 @@ func toReply(user *entity.User) *pb.UserInfoReply {
 }
 
 func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchRequest) (*pb.UserInfoBatchReply, error) {
-	var args []uint
-	for _, v := range in.Id {
-		args = append(args, uint(v))
+	var expressions []clause.Expression
+	if len(in.Id) > 0 {
+		var ids []interface{}
+		for _, v := range in.Id {
+			ids = append(ids, uint(v))
+		}
+		expressions = append(expressions, clause.IN{
+			Column: "id",
+			Values: ids,
+		})
 	}
-	users, err := s.ur.GetAll(ctx, args...)
+	if len(in.PackageName) > 0 {
+		expressions = append(expressions, clause.Eq{
+			Column: "package_name",
+			Value:  in.PackageName,
+		})
+	}
+	if in.After != 0 {
+		expressions = append(expressions, clause.Gt{
+			Column: "created_at",
+			Value:  time.Unix(in.After, 0),
+		})
+	}
+	if in.Before != 0 {
+		expressions = append(expressions, clause.Lt{
+			Column: "created_at",
+			Value:  time.Unix(in.After, 0),
+		})
+	}
+	if len(in.Name) != 0 {
+		expressions = append(expressions, clause.Like{
+			Column: "user_name",
+			Value:  "%" + in.Name + "%",
+		})
+	}
+	if len(in.Mobile) != 0 {
+		expressions = append(expressions, clause.Eq{
+			Column: "mobile",
+			Value:  in.Mobile,
+		})
+	}
+
+	c := clause.Where{
+		Exprs: expressions,
+	}
+
+	users, err := s.ur.GetAll(ctx, c)
 	if errors.Is(err, repository.ErrRecordNotFound) {
 		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
 	}
@@ -551,12 +594,6 @@ func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchReques
 
 	for _, v := range users {
 		tmp := toReply(&v).Data
-		if !in.Taobao {
-			tmp.TaobaoExtra = nil
-		}
-		if !in.Wechat {
-			tmp.WechatExtra = nil
-		}
 		resp.Data = append(resp.Data, tmp)
 	}
 

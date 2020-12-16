@@ -5,6 +5,8 @@ package mocks
 import (
 	context "context"
 
+	clause "gorm.io/gorm/clause"
+
 	entity "glab.tagtic.cn/ad_gains/kitty/app/entity"
 
 	mock "github.com/stretchr/testify/mock"
@@ -38,20 +40,13 @@ func (_m *UserRepository) Get(ctx context.Context, id uint) (*entity.User, error
 	return r0, r1
 }
 
-// GetAll provides a mock function with given fields: ctx, ids
-func (_m *UserRepository) GetAll(ctx context.Context, ids ...uint) ([]entity.User, error) {
-	_va := make([]interface{}, len(ids))
-	for _i := range ids {
-		_va[_i] = ids[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
+// GetAll provides a mock function with given fields: ctx, where
+func (_m *UserRepository) GetAll(ctx context.Context, where clause.Where) ([]entity.User, error) {
+	ret := _m.Called(ctx, where)
 
 	var r0 []entity.User
-	if rf, ok := ret.Get(0).(func(context.Context, ...uint) []entity.User); ok {
-		r0 = rf(ctx, ids...)
+	if rf, ok := ret.Get(0).(func(context.Context, clause.Where) []entity.User); ok {
+		r0 = rf(ctx, where)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]entity.User)
@@ -59,8 +54,8 @@ func (_m *UserRepository) GetAll(ctx context.Context, ids ...uint) ([]entity.Use
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, ...uint) error); ok {
-		r1 = rf(ctx, ids...)
+	if rf, ok := ret.Get(1).(func(context.Context, clause.Where) error); ok {
+		r1 = rf(ctx, where)
 	} else {
 		r1 = ret.Error(1)
 	}

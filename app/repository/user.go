@@ -163,11 +163,11 @@ func (r *UserRepo) Get(ctx context.Context, id uint) (*entity.User, error) {
 	return &u, nil
 }
 
-func (r *UserRepo) GetAll(ctx context.Context, ids ...uint) ([]entity.User, error) {
+func (r *UserRepo) GetAll(ctx context.Context, where clause.Where) ([]entity.User, error) {
 	var (
 		u []entity.User
 	)
-	if err := r.db.WithContext(ctx).Find(&u, ids).Error; err != nil {
+	if err := r.db.WithContext(ctx).Clauses(where).Find(&u).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, ErrRecordNotFound
 		}

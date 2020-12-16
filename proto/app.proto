@@ -83,6 +83,7 @@ service App {
       tags: "用户信息"
     };
   }
+
   // 更新个人信息
   // 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
   rpc UpdateInfo (UserInfoUpdateRequest) returns (UserInfoReply) {
@@ -302,10 +303,11 @@ message GetCodeRequest {
 
 message UserInfoBatchRequest {
   repeated uint64 id = 1;
-  // 同时获得微信相关信息
-  bool wechat = 2;
-  // 同时获得淘宝相关信息
-  bool taobao = 3;
+  string packageName = 4;
+  int64 after = 5;
+  int64 before = 6;
+  string mobile = 7;
+  string name = 8;
 }
 
 message UserInfoRequest {

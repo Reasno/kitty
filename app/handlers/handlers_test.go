@@ -16,6 +16,7 @@ import (
 	wm "glab.tagtic.cn/ad_gains/kitty/pkg/wechat/mocks"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func getConf() contract.ConfigReader {
@@ -217,8 +218,8 @@ func TestAppService_GetInfoBatch(t *testing.T) {
 				logger: log.NewNopLogger(),
 				ur: (func() UserRepository {
 					ur := &mocks.UserRepository{}
-					ur.On("GetAll", mock.Anything, mock.AnythingOfType("uint"), mock.AnythingOfType("uint"), mock.AnythingOfType("uint")).Return(func(ctx context.Context, ids ...uint) []entity.User {
-						return []entity.User{{Mobile: ns("123"), PackageName: "foo", Model: gorm.Model{ID: ids[0]}, UserName: "foo"}}
+					ur.On("GetAll", mock.Anything, mock.Anything).Return(func(ctx context.Context, where clause.Where) []entity.User {
+						return []entity.User{{Mobile: ns("123"), PackageName: "foo", Model: gorm.Model{ID: 1}, UserName: "foo"}}
 					}, nil).Once()
 					return ur
 				})(),

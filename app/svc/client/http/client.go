@@ -552,9 +552,15 @@ func EncodeHTTPGetInfoBatchZeroRequest(_ context.Context, r *http.Request, reque
 		values.Add("id", fmt.Sprint(v))
 	}
 
-	values.Add("wechat", fmt.Sprint(req.Wechat))
+	values.Add("packageName", fmt.Sprint(req.PackageName))
 
-	values.Add("taobao", fmt.Sprint(req.Taobao))
+	values.Add("after", fmt.Sprint(req.After))
+
+	values.Add("before", fmt.Sprint(req.Before))
+
+	values.Add("mobile", fmt.Sprint(req.Mobile))
+
+	values.Add("name", fmt.Sprint(req.Name))
 
 	r.URL.RawQuery = values.Encode()
 	return nil

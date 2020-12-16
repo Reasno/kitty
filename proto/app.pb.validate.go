@@ -1026,9 +1026,15 @@ func (m *UserInfoBatchRequest) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Wechat
+	// no validation rules for PackageName
 
-	// no validation rules for Taobao
+	// no validation rules for After
+
+	// no validation rules for Before
+
+	// no validation rules for Mobile
+
+	// no validation rules for Name
 
 	return nil
 }

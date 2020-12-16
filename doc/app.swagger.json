@@ -41,18 +41,36 @@
             "collectionFormat": "multi"
           },
           {
-            "name": "wechat",
-            "description": "同时获得微信相关信息.",
+            "name": "packageName",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
           },
           {
-            "name": "taobao",
-            "description": "同时获得淘宝相关信息.",
+            "name": "after",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "mobile",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [

@@ -366,22 +366,40 @@ func DecodeHTTPGetInfoBatchZeroRequest(_ context.Context, r *http.Request) (inte
 		req.Id = IdGetInfoBatch
 	}
 
-	if WechatGetInfoBatchStrArr, ok := queryParams["wechat"]; ok {
-		WechatGetInfoBatchStr := WechatGetInfoBatchStrArr[0]
-		WechatGetInfoBatch, err := strconv.ParseBool(WechatGetInfoBatchStr)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting WechatGetInfoBatch from query, queryParams: %v", queryParams))
-		}
-		req.Wechat = WechatGetInfoBatch
+	if PackageNameGetInfoBatchStrArr, ok := queryParams["packageName"]; ok {
+		PackageNameGetInfoBatchStr := PackageNameGetInfoBatchStrArr[0]
+		PackageNameGetInfoBatch := PackageNameGetInfoBatchStr
+		req.PackageName = PackageNameGetInfoBatch
 	}
 
-	if TaobaoGetInfoBatchStrArr, ok := queryParams["taobao"]; ok {
-		TaobaoGetInfoBatchStr := TaobaoGetInfoBatchStrArr[0]
-		TaobaoGetInfoBatch, err := strconv.ParseBool(TaobaoGetInfoBatchStr)
+	if AfterGetInfoBatchStrArr, ok := queryParams["after"]; ok {
+		AfterGetInfoBatchStr := AfterGetInfoBatchStrArr[0]
+		AfterGetInfoBatch, err := strconv.ParseInt(AfterGetInfoBatchStr, 10, 64)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting TaobaoGetInfoBatch from query, queryParams: %v", queryParams))
+			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting AfterGetInfoBatch from query, queryParams: %v", queryParams))
 		}
-		req.Taobao = TaobaoGetInfoBatch
+		req.After = AfterGetInfoBatch
+	}
+
+	if BeforeGetInfoBatchStrArr, ok := queryParams["before"]; ok {
+		BeforeGetInfoBatchStr := BeforeGetInfoBatchStrArr[0]
+		BeforeGetInfoBatch, err := strconv.ParseInt(BeforeGetInfoBatchStr, 10, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting BeforeGetInfoBatch from query, queryParams: %v", queryParams))
+		}
+		req.Before = BeforeGetInfoBatch
+	}
+
+	if MobileGetInfoBatchStrArr, ok := queryParams["mobile"]; ok {
+		MobileGetInfoBatchStr := MobileGetInfoBatchStrArr[0]
+		MobileGetInfoBatch := MobileGetInfoBatchStr
+		req.Mobile = MobileGetInfoBatch
+	}
+
+	if NameGetInfoBatchStrArr, ok := queryParams["name"]; ok {
+		NameGetInfoBatchStr := NameGetInfoBatchStrArr[0]
+		NameGetInfoBatch := NameGetInfoBatchStr
+		req.Name = NameGetInfoBatch
 	}
 
 	return &req, err
