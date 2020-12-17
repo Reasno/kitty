@@ -718,6 +718,8 @@ func (m *UserInfo) Validate() error {
 
 	// no validation rules for Mobile
 
+	// no validation rules for InviteCode
+
 	return nil
 }
 

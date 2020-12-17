@@ -41,6 +41,16 @@
             "collectionFormat": "multi"
           },
           {
+            "name": "invite_code",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
             "name": "packageName",
             "in": "query",
             "required": false,
@@ -454,6 +464,9 @@
           "$ref": "#/definitions/v2TaobaoExtra"
         },
         "mobile": {
+          "type": "string"
+        },
+        "invite_code": {
           "type": "string"
         }
       }

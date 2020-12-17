@@ -12,6 +12,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
 	"glab.tagtic.cn/ad_gains/kitty/share/handlers"
@@ -82,4 +83,4 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 
 // wire.go:
 
-var ShareServiceSet = wire.NewSet(module.DbSet, module.OpenTracingSet, module.NameAndEnvSet, module.ProvideSecurityConfig, module.ProvideKafkaFactory, module.ProvideHistogramMetrics, module.ProvideHttpClient, module.ProvideUploadManager, repository.NewUserRepo, repository.NewRelationRepo, repository.NewFileRepo, provideTokenizer, internal.NewXTaskRequester, handlers.NewShareService, handlers.ProvideShareServer, wire.Struct(new(internal.InvitationManagerFactory), "*"), wire.Struct(new(internal.InvitationManagerFacade), "*"), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(internal.RelationRepository), new(*repository.RelationRepo)), wire.Bind(new(handlers.InvitationManager), new(*internal.InvitationManagerFacade)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(internal.EncodeDecoder), new(*internal.Tokenizer)))
+var ShareServiceSet = wire.NewSet(module.DbSet, module.OpenTracingSet, module.NameAndEnvSet, module.ProvideSecurityConfig, module.ProvideKafkaFactory, module.ProvideHistogramMetrics, module.ProvideHttpClient, module.ProvideUploadManager, repository.NewUserRepo, repository.NewRelationRepo, repository.NewFileRepo, provideTokenizer, internal.NewXTaskRequester, handlers.NewShareService, handlers.ProvideShareServer, wire.Struct(new(internal.InvitationManagerFactory), "*"), wire.Struct(new(internal.InvitationManagerFacade), "*"), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(internal.RelationRepository), new(*repository.RelationRepo)), wire.Bind(new(handlers.InvitationManager), new(*internal.InvitationManagerFacade)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(internal.EncodeDecoder), new(*invitecode.Tokenizer)))

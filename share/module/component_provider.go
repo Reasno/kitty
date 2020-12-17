@@ -11,17 +11,17 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	code "glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kgrpc"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
 	kitty "glab.tagtic.cn/ad_gains/kitty/proto"
-	"glab.tagtic.cn/ad_gains/kitty/share/internal"
 	"glab.tagtic.cn/ad_gains/kitty/share/svc"
 )
 
-func provideTokenizer(conf contract.ConfigReader) *internal.Tokenizer {
-	return internal.NewTokenizer(conf.String("salt"))
+func provideTokenizer(conf contract.ConfigReader) *code.Tokenizer {
+	return code.NewTokenizer(conf.String("salt"))
 }
 
 func provideEndpoints(middleware overallMiddleware, server kitty.ShareServer) svc.Endpoints {

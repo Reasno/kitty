@@ -21,6 +21,7 @@ import (
 	jaegermetric "github.com/uber/jaeger-lib/metrics"
 	"glab.tagtic.cn/ad_gains/kitty/app/svc"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	code "glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
 	kclient "glab.tagtic.cn/ad_gains/kitty/pkg/kkafka/client"
@@ -42,6 +43,10 @@ var (
 	his         metrics.Histogram
 	initMetrics sync.Once
 )
+
+func provideTokenizer(conf contract.ConfigReader) *code.Tokenizer {
+	return code.NewTokenizer(conf.String("salt"))
+}
 
 func ProvideHistogramMetrics(appName contract.AppName, env contract.Env) metrics.Histogram {
 	initMetrics.Do(func() {

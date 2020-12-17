@@ -366,6 +366,18 @@ func DecodeHTTPGetInfoBatchZeroRequest(_ context.Context, r *http.Request) (inte
 		req.Id = IdGetInfoBatch
 	}
 
+	if InviteCodeGetInfoBatchStrArr, ok := queryParams["invite_code"]; ok {
+		InviteCodeGetInfoBatchStr := InviteCodeGetInfoBatchStrArr[0]
+
+		var InviteCodeGetInfoBatch []string
+		if len(InviteCodeGetInfoBatchStrArr) > 1 {
+			InviteCodeGetInfoBatch = InviteCodeGetInfoBatchStrArr
+		} else {
+			InviteCodeGetInfoBatch = strings.Split(InviteCodeGetInfoBatchStr, ",")
+		}
+		req.InviteCode = InviteCodeGetInfoBatch
+	}
+
 	if PackageNameGetInfoBatchStrArr, ok := queryParams["packageName"]; ok {
 		PackageNameGetInfoBatchStr := PackageNameGetInfoBatchStrArr[0]
 		PackageNameGetInfoBatch := PackageNameGetInfoBatchStr

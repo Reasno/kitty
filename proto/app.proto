@@ -276,6 +276,7 @@ message UserInfo {
   WechatExtra wechat_extra = 10;
   TaobaoExtra taobao_extra = 11;
   string mobile = 12;
+  string invite_code = 13;
 }
 
 message UserInfoReply {
@@ -303,11 +304,13 @@ message GetCodeRequest {
 
 message UserInfoBatchRequest {
   repeated uint64 id = 1;
+  repeated string invite_code = 2;
   string packageName = 4;
   int64 after = 5;
   int64 before = 6;
   string mobile = 7;
   string name = 8;
+
 }
 
 message UserInfoRequest {

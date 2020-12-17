@@ -24,11 +24,11 @@ func getConf() contract.ConfigReader {
 	conf.On("String", "name").Return("foo", nil)
 	conf.On("String", "security.kid").Return("foo", nil)
 	conf.On("String", "security.key").Return("foo", nil)
+	conf.On("String", "salt").Return("foo", nil)
 	return conf
 }
 
 func TestAppService_GetCode(t *testing.T) {
-	t.Parallel()
 	cases := []struct {
 		name    string
 		service appService
@@ -76,6 +76,7 @@ func TestAppService_GetCode(t *testing.T) {
 	for _, c := range cases {
 		cc := c
 		t.Run(cc.name, func(t *testing.T) {
+			t.Parallel()
 			out, err := cc.service.GetCode(context.Background(), &cc.in)
 			if err != nil {
 				t.Fatal(err)

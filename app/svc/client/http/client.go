@@ -552,6 +552,8 @@ func EncodeHTTPGetInfoBatchZeroRequest(_ context.Context, r *http.Request, reque
 		values.Add("id", fmt.Sprint(v))
 	}
 
+	values["invite_code"] = req.InviteCode
+
 	values.Add("packageName", fmt.Sprint(req.PackageName))
 
 	values.Add("after", fmt.Sprint(req.After))

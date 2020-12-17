@@ -18,6 +18,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/app/msg"
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	code "glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
@@ -93,7 +94,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 
 	// 拼装返回结果
-	var resp = toReply(u)
+	var resp = s.toReply(u)
 	resp.Data.Token = tokenString
 
 	return resp, nil
@@ -129,7 +130,7 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	var resp = toReply(u)
+	var resp = s.toReply(u)
 
 	if !in.Taobao {
 		resp.Data.TaobaoExtra = nil
@@ -167,7 +168,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		return nil, dbErr(err)
 	}
 
-	reply := toReply(u)
+	reply := s.toReply(u)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(u.ID),
 		u.CommonSUUID,
@@ -198,7 +199,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 		return nil, dbErr(err)
 	}
 
-	var resp = toReply(u)
+	var resp = s.toReply(u)
 	return resp, nil
 
 }
@@ -281,7 +282,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 获取Token
-	reply := toReply(newUser)
+	reply := s.toReply(newUser)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(newUser.ID),
 		newUser.CommonSUUID,
@@ -322,7 +323,7 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	var resp = toReply(user)
+	var resp = s.toReply(user)
 	return resp, nil
 }
 
@@ -509,11 +510,13 @@ func redact(mobile string) string {
 	return mobile
 }
 
-func toReply(user *entity.User) *pb.UserInfoReply {
+func (s appService) toReply(user *entity.User) *pb.UserInfoReply {
 	var wechatExtra pb.WechatExtra
 	_ = wechatExtra.Unmarshal(user.WechatExtra)
 	var taobaoExtra pb.TaobaoExtra
 	_ = taobaoExtra.Unmarshal(user.TaobaoExtra)
+	var tokenizer = code.NewTokenizer(s.conf.String("salt"))
+	inviteCode, _ := tokenizer.Encode(user.ID)
 	return &pb.UserInfoReply{
 		Code:    0,
 		Message: "",
@@ -529,6 +532,7 @@ func toReply(user *entity.User) *pb.UserInfoReply {
 			IsNew:        user.IsNew,
 			WechatExtra:  &wechatExtra,
 			TaobaoExtra:  &taobaoExtra,
+			InviteCode:   inviteCode,
 		},
 	}
 }
@@ -539,6 +543,18 @@ func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchReques
 		var ids []interface{}
 		for _, v := range in.Id {
 			ids = append(ids, uint(v))
+		}
+		expressions = append(expressions, clause.IN{
+			Column: "id",
+			Values: ids,
+		})
+	}
+	if len(in.InviteCode) > 0 {
+		var ids []interface{}
+		for _, v := range in.InviteCode {
+			t := code.NewTokenizer(s.conf.String("salt"))
+			id, _ := t.Decode(v)
+			ids = append(ids, id)
 		}
 		expressions = append(expressions, clause.IN{
 			Column: "id",
@@ -593,7 +609,7 @@ func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchReques
 	}
 
 	for _, v := range users {
-		tmp := toReply(&v).Data
+		tmp := s.toReply(&v).Data
 		resp.Data = append(resp.Data, tmp)
 	}
 

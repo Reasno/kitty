@@ -5,7 +5,6 @@ import (
 )
 
 var (
-	ErrNoRewardAvailable   = errors.New("no reward available")
-	ErrFailedToDecodeToken = errors.New("cannot decode token")
-	ErrFailedXtaskRequest  = errors.New("failed to request xtask")
+	ErrNoRewardAvailable  = errors.New("no reward available")
+	ErrFailedXtaskRequest = errors.New("failed to request xtask")
 )

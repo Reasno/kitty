@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
+	code "glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"glab.tagtic.cn/ad_gains/kitty/share/internal/mocks"
 )
@@ -56,7 +57,7 @@ func TestInvitationManager_AddToken(t *testing.T) {
 					ur.On("AddRelations", mock.Anything, mock.Anything).Return(nil).Once()
 					return ur
 				})(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 			},
 
 			1,
@@ -72,12 +73,12 @@ func TestInvitationManager_AddToken(t *testing.T) {
 					ur.On("AddRelations", mock.Anything, mock.Anything).Return(nil).Once()
 					return ur
 				})(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 			},
 
 			1,
 			"发阿斯顿发",
-			ErrFailedToDecodeToken,
+			code.ErrFailedToDecodeToken,
 		},
 	}
 	for _, c := range cases {
@@ -118,7 +119,7 @@ func TestInvitationManager_ClaimReward(t *testing.T) {
 					}).Once()
 					return ur
 				})(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 				xtaskClient: MockClient(func(ctx context.Context, dto *XTaskRequest) (*XTaskResponse, error) {
 					return &XTaskResponse{Code: 0}, nil
 				}),
@@ -148,7 +149,7 @@ func TestInvitationManager_ClaimReward(t *testing.T) {
 					}).Once()
 					return ur
 				})(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 				xtaskClient: MockClient(func(ctx context.Context, dto *XTaskRequest) (*XTaskResponse, error) {
 					return &XTaskResponse{Code: 2, Msg: "foo"}, ErrFailedXtaskRequest
 				}),
@@ -178,7 +179,7 @@ func TestInvitationManager_ClaimReward(t *testing.T) {
 					}).Once()
 					return ur
 				})(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 			},
 
 			1,
@@ -196,7 +197,7 @@ func TestInvitationManager_ClaimReward(t *testing.T) {
 					}).Once()
 					return ur
 				})(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 			},
 
 			1,
@@ -245,7 +246,7 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 					}).Once()
 					return ur
 				})(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 			},
 
 			1,
@@ -266,7 +267,7 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 					}).Once()
 					return ur
 				})(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 			},
 
 			1,
@@ -299,7 +300,7 @@ func TestInvitationManager_GetUrl(t *testing.T) {
 			InvitationManager{
 				conf:      getConf(),
 				rr:        nil,
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 				logger:    log.NewNopLogger(),
 			},
 			context.WithValue(context.Background(), jwt.JWTClaimsContextKey, &kjwt.Claim{
@@ -347,7 +348,7 @@ func TestInvitationManager_ListApprentice(t *testing.T) {
 					}, nil).Once()
 					return &ur
 				}(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 			},
 			1,
 			1,
@@ -371,7 +372,7 @@ func TestInvitationManager_ListApprentice(t *testing.T) {
 					}, nil).Once()
 					return &ur
 				}(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 			},
 			10,
 			2,
@@ -402,7 +403,7 @@ func TestInvitationManager_ListApprentice(t *testing.T) {
 					}, nil).Once()
 					return &ur
 				}(),
-				tokenizer: NewTokenizer("foo"),
+				tokenizer: code.NewTokenizer("foo"),
 			},
 			1,
 			1,
