@@ -12,6 +12,12 @@ ENV GONOPROXY *.tagtic.cn
 ENV GOSUMDB sum.golang.google.cn
 ENV GOPRIVATE glab.tagtic.cn/**
 
+COPY go.mod .
+COPY go.sum .
+
+# Get dependancies - will also be cached if we won't change mod/sum
+RUN go mod download
+
 # Copy everything from the current directory to the PWD(Present Working Directory) inside the container
 COPY . .
 
