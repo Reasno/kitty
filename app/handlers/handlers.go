@@ -316,6 +316,9 @@ func (s appService) SoftDelete(ctx context.Context, in *pb.UserSoftDeleteRequest
 		Wechat: true,
 		Taobao: true,
 	}, in.Id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, kerr.NotFoundErr(err, msg.AlreadyDeleted)
+	}
 	if err != nil {
 		return nil, err
 	}
