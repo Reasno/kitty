@@ -442,7 +442,6 @@ func (s appService) unbindId(ctx context.Context, in *pb.UserUnbindRequest, id u
 		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
 	}
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	if in.Mobile {
