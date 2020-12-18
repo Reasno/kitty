@@ -31,4 +31,5 @@ const (
 	InvalidInviteTarget            = "不合法的邀请对象"
 	XTastAbnormally                = "任务服务繁忙，请稍后再试"
 	ReenteringCode                 = "不能重复填写邀请码"
+	AdminOnly                      = "当前操作需要管理员权限"
 )

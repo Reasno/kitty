@@ -178,6 +178,28 @@ func TestUserRepo_GetAll(t *testing.T) {
 	}
 }
 
+func TestUserRepo_Count(t *testing.T) {
+	setUp(t)
+	defer tearDown()
+
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil))
+	ctx := context.Background()
+	for i := 1; i < 5; i++ {
+		user := entity.User{Model: gorm.Model{ID: uint(i)}, UserName: "hello"}
+		_ = userRepo.Save(ctx, &user)
+	}
+	count, err := userRepo.Count(ctx, clause.Where{Exprs: []clause.Expression{clause.IN{
+		Column: "id",
+		Values: []interface{}{1, 2, 3, 4},
+	}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 4 {
+		t.Fatal("there should be four users")
+	}
+}
+
 func TestUniqueConstraint(t *testing.T) {
 	if !useMysql {
 		t.Skip("unique constraints tests must be run on mysql")

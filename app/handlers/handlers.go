@@ -23,6 +23,7 @@ import (
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -53,7 +54,8 @@ type UserRepository interface {
 	GetFromDevice(ctx context.Context, packageName, suuid string, device *entity.Device) (user *entity.User, err error)
 	Update(ctx context.Context, id uint, user entity.User) (newUser *entity.User, err error)
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
-	GetAll(ctx context.Context, where clause.Where) (user []entity.User, err error)
+	GetAll(ctx context.Context, where ...clause.Expression) (user []entity.User, err error)
+	Count(ctx context.Context, where ...clause.Expression) (total int64, err error)
 	Save(ctx context.Context, user *entity.User) error
 }
 
@@ -204,6 +206,38 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 
 }
 
+func (s appService) SoftDelete(ctx context.Context, in *pb.UserSoftDeleteRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.ClaimFromContext(ctx)
+	if in.Id != 0 && in.Id != claim.UserId {
+		// 删除别人的账号需要管理员权限
+		if claim.Audience != "admin" {
+			return nil, kerr.UnauthenticatedErr(errors.New("action requires admin privilege"), msg.AdminOnly)
+		}
+	}
+	if in.Id == 0 {
+		in.Id = claim.UserId
+	}
+	u, err := s.Unbind(ctx, &pb.UserUnbindRequest{
+		Mobile: true,
+		Wechat: true,
+		Taobao: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.ur.Update(ctx, uint(in.Id), entity.User{Model: gorm.Model{
+		DeletedAt: gorm.DeletedAt{
+			Time:  time.Now(),
+			Valid: true,
+		},
+	}})
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	u.Data.IsDeleted = true
+	return u, nil
+}
+
 func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.ClaimFromContext(ctx)
 
@@ -346,12 +380,12 @@ func (s appService) debug(err error) {
 		level.Debug(s.logger).Log("err", err)
 	}
 }
-
 func (s appService) error(err error) {
 	if err != nil {
 		level.Error(s.logger).Log("err", err)
 	}
 }
+
 func (s appService) warn(err error) {
 	if err != nil {
 		level.Warn(s.logger).Log("err", err)
@@ -596,7 +630,22 @@ func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchReques
 		Exprs: expressions,
 	}
 
-	users, err := s.ur.GetAll(ctx, c)
+	count, err := s.ur.Count(ctx, c)
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	if in.PerPage <= 0 {
+		in.PerPage = 20
+	}
+	if in.Page <= 0 {
+		in.Page = 1
+	}
+	limit := clause.Limit{
+		Limit:  int(in.PerPage),
+		Offset: int((in.Page - 1) * in.PerPage),
+	}
+
+	users, err := s.ur.GetAll(ctx, c, limit)
 	if errors.Is(err, repository.ErrRecordNotFound) {
 		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
 	}
@@ -612,6 +661,6 @@ func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchReques
 		tmp := s.toReply(&v).Data
 		resp.Data = append(resp.Data, tmp)
 	}
-
+	resp.Count = count
 	return &resp, nil
 }

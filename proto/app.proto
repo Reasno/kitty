@@ -130,6 +130,17 @@ service App {
       body: "*"
     };
   }
+
+  // 软删除用户接口。如果指定ID删除，需要使用专门的管理员JWT。
+  // 如果只删除当前JWT当中的用户，无需管理员权限，ID填0即可。
+  rpc SoftDelete (UserSoftDeleteRequest) returns (UserInfoReply) {
+    option (options.openapiv2_operation) = {
+      tags: "登录"
+    };
+    option (google.api.http) = {
+      delete: "/info/{id}"
+    };
+  }
 }
 
 
@@ -277,6 +288,7 @@ message UserInfo {
   TaobaoExtra taobao_extra = 11;
   string mobile = 12;
   string invite_code = 13;
+  bool is_deleted = 14;
 }
 
 message UserInfoReply {
@@ -291,6 +303,7 @@ message UserInfoBatchReply {
   int32 code = 1 [(gogoproto.jsontag) = "code"];
   repeated UserInfo data = 3;
   string msg = 4;
+  int64 count = 5;
 }
 
 
@@ -310,7 +323,8 @@ message UserInfoBatchRequest {
   int64 before = 6;
   string mobile = 7;
   string name = 8;
-
+  int32 perPage = 9;
+  int32 page = 10;
 }
 
 message UserInfoRequest {
@@ -355,3 +369,6 @@ message GenericReply {
   string msg = 3;
 }
 
+message UserSoftDeleteRequest {
+  uint64 id = 1;
+}

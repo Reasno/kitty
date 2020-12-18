@@ -81,6 +81,15 @@ func (m MonitoredAppService) Refresh(ctx context.Context, request *pb.UserRefres
 	return resp, err
 }
 
+func (m MonitoredAppService) SoftDelete(ctx context.Context, in *pb.UserSoftDeleteRequest) (*pb.UserInfoReply, error) {
+	resp, err := m.AppServer.SoftDelete(ctx, in)
+	if err != nil {
+		return resp, err
+	}
+	m.emitUser(ctx, resp)
+	return resp, err
+}
+
 func (m MonitoredAppService) emitUser(ctx context.Context, resp *pb.UserInfoReply) {
 	_ = m.userBus.Emit(ctx, resp.Data)
 }

@@ -17,6 +17,34 @@ type UserRepository struct {
 	mock.Mock
 }
 
+// Count provides a mock function with given fields: ctx, where
+func (_m *UserRepository) Count(ctx context.Context, where ...clause.Expression) (int64, error) {
+	_va := make([]interface{}, len(where))
+	for _i := range where {
+		_va[_i] = where[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 int64
+	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) int64); ok {
+		r0 = rf(ctx, where...)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, ...clause.Expression) error); ok {
+		r1 = rf(ctx, where...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Get provides a mock function with given fields: ctx, id
 func (_m *UserRepository) Get(ctx context.Context, id uint) (*entity.User, error) {
 	ret := _m.Called(ctx, id)
@@ -41,12 +69,19 @@ func (_m *UserRepository) Get(ctx context.Context, id uint) (*entity.User, error
 }
 
 // GetAll provides a mock function with given fields: ctx, where
-func (_m *UserRepository) GetAll(ctx context.Context, where clause.Where) ([]entity.User, error) {
-	ret := _m.Called(ctx, where)
+func (_m *UserRepository) GetAll(ctx context.Context, where ...clause.Expression) ([]entity.User, error) {
+	_va := make([]interface{}, len(where))
+	for _i := range where {
+		_va[_i] = where[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 []entity.User
-	if rf, ok := ret.Get(0).(func(context.Context, clause.Where) []entity.User); ok {
-		r0 = rf(ctx, where)
+	if rf, ok := ret.Get(0).(func(context.Context, ...clause.Expression) []entity.User); ok {
+		r0 = rf(ctx, where...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]entity.User)
@@ -54,8 +89,8 @@ func (_m *UserRepository) GetAll(ctx context.Context, where clause.Where) ([]ent
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, clause.Where) error); ok {
-		r1 = rf(ctx, where)
+	if rf, ok := ret.Get(1).(func(context.Context, ...clause.Expression) error); ok {
+		r1 = rf(ctx, where...)
 	} else {
 		r1 = ret.Error(1)
 	}

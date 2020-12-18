@@ -140,6 +140,19 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.AppServer, error) {
 		).Endpoint()
 	}
 
+	var softdeleteEndpoint endpoint.Endpoint
+	{
+		softdeleteEndpoint = grpctransport.NewClient(
+			conn,
+			"kitty.App",
+			"SoftDelete",
+			EncodeGRPCSoftDeleteRequest,
+			DecodeGRPCSoftDeleteResponse,
+			pb.UserInfoReply{},
+			clientOptions...,
+		).Endpoint()
+	}
+
 	return svc.Endpoints{
 		LoginEndpoint:        loginEndpoint,
 		GetCodeEndpoint:      getcodeEndpoint,
@@ -149,6 +162,7 @@ func New(conn *grpc.ClientConn, options ...ClientOption) (pb.AppServer, error) {
 		BindEndpoint:         bindEndpoint,
 		UnbindEndpoint:       unbindEndpoint,
 		RefreshEndpoint:      refreshEndpoint,
+		SoftDeleteEndpoint:   softdeleteEndpoint,
 	}, nil
 }
 
@@ -210,6 +224,13 @@ func DecodeGRPCRefreshResponse(_ context.Context, grpcReply interface{}) (interf
 	return reply, nil
 }
 
+// DecodeGRPCSoftDeleteResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC softdelete reply to a user-domain softdelete response. Primarily useful in a client.
+func DecodeGRPCSoftDeleteResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.UserInfoReply)
+	return reply, nil
+}
+
 // GRPC Client Encode
 
 // EncodeGRPCLoginRequest is a transport/grpc.EncodeRequestFunc that converts a
@@ -265,6 +286,13 @@ func EncodeGRPCUnbindRequest(_ context.Context, request interface{}) (interface{
 // user-domain refresh request to a gRPC refresh request. Primarily useful in a client.
 func EncodeGRPCRefreshRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.UserRefreshRequest)
+	return req, nil
+}
+
+// EncodeGRPCSoftDeleteRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain softdelete request to a gRPC softdelete request. Primarily useful in a client.
+func EncodeGRPCSoftDeleteRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.UserSoftDeleteRequest)
 	return req, nil
 }
 

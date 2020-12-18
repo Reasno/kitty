@@ -109,6 +109,13 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		EncodeHTTPGenericResponse,
 		serverOptions...,
 	))
+
+	m.Methods("DELETE").Path("/info/{id}").Handler(httptransport.NewServer(
+		endpoints.SoftDeleteEndpoint,
+		DecodeHTTPSoftDeleteZeroRequest,
+		EncodeHTTPGenericResponse,
+		serverOptions...,
+	))
 	return m
 }
 
@@ -414,6 +421,24 @@ func DecodeHTTPGetInfoBatchZeroRequest(_ context.Context, r *http.Request) (inte
 		req.Name = NameGetInfoBatch
 	}
 
+	if PerPageGetInfoBatchStrArr, ok := queryParams["perPage"]; ok {
+		PerPageGetInfoBatchStr := PerPageGetInfoBatchStrArr[0]
+		PerPageGetInfoBatch, err := strconv.ParseInt(PerPageGetInfoBatchStr, 10, 32)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting PerPageGetInfoBatch from query, queryParams: %v", queryParams))
+		}
+		req.PerPage = int32(PerPageGetInfoBatch)
+	}
+
+	if PageGetInfoBatchStrArr, ok := queryParams["page"]; ok {
+		PageGetInfoBatchStr := PageGetInfoBatchStrArr[0]
+		PageGetInfoBatch, err := strconv.ParseInt(PageGetInfoBatchStr, 10, 32)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting PageGetInfoBatch from query, queryParams: %v", queryParams))
+		}
+		req.Page = int32(PageGetInfoBatch)
+	}
+
 	return &req, err
 }
 
@@ -557,6 +582,49 @@ func DecodeHTTPRefreshZeroRequest(_ context.Context, r *http.Request) (interface
 
 	queryParams := r.URL.Query()
 	_ = queryParams
+
+	return &req, err
+}
+
+// DecodeHTTPSoftDeleteZeroRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded softdelete request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPSoftDeleteZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	defer r.Body.Close()
+	var req pb.UserSoftDeleteRequest
+	buf, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read body of http request")
+	}
+	if len(buf) > 0 {
+		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
+		unmarshaller := jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		}
+		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
+			const size = 8196
+			if len(buf) > size {
+				buf = buf[:size]
+			}
+			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
+				http.StatusBadRequest,
+				nil,
+			}
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := r.URL.Query()
+	_ = queryParams
+
+	IdSoftDeleteStr := pathParams["id"]
+	IdSoftDelete, err := strconv.ParseUint(IdSoftDeleteStr, 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting IdSoftDelete from path, pathParams: %v", pathParams))
+	}
+	req.Id = IdSoftDelete
 
 	return &req, err
 }

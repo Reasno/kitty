@@ -81,6 +81,20 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -210,6 +224,30 @@
         ],
         "tags": [
           "用户信息"
+        ]
+      },
+      "delete": {
+        "summary": "JWT Token续期，需要在每次升级系统或每次冷启动前调用，\n避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，\n后续请求务必请将老JWT替换为新JWT。",
+        "operationId": "App_SoftDelete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v2UserInfoReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "登录"
         ]
       }
     },
@@ -468,6 +506,9 @@
         },
         "invite_code": {
           "type": "string"
+        },
+        "is_deleted": {
+          "type": "boolean"
         }
       }
     },
@@ -486,6 +527,10 @@
         },
         "msg": {
           "type": "string"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64"
         }
       }
     },

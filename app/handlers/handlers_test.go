@@ -3,7 +3,9 @@ package handlers
 import (
 	"context"
 	"testing"
+	"time"
 
+	kitjwt "github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -12,6 +14,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	mc "glab.tagtic.cn/ad_gains/kitty/pkg/contract/mocks"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
+	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 	wm "glab.tagtic.cn/ad_gains/kitty/pkg/wechat/mocks"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
@@ -204,6 +207,69 @@ func TestAppService_GetInfo(t *testing.T) {
 	}
 }
 
+func TestAppService_SoftDelete(t *testing.T) {
+
+	cases := []struct {
+		name    string
+		service appService
+		in      pb.UserSoftDeleteRequest
+		out     pb.UserInfoReply
+	}{
+		{
+			"软删除",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					ur.On("Get", mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint) *entity.User {
+						return &entity.User{Mobile: ns("123"), PackageName: "foo", Model: gorm.Model{ID: id}, UserName: "foo"}
+					}, nil).Once()
+					ur.On("Save", mock.Anything, mock.Anything).Return(nil).Once()
+					ur.On("Update", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint, user entity.User) *entity.User {
+						assert.True(t, user.Model.DeletedAt.Valid)
+						return &entity.User{PackageName: "foo", Model: user.Model, UserName: "foo"}
+					}, nil).Once()
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					return cr
+				})(),
+				sender: &mc.SmsSender{},
+				wechat: &wm.Wechater{},
+			},
+
+			pb.UserSoftDeleteRequest{
+				Id: 1,
+			},
+			pb.UserInfoReply{
+				Code: 0,
+				Data: &pb.UserInfo{
+					UserName: "foo",
+				},
+			},
+		},
+	}
+	for _, c := range cases {
+		t.Parallel()
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			ctx := context.WithValue(context.Background(), kitjwt.JWTClaimsContextKey, jwt2.NewAdminClaim("test", time.Hour))
+			out, err := cc.service.SoftDelete(ctx, &cc.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if out.Code != cc.out.Code {
+				t.Fatalf("want %d, got %d", cc.out.Code, out.Code)
+			}
+			if out.Data.IsDeleted != true {
+				t.Fatalf("want %t, got %t", true, out.Data.IsDeleted)
+			}
+		})
+	}
+}
+
 func TestAppService_GetInfoBatch(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
@@ -219,9 +285,10 @@ func TestAppService_GetInfoBatch(t *testing.T) {
 				logger: log.NewNopLogger(),
 				ur: (func() UserRepository {
 					ur := &mocks.UserRepository{}
-					ur.On("GetAll", mock.Anything, mock.Anything).Return(func(ctx context.Context, where clause.Where) []entity.User {
+					ur.On("GetAll", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, where ...clause.Expression) []entity.User {
 						return []entity.User{{Mobile: ns("123"), PackageName: "foo", Model: gorm.Model{ID: 1}, UserName: "foo"}}
 					}, nil).Once()
+					ur.On("Count", mock.Anything, mock.Anything).Return(int64(1), nil).Once()
 					return ur
 				})(),
 				cr: (func() CodeRepository {

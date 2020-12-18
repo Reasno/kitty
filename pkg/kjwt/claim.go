@@ -38,6 +38,17 @@ func NewClaim(uid uint64, issuer, suuid, channel, versionCode, wechat, mobile, p
 	}
 }
 
+func NewAdminClaim(issuer string, ttl time.Duration) *Claim {
+	return &Claim{
+		StandardClaims: stdjwt.StandardClaims{
+			Audience:  "admin",
+			ExpiresAt: time.Now().Add(ttl).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			Issuer:    issuer,
+		},
+	}
+}
+
 func ClaimFromContext(ctx context.Context) *Claim {
 	if c, ok := ctx.Value(jwt.JWTClaimsContextKey).(*Claim); ok {
 		return c

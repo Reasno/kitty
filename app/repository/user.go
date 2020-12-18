@@ -163,15 +163,28 @@ func (r *UserRepo) Get(ctx context.Context, id uint) (*entity.User, error) {
 	return &u, nil
 }
 
-func (r *UserRepo) GetAll(ctx context.Context, where clause.Where) ([]entity.User, error) {
+func (r *UserRepo) GetAll(ctx context.Context, where ...clause.Expression) ([]entity.User, error) {
 	var (
 		u []entity.User
 	)
-	if err := r.db.WithContext(ctx).Clauses(where).Find(&u).Error; err != nil {
+	if err := r.db.WithContext(ctx).Clauses(where...).Find(&u).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, ErrRecordNotFound
 		}
 		return nil, errors.Wrap(err, emsg)
 	}
 	return u, nil
+}
+
+func (r *UserRepo) Count(ctx context.Context, where ...clause.Expression) (int64, error) {
+	var (
+		count int64
+	)
+	if err := r.db.WithContext(ctx).Model(&entity.User{}).Clauses(where...).Count(&count).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return 0, ErrRecordNotFound
+		}
+		return 0, errors.Wrap(err, emsg)
+	}
+	return count, nil
 }
