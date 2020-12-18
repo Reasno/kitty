@@ -323,8 +323,8 @@ message UserInfoBatchRequest {
   int64 before = 6;
   string mobile = 7;
   string name = 8;
-  int32 perPage = 9;
-  int32 page = 10;
+  int32 perPage = 9; // 每页返回记录数
+  int32 page = 10; // 页码。从1开始。
 }
 
 message UserInfoRequest {

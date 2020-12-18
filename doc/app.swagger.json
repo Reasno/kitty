@@ -227,7 +227,7 @@
         ]
       },
       "delete": {
-        "summary": "JWT Token续期，需要在每次升级系统或每次冷启动前调用，\n避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，\n后续请求务必请将老JWT替换为新JWT。",
+        "summary": "软删除用户接口。如果指定ID删除，需要使用专门的管理员JWT。\n如果只删除当前JWT当中的用户，无需管理员权限，ID填0即可。",
         "operationId": "App_SoftDelete",
         "responses": {
           "200": {

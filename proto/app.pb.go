@@ -1764,9 +1764,8 @@ type AppClient interface {
 	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
 	// 后续请求务必请将老JWT替换为新JWT。
 	Refresh(ctx context.Context, in *UserRefreshRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
-	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，
-	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
-	// 后续请求务必请将老JWT替换为新JWT。
+	// 软删除用户接口。如果指定ID删除，需要使用专门的管理员JWT。
+	// 如果只删除当前JWT当中的用户，无需管理员权限，ID填0即可。
 	SoftDelete(ctx context.Context, in *UserSoftDeleteRequest, opts ...grpc.CallOption) (*UserInfoReply, error)
 }
 
@@ -1882,9 +1881,8 @@ type AppServer interface {
 	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
 	// 后续请求务必请将老JWT替换为新JWT。
 	Refresh(context.Context, *UserRefreshRequest) (*UserInfoReply, error)
-	// JWT Token续期，需要在每次升级系统或每次冷启动前调用，
-	// 避免jwt中的信息与实际信息不一致。本接口会返回新的JWT，
-	// 后续请求务必请将老JWT替换为新JWT。
+	// 软删除用户接口。如果指定ID删除，需要使用专门的管理员JWT。
+	// 如果只删除当前JWT当中的用户，无需管理员权限，ID填0即可。
 	SoftDelete(context.Context, *UserSoftDeleteRequest) (*UserInfoReply, error)
 }
 
