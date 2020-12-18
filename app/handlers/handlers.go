@@ -188,6 +188,100 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	return reply, nil
 }
 
+func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchRequest) (*pb.UserInfoBatchReply, error) {
+	var expressions []clause.Expression
+	if len(in.Id) > 0 {
+		var ids []interface{}
+		for _, v := range in.Id {
+			ids = append(ids, uint(v))
+		}
+		expressions = append(expressions, clause.IN{
+			Column: "id",
+			Values: ids,
+		})
+	}
+	if len(in.InviteCode) > 0 {
+		var ids []interface{}
+		for _, v := range in.InviteCode {
+			t := code.NewTokenizer(s.conf.String("salt"))
+			id, _ := t.Decode(v)
+			ids = append(ids, id)
+		}
+		expressions = append(expressions, clause.IN{
+			Column: "id",
+			Values: ids,
+		})
+	}
+	if len(in.PackageName) > 0 {
+		expressions = append(expressions, clause.Eq{
+			Column: "package_name",
+			Value:  in.PackageName,
+		})
+	}
+	if in.After != 0 {
+		expressions = append(expressions, clause.Gt{
+			Column: "created_at",
+			Value:  time.Unix(in.After, 0),
+		})
+	}
+	if in.Before != 0 {
+		expressions = append(expressions, clause.Lt{
+			Column: "created_at",
+			Value:  time.Unix(in.After, 0),
+		})
+	}
+	if len(in.Name) != 0 {
+		expressions = append(expressions, clause.Like{
+			Column: "user_name",
+			Value:  "%" + in.Name + "%",
+		})
+	}
+	if len(in.Mobile) != 0 {
+		expressions = append(expressions, clause.Eq{
+			Column: "mobile",
+			Value:  in.Mobile,
+		})
+	}
+
+	c := clause.Where{
+		Exprs: expressions,
+	}
+
+	count, err := s.ur.Count(ctx, c)
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	if in.PerPage <= 0 {
+		in.PerPage = 20
+	}
+	if in.Page <= 0 {
+		in.Page = 1
+	}
+	limit := clause.Limit{
+		Limit:  int(in.PerPage),
+		Offset: int((in.Page - 1) * in.PerPage),
+	}
+
+	users, err := s.ur.GetAll(ctx, c, limit)
+	if errors.Is(err, repository.ErrRecordNotFound) {
+		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
+	}
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	var resp = pb.UserInfoBatchReply{
+		Code: 0,
+		Data: []*pb.UserInfo{},
+	}
+
+	for _, v := range users {
+		tmp := s.toReply(&v).Data
+		resp.Data = append(resp.Data, tmp)
+	}
+	resp.Count = count
+	return &resp, nil
+}
+
 func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.ClaimFromContext(ctx)
 	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
@@ -217,11 +311,11 @@ func (s appService) SoftDelete(ctx context.Context, in *pb.UserSoftDeleteRequest
 	if in.Id == 0 {
 		in.Id = claim.UserId
 	}
-	u, err := s.Unbind(ctx, &pb.UserUnbindRequest{
+	u, err := s.unbindId(ctx, &pb.UserUnbindRequest{
 		Mobile: true,
 		Wechat: true,
 		Taobao: true,
-	})
+	}, in.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +430,11 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 
 func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.ClaimFromContext(ctx)
-	user, err := s.ur.Get(ctx, uint(claim.UserId))
+	return s.unbindId(ctx, in, claim.UserId)
+}
+
+func (s appService) unbindId(ctx context.Context, in *pb.UserUnbindRequest, id uint64) (*pb.UserInfoReply, error) {
+	user, err := s.ur.Get(ctx, uint(id))
 	if err != nil {
 		return nil, dbErr(err)
 	}
@@ -374,12 +472,12 @@ func (s appService) getToken(param *tokenParam) (string, error) {
 	token.Header["kid"] = s.conf.String("security.kid")
 	return token.SignedString([]byte(s.conf.String("security.key")))
 }
-
 func (s appService) debug(err error) {
 	if err != nil {
 		level.Debug(s.logger).Log("err", err)
 	}
 }
+
 func (s appService) error(err error) {
 	if err != nil {
 		level.Error(s.logger).Log("err", err)
@@ -572,98 +670,4 @@ func (s appService) toReply(user *entity.User) *pb.UserInfoReply {
 			InviteCode:   inviteCode,
 		},
 	}
-}
-
-func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchRequest) (*pb.UserInfoBatchReply, error) {
-	var expressions []clause.Expression
-	if len(in.Id) > 0 {
-		var ids []interface{}
-		for _, v := range in.Id {
-			ids = append(ids, uint(v))
-		}
-		expressions = append(expressions, clause.IN{
-			Column: "id",
-			Values: ids,
-		})
-	}
-	if len(in.InviteCode) > 0 {
-		var ids []interface{}
-		for _, v := range in.InviteCode {
-			t := code.NewTokenizer(s.conf.String("salt"))
-			id, _ := t.Decode(v)
-			ids = append(ids, id)
-		}
-		expressions = append(expressions, clause.IN{
-			Column: "id",
-			Values: ids,
-		})
-	}
-	if len(in.PackageName) > 0 {
-		expressions = append(expressions, clause.Eq{
-			Column: "package_name",
-			Value:  in.PackageName,
-		})
-	}
-	if in.After != 0 {
-		expressions = append(expressions, clause.Gt{
-			Column: "created_at",
-			Value:  time.Unix(in.After, 0),
-		})
-	}
-	if in.Before != 0 {
-		expressions = append(expressions, clause.Lt{
-			Column: "created_at",
-			Value:  time.Unix(in.After, 0),
-		})
-	}
-	if len(in.Name) != 0 {
-		expressions = append(expressions, clause.Like{
-			Column: "user_name",
-			Value:  "%" + in.Name + "%",
-		})
-	}
-	if len(in.Mobile) != 0 {
-		expressions = append(expressions, clause.Eq{
-			Column: "mobile",
-			Value:  in.Mobile,
-		})
-	}
-
-	c := clause.Where{
-		Exprs: expressions,
-	}
-
-	count, err := s.ur.Count(ctx, c)
-	if err != nil {
-		return nil, dbErr(err)
-	}
-	if in.PerPage <= 0 {
-		in.PerPage = 20
-	}
-	if in.Page <= 0 {
-		in.Page = 1
-	}
-	limit := clause.Limit{
-		Limit:  int(in.PerPage),
-		Offset: int((in.Page - 1) * in.PerPage),
-	}
-
-	users, err := s.ur.GetAll(ctx, c, limit)
-	if errors.Is(err, repository.ErrRecordNotFound) {
-		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
-	}
-	if err != nil {
-		return nil, dbErr(err)
-	}
-	var resp = pb.UserInfoBatchReply{
-		Code: 0,
-		Data: []*pb.UserInfo{},
-	}
-
-	for _, v := range users {
-		tmp := s.toReply(&v).Data
-		resp.Data = append(resp.Data, tmp)
-	}
-	resp.Count = count
-	return &resp, nil
 }
