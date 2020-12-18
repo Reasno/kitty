@@ -316,7 +316,7 @@ func (s appService) SoftDelete(ctx context.Context, in *pb.UserSoftDeleteRequest
 		Wechat: true,
 		Taobao: true,
 	}, in.Id)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, repository.ErrRecordNotFound) {
 		return nil, kerr.NotFoundErr(err, msg.AlreadyDeleted)
 	}
 	if err != nil {
@@ -328,7 +328,7 @@ func (s appService) SoftDelete(ctx context.Context, in *pb.UserSoftDeleteRequest
 			Valid: true,
 		},
 	}})
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, repository.ErrRecordNotFound) {
 		return nil, dbErr(err)
 	}
 	u.Data.IsDeleted = true
@@ -438,11 +438,12 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 
 func (s appService) unbindId(ctx context.Context, in *pb.UserUnbindRequest, id uint64) (*pb.UserInfoReply, error) {
 	user, err := s.ur.Get(ctx, uint(id))
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, repository.ErrRecordNotFound) {
 		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
 	}
 	if err != nil {
-		return nil, dbErr(err)
+		fmt.Println(err)
+		return nil, err
 	}
 	if in.Mobile {
 		user.Mobile = sql.NullString{}
