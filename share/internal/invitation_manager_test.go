@@ -309,7 +309,23 @@ func TestInvitationManager_GetUrl(t *testing.T) {
 				Channel:     "foo",
 				VersionCode: "1000",
 			}),
-			"http://www.donews.com?channel=foo&invite_code=87V6lEZJvN&package_name=com.donews.www&user_id=100&version_code=1000",
+			"http://www.donews.com?channel=foo_share&invite_code=87V6lEZJvN&package_name=com.donews.www&user_id=100&version_code=1000",
+		},
+		{
+			"二次分享拼接URL",
+			InvitationManager{
+				conf:      getConf(),
+				rr:        nil,
+				tokenizer: code.NewTokenizer("foo"),
+				logger:    log.NewNopLogger(),
+			},
+			context.WithValue(context.Background(), jwt.JWTClaimsContextKey, &kjwt.Claim{
+				PackageName: "com.donews.www",
+				UserId:      100,
+				Channel:     "foo_share",
+				VersionCode: "1000",
+			}),
+			"http://www.donews.com?channel=foo_share&invite_code=87V6lEZJvN&package_name=com.donews.www&user_id=100&version_code=1000",
 		},
 	}
 	for _, c := range cases {
