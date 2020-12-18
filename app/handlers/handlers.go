@@ -614,6 +614,10 @@ func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 		u.HeadImg = "https://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png"
 	}
 
+	if u.HeadImg == "http://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png" {
+		u.HeadImg = "https://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png"
+	}
+
 	if hasExtra {
 		err = s.ur.Save(ctx, u)
 		if err != nil {
