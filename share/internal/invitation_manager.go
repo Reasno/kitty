@@ -200,7 +200,7 @@ func (im *InvitationManager) GetUrl(ctx context.Context, claim *jwt2.Claim) stri
 func getSteps(names []OrientationEvent) []entity.OrientationStep {
 	var steps []entity.OrientationStep
 	for _, s := range names {
-		steps = append(steps, entity.OrientationStep{EventId: s.Id, EventType: s.Type})
+		steps = append(steps, entity.OrientationStep{EventId: s.Id, EventType: s.Type, ChineseName: s.ChineseName})
 	}
 	return steps
 }
