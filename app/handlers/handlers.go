@@ -678,6 +678,7 @@ func (s appService) toReply(user *entity.User) *pb.UserInfoReply {
 			WechatExtra:  &wechatExtra,
 			TaobaoExtra:  &taobaoExtra,
 			InviteCode:   inviteCode,
+			IsInvited:    user.InviteCode != "",
 		},
 	}
 }
