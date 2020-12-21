@@ -36,7 +36,7 @@ type RelationRepository interface {
 type OrientationEvent struct {
 	Id          int    `yaml:"id"`
 	Type        string `yaml:"type"`
-	ChineseName string `yaml:"chinese_name"`
+	ChineseName string `yaml:"chineseName"`
 }
 
 type ReceivedEvent struct {
@@ -45,13 +45,13 @@ type ReceivedEvent struct {
 }
 
 type ShareConfig struct {
-	OrientationEvents []OrientationEvent `yaml:"orientation_events"`
+	OrientationEvents []OrientationEvent `yaml:"orientationEvents"`
 	Url               string             `yaml:"url"`
 	Reward            struct {
 		Level1 int `yaml:"level1"`
 		Level2 int `yaml:"level2"`
 	} `yaml:"reward"`
-	TaskId string `yaml:"task_id"`
+	TaskId string `yaml:"taskId"`
 }
 
 func (s *ShareConfig) reward(depth int) int {
