@@ -226,7 +226,8 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 		{
 			"正常前进",
 			InvitationManager{
-				conf: getConf(),
+				logger: log.NewNopLogger(),
+				conf:   getConf(),
 				rr: (func() RelationRepository {
 					ur := &mocks.RelationRepository{}
 					ur.On("UpdateRelations", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, apprentice *entity.User, existingRelationCallback func(relations []entity.Relation) error) error {
@@ -268,6 +269,7 @@ func TestInvitationManager_AdvanceStep(t *testing.T) {
 					return ur
 				})(),
 				tokenizer: code.NewTokenizer("foo"),
+				logger:    log.NewNopLogger(),
 			},
 
 			1,
