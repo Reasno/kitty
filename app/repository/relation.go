@@ -24,7 +24,7 @@ func (r *RelationRepo) QueryRelations(ctx context.Context, condition entity.Rela
 		Preload("Master").
 		Preload("OrientationSteps").
 		Where(&condition).
-		Order("reward_claimed desc, orientation_completed, created_at desc").
+		Order("reward_claimed, orientation_completed desc, created_at desc").
 		Find(&relations).Error
 
 	return relations, err
