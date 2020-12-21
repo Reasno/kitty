@@ -1,8 +1,12 @@
-package internal
+package invitecode
 
 import (
+	"errors"
+
 	"github.com/speps/go-hashids"
 )
+
+var ErrFailedToDecodeToken = errors.New("cannot decode token")
 
 type Tokenizer struct {
 	h *hashids.HashID

@@ -83,6 +83,7 @@ service App {
       tags: "用户信息"
     };
   }
+
   // 更新个人信息
   // 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
   rpc UpdateInfo (UserInfoUpdateRequest) returns (UserInfoReply) {
@@ -127,6 +128,17 @@ service App {
     option (google.api.http) = {
       post: "/refresh"
       body: "*"
+    };
+  }
+
+  // 软删除用户接口。如果指定ID删除，需要使用专门的管理员JWT。
+  // 如果只删除当前JWT当中的用户，无需管理员权限，ID填0即可。
+  rpc SoftDelete (UserSoftDeleteRequest) returns (UserInfoReply) {
+    option (options.openapiv2_operation) = {
+      tags: "登录"
+    };
+    option (google.api.http) = {
+      delete: "/info/{id}"
     };
   }
 }
@@ -275,6 +287,8 @@ message UserInfo {
   WechatExtra wechat_extra = 10;
   TaobaoExtra taobao_extra = 11;
   string mobile = 12;
+  string invite_code = 13;
+  bool is_deleted = 14;
 }
 
 message UserInfoReply {
@@ -289,6 +303,7 @@ message UserInfoBatchReply {
   int32 code = 1 [(gogoproto.jsontag) = "code"];
   repeated UserInfo data = 3;
   string msg = 4;
+  int64 count = 5;
 }
 
 
@@ -302,10 +317,14 @@ message GetCodeRequest {
 
 message UserInfoBatchRequest {
   repeated uint64 id = 1;
-  // 同时获得微信相关信息
-  bool wechat = 2;
-  // 同时获得淘宝相关信息
-  bool taobao = 3;
+  repeated string invite_code = 2;
+  string packageName = 4;
+  int64 after = 5;
+  int64 before = 6;
+  string mobile = 7;
+  string name = 8;
+  int32 perPage = 9; // 每页返回记录数
+  int32 page = 10; // 页码。从1开始。
 }
 
 message UserInfoRequest {
@@ -350,3 +369,6 @@ message GenericReply {
   string msg = 3;
 }
 
+message UserSoftDeleteRequest {
+  uint64 id = 1;
+}

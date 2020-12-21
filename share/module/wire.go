@@ -9,6 +9,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
 	"glab.tagtic.cn/ad_gains/kitty/share/handlers"
@@ -38,7 +39,7 @@ var ShareServiceSet = wire.NewSet(
 	wire.Bind(new(handlers.InvitationManager), new(*internal.InvitationManagerFacade)),
 	wire.Bind(new(contract.Uploader), new(*ots3.Manager)),
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
-	wire.Bind(new(internal.EncodeDecoder), new(*internal.Tokenizer)),
+	wire.Bind(new(internal.EncodeDecoder), new(*invitecode.Tokenizer)),
 )
 
 func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {

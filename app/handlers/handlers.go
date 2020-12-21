@@ -18,10 +18,13 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/app/msg"
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	code "glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type appService struct {
@@ -51,7 +54,8 @@ type UserRepository interface {
 	GetFromDevice(ctx context.Context, packageName, suuid string, device *entity.Device) (user *entity.User, err error)
 	Update(ctx context.Context, id uint, user entity.User) (newUser *entity.User, err error)
 	Get(ctx context.Context, id uint) (user *entity.User, err error)
-	GetAll(ctx context.Context, ids ...uint) (user []entity.User, err error)
+	GetAll(ctx context.Context, where ...clause.Expression) (user []entity.User, err error)
+	Count(ctx context.Context, where ...clause.Expression) (total int64, err error)
 	Save(ctx context.Context, user *entity.User) error
 }
 
@@ -92,7 +96,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 
 	// 拼装返回结果
-	var resp = toReply(u)
+	var resp = s.toReply(u)
 	resp.Data.Token = tokenString
 
 	return resp, nil
@@ -128,7 +132,7 @@ func (s appService) GetInfo(ctx context.Context, in *pb.UserInfoRequest) (*pb.Us
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	var resp = toReply(u)
+	var resp = s.toReply(u)
 
 	if !in.Taobao {
 		resp.Data.TaobaoExtra = nil
@@ -166,7 +170,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		return nil, dbErr(err)
 	}
 
-	reply := toReply(u)
+	reply := s.toReply(u)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(u.ID),
 		u.CommonSUUID,
@@ -184,6 +188,100 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 	return reply, nil
 }
 
+func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchRequest) (*pb.UserInfoBatchReply, error) {
+	var expressions []clause.Expression
+	if len(in.Id) > 0 {
+		var ids []interface{}
+		for _, v := range in.Id {
+			ids = append(ids, uint(v))
+		}
+		expressions = append(expressions, clause.IN{
+			Column: "id",
+			Values: ids,
+		})
+	}
+	if len(in.InviteCode) > 0 {
+		var ids []interface{}
+		for _, v := range in.InviteCode {
+			t := code.NewTokenizer(s.conf.String("salt"))
+			id, _ := t.Decode(v)
+			ids = append(ids, id)
+		}
+		expressions = append(expressions, clause.IN{
+			Column: "id",
+			Values: ids,
+		})
+	}
+	if len(in.PackageName) > 0 {
+		expressions = append(expressions, clause.Eq{
+			Column: "package_name",
+			Value:  in.PackageName,
+		})
+	}
+	if in.After != 0 {
+		expressions = append(expressions, clause.Gt{
+			Column: "created_at",
+			Value:  time.Unix(in.After, 0),
+		})
+	}
+	if in.Before != 0 {
+		expressions = append(expressions, clause.Lt{
+			Column: "created_at",
+			Value:  time.Unix(in.After, 0),
+		})
+	}
+	if len(in.Name) != 0 {
+		expressions = append(expressions, clause.Like{
+			Column: "user_name",
+			Value:  "%" + in.Name + "%",
+		})
+	}
+	if len(in.Mobile) != 0 {
+		expressions = append(expressions, clause.Eq{
+			Column: "mobile",
+			Value:  in.Mobile,
+		})
+	}
+
+	c := clause.Where{
+		Exprs: expressions,
+	}
+
+	count, err := s.ur.Count(ctx, c)
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	if in.PerPage <= 0 {
+		in.PerPage = 20
+	}
+	if in.Page <= 0 {
+		in.Page = 1
+	}
+	limit := clause.Limit{
+		Limit:  int(in.PerPage),
+		Offset: int((in.Page - 1) * in.PerPage),
+	}
+
+	users, err := s.ur.GetAll(ctx, c, limit)
+	if errors.Is(err, repository.ErrRecordNotFound) {
+		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
+	}
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	var resp = pb.UserInfoBatchReply{
+		Code: 0,
+		Data: []*pb.UserInfo{},
+	}
+
+	for _, v := range users {
+		tmp := s.toReply(&v).Data
+		resp.Data = append(resp.Data, tmp)
+	}
+	resp.Count = count
+	return &resp, nil
+}
+
 func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.ClaimFromContext(ctx)
 	u, err := s.ur.Update(ctx, uint(claim.UserId), entity.User{
@@ -197,9 +295,44 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 		return nil, dbErr(err)
 	}
 
-	var resp = toReply(u)
+	var resp = s.toReply(u)
 	return resp, nil
 
+}
+
+func (s appService) SoftDelete(ctx context.Context, in *pb.UserSoftDeleteRequest) (*pb.UserInfoReply, error) {
+	claim := kittyjwt.ClaimFromContext(ctx)
+	if in.Id != 0 && in.Id != claim.UserId {
+		// 删除别人的账号需要管理员权限
+		if claim.Audience != "admin" {
+			return nil, kerr.UnauthenticatedErr(errors.New("action requires admin privilege"), msg.AdminOnly)
+		}
+	}
+	if in.Id == 0 {
+		in.Id = claim.UserId
+	}
+	u, err := s.unbindId(ctx, &pb.UserUnbindRequest{
+		Mobile: true,
+		Wechat: true,
+		Taobao: true,
+	}, in.Id)
+	if errors.Is(err, repository.ErrRecordNotFound) {
+		return nil, kerr.NotFoundErr(err, msg.AlreadyDeleted)
+	}
+	if err != nil {
+		return nil, err
+	}
+	_, err = s.ur.Update(ctx, uint(in.Id), entity.User{Model: gorm.Model{
+		DeletedAt: gorm.DeletedAt{
+			Time:  time.Now(),
+			Valid: true,
+		},
+	}})
+	if err != nil && !errors.Is(err, repository.ErrRecordNotFound) {
+		return nil, dbErr(err)
+	}
+	u.Data.IsDeleted = true
+	return u, nil
 }
 
 func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserInfoReply, error) {
@@ -280,7 +413,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 获取Token
-	reply := toReply(newUser)
+	reply := s.toReply(newUser)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(newUser.ID),
 		newUser.CommonSUUID,
@@ -300,9 +433,16 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 
 func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
 	claim := kittyjwt.ClaimFromContext(ctx)
-	user, err := s.ur.Get(ctx, uint(claim.UserId))
+	return s.unbindId(ctx, in, claim.UserId)
+}
+
+func (s appService) unbindId(ctx context.Context, in *pb.UserUnbindRequest, id uint64) (*pb.UserInfoReply, error) {
+	user, err := s.ur.Get(ctx, uint(id))
+	if errors.Is(err, repository.ErrRecordNotFound) {
+		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
+	}
 	if err != nil {
-		return nil, dbErr(err)
+		return nil, err
 	}
 	if in.Mobile {
 		user.Mobile = sql.NullString{}
@@ -321,7 +461,7 @@ func (s appService) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.U
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	var resp = toReply(user)
+	var resp = s.toReply(user)
 	return resp, nil
 }
 
@@ -338,7 +478,6 @@ func (s appService) getToken(param *tokenParam) (string, error) {
 	token.Header["kid"] = s.conf.String("security.kid")
 	return token.SignedString([]byte(s.conf.String("security.key")))
 }
-
 func (s appService) debug(err error) {
 	if err != nil {
 		level.Debug(s.logger).Log("err", err)
@@ -350,6 +489,7 @@ func (s appService) error(err error) {
 		level.Error(s.logger).Log("err", err)
 	}
 }
+
 func (s appService) warn(err error) {
 	if err != nil {
 		level.Warn(s.logger).Log("err", err)
@@ -470,6 +610,13 @@ func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 		u.VersionCode = in.VersionCode
 		hasExtra = true
 	}
+	if u.HeadImg == "" {
+		u.HeadImg = "https://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png"
+	}
+
+	if u.HeadImg == "http://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png" {
+		u.HeadImg = "https://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png"
+	}
 
 	if hasExtra {
 		err = s.ur.Save(ctx, u)
@@ -508,11 +655,13 @@ func redact(mobile string) string {
 	return mobile
 }
 
-func toReply(user *entity.User) *pb.UserInfoReply {
+func (s appService) toReply(user *entity.User) *pb.UserInfoReply {
 	var wechatExtra pb.WechatExtra
 	_ = wechatExtra.Unmarshal(user.WechatExtra)
 	var taobaoExtra pb.TaobaoExtra
 	_ = taobaoExtra.Unmarshal(user.TaobaoExtra)
+	var tokenizer = code.NewTokenizer(s.conf.String("salt"))
+	inviteCode, _ := tokenizer.Encode(user.ID)
 	return &pb.UserInfoReply{
 		Code:    0,
 		Message: "",
@@ -528,37 +677,7 @@ func toReply(user *entity.User) *pb.UserInfoReply {
 			IsNew:        user.IsNew,
 			WechatExtra:  &wechatExtra,
 			TaobaoExtra:  &taobaoExtra,
+			InviteCode:   inviteCode,
 		},
 	}
-}
-
-func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchRequest) (*pb.UserInfoBatchReply, error) {
-	var args []uint
-	for _, v := range in.Id {
-		args = append(args, uint(v))
-	}
-	users, err := s.ur.GetAll(ctx, args...)
-	if errors.Is(err, repository.ErrRecordNotFound) {
-		return nil, kerr.NotFoundErr(err, msg.ErrorRecordNotFound)
-	}
-	if err != nil {
-		return nil, dbErr(err)
-	}
-	var resp = pb.UserInfoBatchReply{
-		Code: 0,
-		Data: []*pb.UserInfo{},
-	}
-
-	for _, v := range users {
-		tmp := toReply(&v).Data
-		if !in.Taobao {
-			tmp.TaobaoExtra = nil
-		}
-		if !in.Wechat {
-			tmp.WechatExtra = nil
-		}
-		resp.Data = append(resp.Data, tmp)
-	}
-
-	return &resp, nil
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -35,7 +36,7 @@ type RelationRepository interface {
 type OrientationEvent struct {
 	Id          int    `yaml:"id"`
 	Type        string `yaml:"type"`
-	ChineseName string `yaml:"chineseName"`
+	ChineseName string `yaml:"chinese_name"`
 }
 
 type ReceivedEvent struct {
@@ -183,7 +184,11 @@ func (im *InvitationManager) GetToken(_ context.Context, id uint) string {
 func (im *InvitationManager) GetUrl(ctx context.Context, claim *jwt2.Claim) string {
 	args := url.Values{}
 	args.Add("user_id", strconv.FormatUint(claim.UserId, 10))
-	args.Add("channel", claim.Channel)
+	channel := claim.Channel
+	if !strings.HasSuffix(channel, "_share") {
+		channel = fmt.Sprintf("%s_share", channel)
+	}
+	args.Add("channel", channel)
 	args.Add("version_code", claim.VersionCode)
 	args.Add("package_name", claim.PackageName)
 	args.Add("invite_code", im.GetToken(ctx, uint(claim.UserId)))

@@ -41,18 +41,60 @@
             "collectionFormat": "multi"
           },
           {
-            "name": "wechat",
-            "description": "同时获得微信相关信息.",
+            "name": "invite_code",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
           },
           {
-            "name": "taobao",
-            "description": "同时获得淘宝相关信息.",
+            "name": "packageName",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "string"
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "mobile",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "tags": [
@@ -182,6 +224,30 @@
         ],
         "tags": [
           "用户信息"
+        ]
+      },
+      "delete": {
+        "summary": "软删除用户接口。如果指定ID删除，需要使用专门的管理员JWT。\n如果只删除当前JWT当中的用户，无需管理员权限，ID填0即可。",
+        "operationId": "App_SoftDelete",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v2UserInfoReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "登录"
         ]
       }
     },
@@ -437,6 +503,12 @@
         },
         "mobile": {
           "type": "string"
+        },
+        "invite_code": {
+          "type": "string"
+        },
+        "is_deleted": {
+          "type": "boolean"
         }
       }
     },
@@ -455,6 +527,10 @@
         },
         "msg": {
           "type": "string"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64"
         }
       }
     },
