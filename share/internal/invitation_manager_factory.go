@@ -23,9 +23,9 @@ func (i *InvitationManagerFactory) NewManager(conf contract.ConfigReader) *Invit
 			conf.Int("reward.level1"),
 			conf.Int("reward.level2"),
 		},
-		TaskId: conf.String("task_id"),
+		TaskId: conf.String("taskId"),
 	}
-	err := conf.Unmarshal("orientation_events", &sc.OrientationEvents)
+	err := conf.Unmarshal("orientationEvents", &sc.OrientationEvents)
 	if err != nil {
 		level.Warn(i.Logger).Log("err", err.Error())
 	}
