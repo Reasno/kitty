@@ -145,6 +145,7 @@ func (im *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint
 		level.Info(im.logger).Log("msg", fmt.Sprintf("invalid event %+v, want %+v", event, im.conf.OrientationEvents))
 		return nil
 	}
+	level.Info(im.logger).Log("msg", fmt.Sprintf("valid event received %+v", event))
 
 	apprentice := user(uint(apprenticeId))
 
