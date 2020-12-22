@@ -12,7 +12,7 @@ import (
 // User describes a user
 type User struct {
 	gorm.Model
-	UserName      string         `json:"user_name" gorm:"default:游客"`
+	UserName      string         `json:"user_name" gorm:"default:游客;type:varchar(30)"`
 	WechatOpenId  sql.NullString `json:"wechat_openid" gorm:"type:varchar(255);uniqueIndex:wechat_openid_index"`
 	WechatUnionId sql.NullString `json:"wechat_unionid"`
 	HeadImg       string         `json:"head_img" gorm:"default:http://ad-static-xg.tagtic.cn/ad-material/file/0b8f18e1e666474291174ba316cccb51.png"`

@@ -178,7 +178,9 @@ func (im *InvitationManager) ListApprentices(ctx context.Context, masterId uint6
 
 func (im *InvitationManager) GetToken(_ context.Context, id uint) string {
 	value, err := im.tokenizer.Encode(id)
-	_ = level.Warn(im.logger).Log("err", err)
+	if err != nil {
+		_ = level.Warn(im.logger).Log("err", err)
+	}
 	return value
 }
 

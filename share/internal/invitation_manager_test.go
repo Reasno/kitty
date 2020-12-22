@@ -3,8 +3,9 @@ package internal
 import (
 	"context"
 	"errors"
-	"github.com/go-kit/kit/log"
 	"testing"
+
+	"github.com/go-kit/kit/log"
 
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/stretchr/testify/assert"
@@ -92,6 +93,16 @@ func TestInvitationManager_AddToken(t *testing.T) {
 
 func TestInvitationManager_ClaimReward(t *testing.T) {
 	t.Parallel()
+	rels := []entity.Relation{{
+		MasterID:             1,
+		ApprenticeID:         2,
+		Master:               user(1),
+		Apprentice:           user(2),
+		Depth:                1,
+		OrientationCompleted: true,
+		OrientationSteps:     nil,
+		RewardClaimed:        false,
+	}}
 	cases := []struct {
 		name         string
 		service      InvitationManager
@@ -106,16 +117,7 @@ func TestInvitationManager_ClaimReward(t *testing.T) {
 				rr: (func() RelationRepository {
 					ur := &mocks.RelationRepository{}
 					ur.On("UpdateRelations", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, apprentice *entity.User, existingRelationCallback func(relations []entity.Relation) error) error {
-						return existingRelationCallback([]entity.Relation{{
-							MasterID:             1,
-							ApprenticeID:         2,
-							Master:               user(1),
-							Apprentice:           user(2),
-							Depth:                1,
-							OrientationCompleted: true,
-							OrientationSteps:     nil,
-							RewardClaimed:        false,
-						}})
+						return existingRelationCallback(rels)
 					}).Once()
 					return ur
 				})(),
@@ -210,6 +212,10 @@ func TestInvitationManager_ClaimReward(t *testing.T) {
 		t.Run(cc.name, func(t *testing.T) {
 			err := cc.service.ClaimReward(context.Background(), cc.masterId, cc.apprenticeId)
 			assert.True(t, errors.Is(err, cc.out))
+			if err == nil {
+				assert.True(t, rels[0].RewardClaimed)
+			}
+
 		})
 	}
 }
