@@ -33,12 +33,12 @@ type XTaskResponse struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
 	Data struct {
-		Icon         string `json:"icon"`
-		Name         string `json:"name"`
-		CurrentScore int    `json:"current_score"`
-		TodayScore   int    `json:"today_score"`
-		TotalScore   int    `json:"total_score"`
-		Money        string `json:"money"`
+		Icon         string  `json:"icon"`
+		Name         string  `json:"name"`
+		CurrentScore int     `json:"current_score"`
+		TodayScore   int     `json:"today_score"`
+		TotalScore   int     `json:"total_score"`
+		Money        float32 `json:"money"`
 	} `json:"data"`
 }
 
