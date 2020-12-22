@@ -113,15 +113,15 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 	apprentice := user(uint(apprenticeId))
 
 	return im.rr.UpdateRelations(ctx, &apprentice, func(relations []entity.Relation) error {
-		for _, rel := range relations {
-			if rel.MasterID == uint(masterId) {
+		for i, _ := range relations {
+			if relations[i].MasterID == uint(masterId) {
 
-				if err := rel.ClaimReward(); err != nil {
+				if err := relations[i].ClaimReward(); err != nil {
 					return err
 				} else {
 					resp, err := im.xtaskClient.Request(ctx, &XTaskRequest{
 						ScoreDesc:  "邀请好友获得奖励",
-						ScoreValue: im.conf.reward(rel.Depth),
+						ScoreValue: im.conf.reward(relations[i].Depth),
 						TaskId:     im.conf.TaskId,
 						UniqueId:   xid.New().String(),
 					})
