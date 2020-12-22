@@ -220,5 +220,20 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 				return db.Migrator().AlterColumn(&User{}, "HeadImg")
 			},
 		},
+		{
+			ID: "202012220100",
+			Migrate: func(db *gorm.DB) error {
+				type User struct {
+					UserName string `json:"user_name" gorm:"default:游客;type:varchar(30)"`
+				}
+				return db.Migrator().AlterColumn(&User{}, "UserName")
+			},
+			Rollback: func(db *gorm.DB) error {
+				type User struct {
+					UserName string `json:"user_name" gorm:"default:游客"`
+				}
+				return db.Migrator().AlterColumn(&User{}, "UserName")
+			},
+		},
 	})
 }
