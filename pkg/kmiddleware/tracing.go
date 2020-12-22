@@ -46,6 +46,8 @@ func TraceConsumer(tracer stdtracing.Tracer, operationName string, kind ext.Span
 				ext.Error.Set(serverSpan, true)
 				serverSpan.LogKV("error", err.Error())
 			}
+			serverSpan.LogKV("request", request)
+			serverSpan.LogKV("response", resp)
 			return resp, err
 		}
 	}
