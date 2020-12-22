@@ -32,7 +32,7 @@ func (k *KafkaFactory) MakeHandler(topic string) Handler {
 		Addr:        kafka.TCP(k.brokers...),
 		Topic:       topic,
 		Balancer:    &kafka.LeastBytes{},
-		Logger:      klog.KafkaLogAdapter{Logging: level.Debug(k.logger)},
+		Logger:      klog.KafkaLogAdapter{Logging: log.NewNopLogger()},
 		ErrorLogger: klog.KafkaLogAdapter{Logging: level.Warn(k.logger)},
 		BatchSize:   1,
 	}

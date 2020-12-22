@@ -21,6 +21,7 @@ func NewLoggingMiddleware(logger log.Logger, printTrace bool) endpoint.Middlewar
 					fmt.Printf("\n%+v\n\n", stacktracer.StackTrace())
 				}
 			}
+			l.Log("request", fmt.Sprintf("%+v", request), "response", fmt.Sprintf("%+v", response))
 			return response, err
 		}
 	}
