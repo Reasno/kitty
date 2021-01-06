@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"gorm.io/gorm"

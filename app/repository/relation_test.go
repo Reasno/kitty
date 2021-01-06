@@ -328,4 +328,11 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 			assert.Equal(t, true, rel.OrientationCompleted)
 		})
 	}
+
+	var rel entity.Relation
+	db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", 2, 4)
+
+	fmt.Printf("%+v\n", rel)
+	assert.Equal(t, "foo", rel.OrientationSteps[0].EventType)
+	assert.Equal(t, "bar", rel.OrientationSteps[1].EventType)
 }
