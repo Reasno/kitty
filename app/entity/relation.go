@@ -94,7 +94,9 @@ func (r *Relation) ClaimReward() error {
 func (r *Relation) Connect(grandMaster *User, descendants []Relation) (addition []Relation, err error) {
 	newRelations := []Relation{*r}
 	if grandMaster != nil && grandMaster.ID != 0 {
-		newRelations = append(newRelations, *NewIndirectRelation(&r.Apprentice, grandMaster, r.OrientationSteps))
+		var steps []OrientationStep
+		copy(steps, r.OrientationSteps)
+		newRelations = append(newRelations, *NewIndirectRelation(&r.Apprentice, grandMaster, steps))
 	}
 
 	// 检测四阶环
@@ -107,7 +109,9 @@ func (r *Relation) Connect(grandMaster *User, descendants []Relation) (addition 
 			continue
 		}
 		apprentice := User{Model: gorm.Model{ID: descendant.ApprenticeID}}
-		newRelations = append(newRelations, *NewIndirectRelation(&apprentice, &r.Master, r.OrientationSteps))
+		var steps []OrientationStep
+		copy(steps, r.OrientationSteps)
+		newRelations = append(newRelations, *NewIndirectRelation(&apprentice, &r.Master, steps))
 	}
 	return newRelations, nil
 }

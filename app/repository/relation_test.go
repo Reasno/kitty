@@ -290,6 +290,71 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 			user(2),
 			true,
 		},
+		{
+			"4to3",
+			user(4),
+			user(3),
+			true,
+		},
+	}
+
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			repo.AddRelations(ctx, entity.NewRelation(&cc.apprentice, &cc.master, []entity.OrientationStep{
+				{
+					EventType: "foo",
+					EventId:   1,
+				},
+				{
+					EventType: "bar",
+					EventId:   1,
+				},
+			}))
+			var rel entity.Relation
+			db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", cc.master.ID, cc.apprentice.ID)
+
+			fmt.Printf("%+v\n", rel)
+			assert.Equal(t, "foo", rel.OrientationSteps[0].EventType)
+			assert.Equal(t, "bar", rel.OrientationSteps[1].EventType)
+			repo.UpdateRelations(ctx, &cc.apprentice, func(relations []entity.Relation) error {
+				for i := range relations {
+					relations[i].CompleteStep(entity.OrientationStep{EventType: "foo", EventId: 1})
+					relations[i].CompleteStep(entity.OrientationStep{EventType: "bar", EventId: 1})
+				}
+				return nil
+			})
+			db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", cc.master.ID, cc.apprentice.ID)
+			assert.Equal(t, true, rel.OrientationCompleted)
+		})
+	}
+}
+
+func TestRelationRepo_AddRelationsWithOrientationId(t *testing.T) {
+	setUp(t)
+	defer tearDown()
+
+	repo := RelationRepo{db}
+	ctx := context.Background()
+
+	cases := []struct {
+		name       string
+		apprentice entity.User
+		master     entity.User
+		ok         bool
+	}{
+		{
+			"1to2",
+			user(1),
+			user(2),
+			true,
+		},
+		{
+			"3to2",
+			user(3),
+			user(2),
+			true,
+		},
 	}
 
 	for _, c := range cases {
