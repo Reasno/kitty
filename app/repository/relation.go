@@ -75,7 +75,10 @@ func (r *RelationRepo) AddRelations(
 			return errors.Wrap(err, "unable to create relations")
 		}
 		// save orientation steps associated with every relation
-		tx.Save(&newRelations)
+		err = tx.Save(&newRelations).Error
+		if err != nil {
+			return errors.Wrap(err, "unable to create orientation steps")
+		}
 		return nil
 	})
 }
