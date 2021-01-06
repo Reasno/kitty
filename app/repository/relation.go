@@ -70,10 +70,12 @@ func (r *RelationRepo) AddRelations(
 		}
 
 		// save new relations
-		err = tx.WithContext(ctx).Omit("Master").Omit("Apprentice").Create(&newRelations).Error
+		err = tx.WithContext(ctx).Omit("Master").Omit("Apprentice").Omit("OrientationSteps").Create(&newRelations).Error
 		if err != nil {
 			return errors.Wrap(err, "unable to create relations")
 		}
+		// save orientation steps associated with every relation
+		tx.Save(&newRelations)
 		return nil
 	})
 }
