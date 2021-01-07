@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"gorm.io/gorm"
@@ -71,9 +70,14 @@ func (r *RelationRepo) AddRelations(
 		}
 
 		// save new relations
-		err = tx.WithContext(ctx).Omit("Master").Omit("Apprentice").Create(&newRelations).Error
+		err = tx.WithContext(ctx).Omit("Master").Omit("Apprentice").Omit("OrientationSteps").Create(&newRelations).Error
 		if err != nil {
 			return errors.Wrap(err, "unable to create relations")
+		}
+		// save orientation steps associated with every relation
+		err = tx.WithContext(ctx).Omit("Master").Omit("Apprentice").Save(&newRelations).Error
+		if err != nil {
+			return errors.Wrap(err, "unable to create orientation steps")
 		}
 		return nil
 	})

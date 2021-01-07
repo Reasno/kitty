@@ -27,7 +27,7 @@ type signParam struct {
 var s signParam
 
 func init() {
-	signCmd.Flags().BoolVar(&s.admin, "admin", true, "the admin token")
+	signCmd.Flags().BoolVar(&s.admin, "admin", false, "the admin token")
 	signCmd.Flags().Uint64Var(&s.id, "id", 1, "the user id in the token")
 	signCmd.Flags().StringVar(&s.suuid, "suuid", "", "the suuid in the token")
 	signCmd.Flags().StringVar(&s.openid, "openid", "", "the wechat openid in the token")

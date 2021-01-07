@@ -290,6 +290,12 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 			user(2),
 			true,
 		},
+		{
+			"4to3",
+			user(4),
+			user(3),
+			true,
+		},
 	}
 
 	for _, c := range cases {
@@ -308,7 +314,7 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 			var rel entity.Relation
 			db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", cc.master.ID, cc.apprentice.ID)
 
-			fmt.Println(rel.OrientationSteps)
+			fmt.Printf("%+v\n", rel)
 			assert.Equal(t, "foo", rel.OrientationSteps[0].EventType)
 			assert.Equal(t, "bar", rel.OrientationSteps[1].EventType)
 			repo.UpdateRelations(ctx, &cc.apprentice, func(relations []entity.Relation) error {
@@ -322,4 +328,11 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 			assert.Equal(t, true, rel.OrientationCompleted)
 		})
 	}
+
+	var rel entity.Relation
+	db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", 2, 4)
+
+	fmt.Printf("%+v\n", rel)
+	assert.Equal(t, "foo", rel.OrientationSteps[0].EventType)
+	assert.Equal(t, "bar", rel.OrientationSteps[1].EventType)
 }
