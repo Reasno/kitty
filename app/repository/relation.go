@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
@@ -70,7 +69,6 @@ func (r *RelationRepo) AddRelations(
 		if err != nil {
 			return err
 		}
-		fmt.Println("---------------------", len(newRelations), "------------------")
 		// save new relations
 		err = tx.WithContext(ctx).Omit("Apprentice").Create(&newRelations).Error
 		if err != nil {
