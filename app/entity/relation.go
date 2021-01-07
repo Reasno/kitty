@@ -14,8 +14,9 @@ var ErrRelationExist = errors.New("关系已经存在")
 var ErrOrientationHasNotBeenCompleted = errors.New(msg.OrientationHasNotBeenCompleted)
 
 type Relation struct {
+	ID uint `gorm:"primaryKey;autoIncrementIncrement:2"`
 	gorm.Model
-	MasterID             uint `gorm:"index"`
+	MasterID             uint `gorm:"index;"`
 	ApprenticeID         uint `gorm:"index"`
 	Master               User
 	Apprentice           User
