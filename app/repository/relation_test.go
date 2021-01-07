@@ -266,9 +266,15 @@ func TestRelationRepo_AddRelationsWithNumApprentice(t *testing.T) {
 }
 
 func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
+	if !useMysql {
+		t.Skip("this test is reserved for mysql")
+	}
 	setUp(t)
 	defer tearDown()
 
+	sql, _ := db.DB()
+	r, err := sql.Exec("set session auto_increment_increment=2")
+	fmt.Println(r, err)
 	repo := RelationRepo{db}
 	ctx := context.Background()
 

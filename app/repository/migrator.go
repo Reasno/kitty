@@ -157,6 +157,7 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 					StepCompleted bool
 				}
 				type Relation struct {
+					ID uint `gorm:"primaryKey"`
 					gorm.Model
 					MasterID             uint `gorm:"index"`
 					ApprenticeID         uint `gorm:"index"`

@@ -290,6 +290,7 @@ message UserInfo {
   string invite_code = 13;
   bool is_deleted = 14;
   bool is_invited = 15;
+  string suuid = 16;
 }
 
 message UserInfoReply {
