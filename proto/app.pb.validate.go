@@ -724,6 +724,8 @@ func (m *UserInfo) Validate() error {
 
 	// no validation rules for IsInvited
 
+	// no validation rules for Suuid
+
 	return nil
 }
 

@@ -266,9 +266,15 @@ func TestRelationRepo_AddRelationsWithNumApprentice(t *testing.T) {
 }
 
 func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
+	if !useMysql {
+		t.Skip("this test is reserved for mysql")
+	}
 	setUp(t)
 	defer tearDown()
 
+	sql, _ := db.DB()
+	r, err := sql.Exec("set session auto_increment_increment=2")
+	fmt.Println(r, err)
 	repo := RelationRepo{db}
 	ctx := context.Background()
 
@@ -314,7 +320,6 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 			var rel entity.Relation
 			db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", cc.master.ID, cc.apprentice.ID)
 
-			fmt.Printf("%+v\n", rel)
 			assert.Equal(t, "foo", rel.OrientationSteps[0].EventType)
 			assert.Equal(t, "bar", rel.OrientationSteps[1].EventType)
 			repo.UpdateRelations(ctx, &cc.apprentice, func(relations []entity.Relation) error {
@@ -332,7 +337,7 @@ func TestRelationRepo_AddRelationsWithOrientation(t *testing.T) {
 	var rel entity.Relation
 	db.Preload("OrientationSteps").First(&rel, "master_id = ? and apprentice_id = ?", 2, 4)
 
-	fmt.Printf("%+v\n", rel)
+	fmt.Printf("%+v\n", rel.ID)
 	assert.Equal(t, "foo", rel.OrientationSteps[0].EventType)
 	assert.Equal(t, "bar", rel.OrientationSteps[1].EventType)
 }

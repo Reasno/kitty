@@ -276,6 +276,7 @@ func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchReques
 
 	for _, v := range users {
 		tmp := s.toReply(&v).Data
+		tmp.Suuid = v.CommonSUUID
 		resp.Data = append(resp.Data, tmp)
 	}
 	resp.Count = count

@@ -48,7 +48,7 @@ require (
 	google.golang.org/genproto v0.0.0-20201015140912-32ed001d685c
 	google.golang.org/grpc v1.33.0
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
-	gorm.io/driver/mysql v1.0.3
+	gorm.io/driver/mysql v1.0.4-0.20201230025252-5b0f9700d29b
 	gorm.io/driver/sqlite v1.1.1
-	gorm.io/gorm v1.20.5
+	gorm.io/gorm v1.20.10-0.20210107034540-a5bfe2f39dab
 )
