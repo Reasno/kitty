@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -79,6 +80,7 @@ func MakeHttpHandler(endpoint endpoint.Endpoint, middleware endpoint.Middleware)
 		middleware(endpoint),
 		decodeRequest,
 		httptransport.EncodeJSONResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
 	)
 	return server
 }

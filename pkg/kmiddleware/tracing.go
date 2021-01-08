@@ -37,9 +37,11 @@ func TraceConsumer(tracer stdtracing.Tracer, operationName string, kind ext.Span
 			defer serverSpan.Finish()
 			ext.SpanKindConsumer.Set(serverSpan)
 			tenant := config.GetTenant(ctx)
-			serverSpan.SetTag("package.name", tenant.PackageName)
-			serverSpan.SetTag("suuid", tenant.Suuid)
-			serverSpan.SetTag("user.id", tenant.UserId)
+			if tenant.UserId != 0 {
+				serverSpan.SetTag("package.name", tenant.PackageName)
+				serverSpan.SetTag("suuid", tenant.Suuid)
+				serverSpan.SetTag("user.id", tenant.UserId)
+			}
 			ctx = stdtracing.ContextWithSpan(ctx, serverSpan)
 			resp, err := next(ctx, request)
 			if err != nil {
