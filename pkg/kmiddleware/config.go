@@ -44,7 +44,7 @@ func NewConfigMiddleware() endpoint.Middleware {
 			if t, ok := request.(interface {
 				GetVersionCode() string
 			}); ok {
-				tenant.PackageName = t.GetVersionCode()
+				tenant.VersionCode = t.GetVersionCode()
 			}
 			ctx = context.WithValue(ctx, config.TenantKey, &tenant)
 			return e(ctx, request)
