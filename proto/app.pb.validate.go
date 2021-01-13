@@ -726,6 +726,8 @@ func (m *UserInfo) Validate() error {
 
 	// no validation rules for Suuid
 
+	// no validation rules for CreatedAt
+
 	return nil
 }
 
