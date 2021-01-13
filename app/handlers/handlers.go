@@ -680,6 +680,7 @@ func (s appService) toReply(user *entity.User) *pb.UserInfoReply {
 			TaobaoExtra:  &taobaoExtra,
 			InviteCode:   inviteCode,
 			IsInvited:    user.InviteCode != "",
+			CreatedAt:    user.CreatedAt.Format("2006-01-02 15:04:05"),
 		},
 	}
 }

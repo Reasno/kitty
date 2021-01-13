@@ -291,6 +291,7 @@ message UserInfo {
   bool is_deleted = 14;
   bool is_invited = 15;
   string suuid = 16;
+  string created_at = 17;
 }
 
 message UserInfoReply {
