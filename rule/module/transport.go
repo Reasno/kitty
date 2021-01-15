@@ -72,12 +72,10 @@ func decodePayload(payload *dto.Payload, r *http.Request) (err error) {
 		}
 		return nil
 	}
-	err = decoder.Decode(payload, r.URL.Query())
+	_ = decoder.Decode(payload, r.URL.Query())
 	// store extra queries here.
 	payload.Q = r.URL.Query()
-	if err != nil {
-		return errors.Wrap(err, "cannot decode payload in query")
-	}
+
 	return nil
 }
 
