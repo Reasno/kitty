@@ -54,6 +54,7 @@ func (s *sub) Serve(ctx context.Context) error {
 		}
 	}, func(err error) {
 		cancel()
+		_ = s.reader.Close()
 	})
 
 	for i := 0; i < s.parallelism; i++ {
