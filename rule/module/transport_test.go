@@ -33,7 +33,7 @@ func TestDecodePayload(t *testing.T) {
 				return r
 			}(),
 			func(t *testing.T, payload *dto.Payload) {
-				assert.Contains(t, payload.B["foo"], "bar")
+				assert.Equal(t, payload.B["foo"], "bar")
 			},
 		},
 	}

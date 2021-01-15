@@ -3,6 +3,7 @@ package module
 import (
 	"net/http"
 
+	"github.com/robfig/cron/v3"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kgrpc"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
@@ -91,4 +92,8 @@ func (a *Module) ProvideHttp(router *mux.Router) {
 		),
 		httptransport.ServerErrorEncoder(kerr.ErrorEncoder),
 	)))
+}
+
+func (a *Module) ProvideCron(crontab *cron.Cron) {
+	_, _ = crontab.AddFunc("0 * * * *", func() { a.logger.Log("msg", "cron test") })
 }

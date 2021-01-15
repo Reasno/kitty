@@ -13,6 +13,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
 	"github.com/oklog/run"
+	"github.com/robfig/cron/v3"
 	"github.com/spf13/cobra"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"google.golang.org/grpc"
@@ -78,6 +79,20 @@ var serveCmd = &cobra.Command{
 			})
 		}
 
+		// Add Crontab
+		{
+			tab := cron.New()
+			for _, c := range moduleContainer.CronProviders {
+				c(tab)
+			}
+			g.Add(func() error {
+				tab.Run()
+				return nil
+			}, func(err error) {
+				<-tab.Stop().Done()
+			})
+		}
+
 		// Graceful shutdown
 		{
 			c := make(chan os.Signal, 1)
@@ -94,8 +109,6 @@ var serveCmd = &cobra.Command{
 		for _, s := range moduleContainer.RunProviders {
 			s(&g)
 		}
-
-		// Add Cronjob etc. here
 
 		if err := g.Run(); err != nil {
 			er(err)
