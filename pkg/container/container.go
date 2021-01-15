@@ -3,6 +3,7 @@ package container
 import (
 	"github.com/gorilla/mux"
 	"github.com/oklog/run"
+	"github.com/robfig/cron/v3"
 	"google.golang.org/grpc"
 )
 
@@ -13,6 +14,7 @@ type ModuleContainer struct {
 	RunProviders      []func(g *run.Group)
 	MigrationProvider []Migrations
 	SeedProvider      []func() error
+	CronProviders     []func(crontab *cron.Cron)
 }
 
 func NewModuleContainer() ModuleContainer {
@@ -56,6 +58,10 @@ type SeedProvider interface {
 	ProvideSeed() error
 }
 
+type CronProvider interface {
+	ProvideCron(crontab *cron.Cron)
+}
+
 type HttpFunc func(router *mux.Router)
 
 func (h HttpFunc) ProvideHttp(router *mux.Router) {
@@ -80,5 +86,8 @@ func (s *ModuleContainer) Register(app interface{}) {
 	}
 	if p, ok := app.(SeedProvider); ok {
 		s.SeedProvider = append(s.SeedProvider, p.ProvideSeed)
+	}
+	if p, ok := app.(CronProvider); ok {
+		s.CronProviders = append(s.CronProviders, p.ProvideCron)
 	}
 }
