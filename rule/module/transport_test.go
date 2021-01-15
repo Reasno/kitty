@@ -2,6 +2,7 @@ package module
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +24,16 @@ func TestDecodePayload(t *testing.T) {
 			func(t *testing.T, payload *dto.Payload) {
 				assert.Contains(t, payload.Q["foo"], "bar")
 				assert.Contains(t, payload.Q["foo"], "baz")
+			},
+		},
+		{
+			"decode body",
+			func() *http.Request {
+				r, _ := http.NewRequest("POST", "http://example.org", strings.NewReader(`{"foo":"bar"}`))
+				return r
+			}(),
+			func(t *testing.T, payload *dto.Payload) {
+				assert.Contains(t, payload.B["foo"], "bar")
 			},
 		},
 	}
