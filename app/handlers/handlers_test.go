@@ -304,7 +304,7 @@ func TestAppService_GetInfoBatch(t *testing.T) {
 			},
 			pb.UserInfoBatchReply{
 				Code: 0,
-				Data: []*pb.UserInfo{{
+				Data: []*pb.UserInfoDetail{{
 					Id:       1,
 					UserName: "foo",
 				}},
