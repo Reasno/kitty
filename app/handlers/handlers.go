@@ -271,12 +271,11 @@ func (s appService) GetInfoBatch(ctx context.Context, in *pb.UserInfoBatchReques
 	}
 	var resp = pb.UserInfoBatchReply{
 		Code: 0,
-		Data: []*pb.UserInfo{},
+		Data: []*pb.UserInfoDetail{},
 	}
 
 	for _, v := range users {
-		tmp := s.toReply(&v).Data
-		tmp.Suuid = v.CommonSUUID
+		tmp := s.toDetail(&v)
 		resp.Data = append(resp.Data, tmp)
 	}
 	resp.Count = count
@@ -682,5 +681,33 @@ func (s appService) toReply(user *entity.User) *pb.UserInfoReply {
 			IsInvited:    user.InviteCode != "",
 			CreatedAt:    user.CreatedAt.Format("2006-01-02 15:04:05"),
 		},
+	}
+}
+
+func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
+	var wechatExtra pb.WechatExtra
+	_ = wechatExtra.Unmarshal(user.WechatExtra)
+	var taobaoExtra pb.TaobaoExtra
+	_ = taobaoExtra.Unmarshal(user.TaobaoExtra)
+	var tokenizer = code.NewTokenizer(s.conf.String("salt"))
+	inviteCode, _ := tokenizer.Encode(user.ID)
+	return &pb.UserInfoDetail{
+		Id:           uint64(user.ID),
+		UserName:     user.UserName,
+		Wechat:       user.WechatOpenId.String,
+		HeadImg:      user.HeadImg,
+		Gender:       pb.Gender(user.Gender),
+		Birthday:     user.Birthday,
+		ThirdPartyId: user.ThirdPartyId,
+		Mobile:       redact(user.Mobile.String),
+		IsNew:        user.IsNew,
+		WechatExtra:  &wechatExtra,
+		TaobaoExtra:  &taobaoExtra,
+		InviteCode:   inviteCode,
+		IsInvited:    user.InviteCode != "",
+		Suuid:        user.CommonSUUID,
+		Channel:      user.Channel,
+		VersionCode:  user.VersionCode,
+		CreatedAt:    user.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
 }

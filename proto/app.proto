@@ -290,8 +290,31 @@ message UserInfo {
   string invite_code = 13;
   bool is_deleted = 14;
   bool is_invited = 15;
+  string created_at = 17;
+}
+
+message UserInfoDetail {
+  uint64 id = 1;
+  string user_name = 2;
+  string wechat = 3;
+  // 头像地址
+  string head_img = 4;
+  Gender gender = 5;
+  string birthday = 6;
+  string token = 7;
+  // 第三方ID
+  string third_party_id = 8;
+  bool is_new = 9 [(gogoproto.jsontag) = "is_new"];
+  WechatExtra wechat_extra = 10;
+  TaobaoExtra taobao_extra = 11;
+  string mobile = 12;
+  string invite_code = 13;
+  bool is_deleted = 14;
+  bool is_invited = 15;
   string suuid = 16;
   string created_at = 17;
+  string channel = 18;
+  string version_code = 19;
 }
 
 message UserInfoReply {
@@ -304,7 +327,7 @@ message UserInfoReply {
 
 message UserInfoBatchReply {
   int32 code = 1 [(gogoproto.jsontag) = "code"];
-  repeated UserInfo data = 3;
+  repeated UserInfoDetail data = 3;
   string msg = 4;
   int64 count = 5;
 }
