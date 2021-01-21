@@ -513,9 +513,6 @@
         "is_invited": {
           "type": "boolean"
         },
-        "suuid": {
-          "type": "string"
-        },
         "created_at": {
           "type": "string"
         }
@@ -531,7 +528,7 @@
         "data": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v2UserInfo"
+            "$ref": "#/definitions/v2UserInfoDetail"
           }
         },
         "msg": {
@@ -540,6 +537,71 @@
         "count": {
           "type": "string",
           "format": "int64"
+        }
+      }
+    },
+    "v2UserInfoDetail": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "user_name": {
+          "type": "string"
+        },
+        "wechat": {
+          "type": "string"
+        },
+        "head_img": {
+          "type": "string",
+          "title": "头像地址"
+        },
+        "gender": {
+          "$ref": "#/definitions/v2Gender"
+        },
+        "birthday": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "third_party_id": {
+          "type": "string",
+          "title": "第三方ID"
+        },
+        "is_new": {
+          "type": "boolean"
+        },
+        "wechat_extra": {
+          "$ref": "#/definitions/v2WechatExtra"
+        },
+        "taobao_extra": {
+          "$ref": "#/definitions/v2TaobaoExtra"
+        },
+        "mobile": {
+          "type": "string"
+        },
+        "invite_code": {
+          "type": "string"
+        },
+        "is_deleted": {
+          "type": "boolean"
+        },
+        "is_invited": {
+          "type": "boolean"
+        },
+        "suuid": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string"
+        },
+        "version_code": {
+          "type": "string"
         }
       }
     },

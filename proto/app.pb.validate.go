@@ -724,8 +724,6 @@ func (m *UserInfo) Validate() error {
 
 	// no validation rules for IsInvited
 
-	// no validation rules for Suuid
-
 	// no validation rules for CreatedAt
 
 	return nil
@@ -784,6 +782,125 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserInfoValidationError{}
+
+// Validate checks the field values on UserInfoDetail with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *UserInfoDetail) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	// no validation rules for UserName
+
+	// no validation rules for Wechat
+
+	// no validation rules for HeadImg
+
+	// no validation rules for Gender
+
+	// no validation rules for Birthday
+
+	// no validation rules for Token
+
+	// no validation rules for ThirdPartyId
+
+	// no validation rules for IsNew
+
+	if v, ok := interface{}(m.GetWechatExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserInfoDetailValidationError{
+				field:  "WechatExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetTaobaoExtra()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UserInfoDetailValidationError{
+				field:  "TaobaoExtra",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Mobile
+
+	// no validation rules for InviteCode
+
+	// no validation rules for IsDeleted
+
+	// no validation rules for IsInvited
+
+	// no validation rules for Suuid
+
+	// no validation rules for CreatedAt
+
+	// no validation rules for Channel
+
+	// no validation rules for VersionCode
+
+	return nil
+}
+
+// UserInfoDetailValidationError is the validation error returned by
+// UserInfoDetail.Validate if the designated constraints aren't met.
+type UserInfoDetailValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserInfoDetailValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserInfoDetailValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserInfoDetailValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserInfoDetailValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserInfoDetailValidationError) ErrorName() string { return "UserInfoDetailValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UserInfoDetailValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserInfoDetail.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserInfoDetailValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserInfoDetailValidationError{}
 
 // Validate checks the field values on UserInfoReply with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
