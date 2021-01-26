@@ -845,6 +845,8 @@ func (m *UserInfoDetail) Validate() error {
 
 	// no validation rules for VersionCode
 
+	// no validation rules for PackageName
+
 	return nil
 }
 

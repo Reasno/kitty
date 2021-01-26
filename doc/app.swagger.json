@@ -602,6 +602,9 @@
         },
         "version_code": {
           "type": "string"
+        },
+        "packageName": {
+          "type": "string"
         }
       }
     },

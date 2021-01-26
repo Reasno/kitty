@@ -117,6 +117,11 @@ func TestAppService_UpdateInfo(t *testing.T) {
 				})(),
 				sender: &mc.SmsSender{},
 				wechat: &wm.Wechater{},
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
+					return m
+				})(),
 			},
 
 			pb.UserInfoUpdateRequest{
@@ -238,6 +243,11 @@ func TestAppService_SoftDelete(t *testing.T) {
 				})(),
 				sender: &mc.SmsSender{},
 				wechat: &wm.Wechater{},
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
+					return m
+				})(),
 			},
 
 			pb.UserSoftDeleteRequest{
@@ -360,6 +370,11 @@ func TestAppService_Refresh(t *testing.T) {
 				})(),
 				sender: &mc.SmsSender{},
 				wechat: &wm.Wechater{},
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
+					return m
+				})(),
 			},
 
 			pb.UserRefreshRequest{
@@ -417,6 +432,11 @@ func TestLogin(t *testing.T) {
 				})(),
 				sender: &mc.SmsSender{},
 				wechat: &wm.Wechater{},
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
+					return m
+				})(),
 			},
 
 			pb.UserLoginRequest{
@@ -464,6 +484,11 @@ func TestLogin(t *testing.T) {
 					}, nil)
 					return m
 				})(),
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
+					return m
+				})(),
 			},
 
 			pb.UserLoginRequest{
@@ -503,6 +528,11 @@ func TestLogin(t *testing.T) {
 				sender: &mc.SmsSender{},
 				wechat: (func() wechat.Wechater {
 					m := &wm.Wechater{}
+					return m
+				})(),
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
 					return m
 				})(),
 			},
@@ -555,6 +585,11 @@ func TestLogin(t *testing.T) {
 					m.On("GetUserInfoResult", mock.Anything, mock.Anything).Return(&wechat.WxUserInfoResult{
 						Openid: "bar",
 					}, nil)
+					return m
+				})(),
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
 					return m
 				})(),
 			},
@@ -687,6 +722,11 @@ func TestUnbind(t *testing.T) {
 		sender: &mc.SmsSender{},
 		wechat: (func() wechat.Wechater {
 			m := &wm.Wechater{}
+			return m
+		})(),
+		dispatcher: (func() contract.Dispatcher {
+			m := &mc.Dispatcher{}
+			m.On("Dispatch", mock.Anything).Return(nil)
 			return m
 		})(),
 	}
@@ -823,6 +863,11 @@ func TestBind(t *testing.T) {
 					m := &wm.Wechater{}
 					return m
 				})(),
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
+					return m
+				})(),
 			},
 			pb.UserBindRequest{
 				TaobaoExtra: &pb.TaobaoExtra{
@@ -864,6 +909,11 @@ func TestBind(t *testing.T) {
 					m.On("GetUserInfoResult", mock.Anything, mock.Anything).Return(&wechat.WxUserInfoResult{
 						Openid: "bar",
 					}, nil)
+					return m
+				})(),
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
 					return m
 				})(),
 			},
@@ -914,6 +964,11 @@ func TestBind(t *testing.T) {
 					}, nil)
 					return m
 				})(),
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
+					return m
+				})(),
 			},
 			pb.UserBindRequest{
 				Wechat:    "foo",
@@ -952,6 +1007,11 @@ func TestBind(t *testing.T) {
 					m := &wm.Wechater{}
 					return m
 				})(),
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
+					return m
+				})(),
 			},
 			pb.UserBindRequest{
 				WechatExtra: &pb.WechatExtra{OpenId: "bar"},
@@ -988,6 +1048,11 @@ func TestBind(t *testing.T) {
 				sender: &mc.SmsSender{},
 				wechat: (func() wechat.Wechater {
 					m := &wm.Wechater{}
+					return m
+				})(),
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
 					return m
 				})(),
 			},
@@ -1031,6 +1096,11 @@ func TestBind(t *testing.T) {
 					m.On("GetUserInfoResult", mock.Anything, mock.Anything).Return(&wechat.WxUserInfoResult{
 						Openid: "bar",
 					}, nil)
+					return m
+				})(),
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
 					return m
 				})(),
 			},

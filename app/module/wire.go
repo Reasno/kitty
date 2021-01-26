@@ -7,9 +7,11 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 	"glab.tagtic.cn/ad_gains/kitty/app/handlers"
+	"glab.tagtic.cn/ad_gains/kitty/app/listener"
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	kclient "glab.tagtic.cn/ad_gains/kitty/pkg/kkafka/client"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/otredis"
@@ -44,8 +46,13 @@ var AppServerSet = wire.NewSet(
 	provideKeyManager,
 	ProvideHttpClient,
 	ProvideUploadManager,
+	ProvideDispatcher,
 	ProvideRedis,
 	provideWechatConfig,
+	provideUserBus,
+	providePublisherOptions,
+	ProvideKafkaFactory,
+	provideEventBus,
 	wechat.NewWechaterFactory,
 	wechat.NewWechaterFacade,
 	sms.NewTransportFactory,
@@ -60,6 +67,9 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(contract.Keyer), new(otredis.KeyManager)),
 	wire.Bind(new(contract.Uploader), new(*ots3.Manager)),
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
+	wire.Bind(new(listener.UserBus), new(*kclient.DataStore)),
+	wire.Bind(new(listener.EventBus), new(*kclient.EventStore)),
+	wire.Bind(new(contract.Dispatcher), new(*event.Dispatcher)),
 	wire.Bind(new(wechat.Wechater), new(*wechat.WechaterFacade)),
 	wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)),
 	wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)),
@@ -70,16 +80,10 @@ var AppServerSet = wire.NewSet(
 func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {
 	panic(wire.Build(
 		AppServerSet,
-		ProvideKafkaFactory,
 		ProvideSecurityConfig,
 		ProvideHistogramMetrics,
 		provideEndpointsMiddleware,
 		provideProducerMiddleware,
 		provideModule,
-		providePublisherOptions,
-		provideEventBus,
-		provideUserBus,
-		wire.Bind(new(handlers.EventBus), new(*kclient.EventStore)),
-		wire.Bind(new(handlers.UserBus), new(*kclient.DataStore)),
 	))
 }

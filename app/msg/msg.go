@@ -33,4 +33,5 @@ const (
 	ReenteringCode                 = "不能重复填写邀请码"
 	AdminOnly                      = "当前操作需要管理员权限"
 	AlreadyDeleted                 = "用户已被删除"
+	ServerBug                      = "应用程序异常"
 )

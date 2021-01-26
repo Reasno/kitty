@@ -17,7 +17,7 @@ func provideEndpointsMiddleware(l log.Logger, securityConfig *kmiddleware.Securi
 		in.WrapAllLabeledExcept(kmiddleware.NewTraceServerMiddleware(tracer, env.String()))
 		in.WrapAllExcept(kmiddleware.NewConfigMiddleware())
 		in.WrapAllExcept(kmiddleware.NewAuthenticationMiddleware(securityConfig))
-		in.WrapAllExcept(kmiddleware.NewErrorMarshallerMiddleware())
+		in.WrapAllExcept(kmiddleware.NewErrorMarshallerMiddleware(env.IsProd()))
 		return in
 	}
 }

@@ -315,6 +315,7 @@ message UserInfoDetail {
   string created_at = 17;
   string channel = 18;
   string version_code = 19;
+  string package_name = 20;
 }
 
 message UserInfoReply {

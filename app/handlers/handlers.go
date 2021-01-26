@@ -15,9 +15,11 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
+	appevent "glab.tagtic.cn/ad_gains/kitty/app/event"
 	"glab.tagtic.cn/ad_gains/kitty/app/msg"
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
 	code "glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
@@ -28,13 +30,14 @@ import (
 )
 
 type appService struct {
-	conf   contract.ConfigReader
-	logger log.Logger
-	ur     UserRepository
-	cr     CodeRepository
-	fr     FileRepository
-	sender contract.SmsSender
-	wechat wechat.Wechater
+	conf       contract.ConfigReader
+	logger     log.Logger
+	ur         UserRepository
+	cr         CodeRepository
+	fr         FileRepository
+	sender     contract.SmsSender
+	wechat     wechat.Wechater
+	dispatcher contract.Dispatcher
 }
 
 type tokenParam struct {
@@ -93,6 +96,13 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	tokenString, err := s.getToken(&tokenParam{uint64(u.ID), u.CommonSUUID, u.Channel, u.VersionCode, u.WechatOpenId.String, u.Mobile.String, u.PackageName, u.ThirdPartyId})
 	if err != nil {
 		s.warn(err)
+	}
+
+	// 触发事件
+	var detail = s.toDetail(u)
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: detail}))
+	if u.IsNew {
+		_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserCreated{UserInfoDetail: detail}))
 	}
 
 	// 拼装返回结果
@@ -170,6 +180,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		return nil, dbErr(err)
 	}
 
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(u)))
 	reply := s.toReply(u)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(u.ID),
@@ -294,7 +305,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 	if err != nil {
 		return nil, dbErr(err)
 	}
-
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(u)))
 	var resp = s.toReply(u)
 	return resp, nil
 
@@ -413,6 +424,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 获取Token
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(newUser)))
 	reply := s.toReply(newUser)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(newUser.ID),
@@ -461,6 +473,7 @@ func (s appService) unbindId(ctx context.Context, in *pb.UserUnbindRequest, id u
 	if err != nil {
 		return nil, dbErr(err)
 	}
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(user)))
 	var resp = s.toReply(user)
 	return resp, nil
 }
@@ -709,5 +722,6 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 		Channel:      user.Channel,
 		VersionCode:  user.VersionCode,
 		CreatedAt:    user.CreatedAt.Format("2006-01-02 15:04:05"),
+		PackageName:  user.PackageName,
 	}
 }

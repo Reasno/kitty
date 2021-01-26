@@ -15,25 +15,21 @@ func NewAppService(
 	fr FileRepository,
 	sender contract.SmsSender,
 	wechat wechat.Wechater,
+	dispatcher contract.Dispatcher,
 ) appService {
 	return appService{
-		conf:   conf,
-		logger: log,
-		ur:     ur,
-		cr:     cr,
-		sender: sender,
-		wechat: wechat,
-		fr:     fr,
+		conf:       conf,
+		logger:     log,
+		ur:         ur,
+		cr:         cr,
+		sender:     sender,
+		wechat:     wechat,
+		fr:         fr,
+		dispatcher: dispatcher,
 	}
 }
 
 type ServerMiddleware func(server pb.AppServer) pb.AppServer
-
-func NewMonitorMiddleware(userBus UserBus, eventBus EventBus) ServerMiddleware {
-	return func(server pb.AppServer) pb.AppServer {
-		return &MonitoredAppService{userBus: userBus, eventBus: eventBus, AppServer: server}
-	}
-}
 
 func NewInputEnrichMiddleware() ServerMiddleware {
 	return func(server pb.AppServer) pb.AppServer {
@@ -50,9 +46,8 @@ func Chain(outer ServerMiddleware, others ...ServerMiddleware) ServerMiddleware 
 	}
 }
 
-func ProvideAppServer(userBus UserBus, eventBus EventBus, service appService) pb.AppServer {
+func ProvideAppServer(service appService) pb.AppServer {
 	return Chain(
 		NewInputEnrichMiddleware(),
-		NewMonitorMiddleware(userBus, eventBus),
 	)(service)
 }

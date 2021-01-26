@@ -63,7 +63,7 @@ func MakeUploadEndpoint(uploader contract.Uploader) endpoint.Endpoint {
 
 func Middleware(logger log.Logger, env contract.Env, config *kmiddleware.SecurityConfig) endpoint.Middleware {
 	l := kmiddleware.NewLoggingMiddleware(logger, env.IsLocal())
-	e := kmiddleware.NewErrorMarshallerMiddleware()
+	e := kmiddleware.NewErrorMarshallerMiddleware(env.IsProd())
 	a := kmiddleware.NewAuthenticationMiddleware(config)
 	return endpoint.Chain(e, l, a)
 }

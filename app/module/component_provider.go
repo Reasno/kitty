@@ -19,8 +19,10 @@ import (
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 	jaegermetric "github.com/uber/jaeger-lib/metrics"
+	"glab.tagtic.cn/ad_gains/kitty/app/listener"
 	"glab.tagtic.cn/ad_gains/kitty/app/svc"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
 	code "glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
@@ -95,7 +97,7 @@ func provideUserBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, op
 }
 
 func ProvideKafkaFactory(conf contract.ConfigReader, logger log.Logger) (*kkafka.KafkaFactory, func()) {
-	factory := kkafka.NewKafkaFactory(conf.Strings("kafka.brokers"), logger)
+	factory := kkafka.NewKafkaFactory(conf.Strings("kafka.brokers"), log.NewNopLogger())
 	return factory, func() {
 		_ = factory.Close()
 	}
@@ -201,6 +203,17 @@ func ProvideGormDB(dialector gorm.Dialector, config *gorm.Config, tracer opentra
 
 func ProvideJaegerLogAdapter(l log.Logger) jaeger.Logger {
 	return &logging.JaegerLogAdapter{Logging: l}
+}
+
+func ProvideDispatcher(ubus listener.UserBus, ebus listener.EventBus) *event.Dispatcher {
+	dispatcher := event.Dispatcher{}
+	dispatcher.Subscribe(listener.UserChanged{
+		Bus: ubus,
+	})
+	dispatcher.Subscribe(listener.UserCreated{
+		Bus: ebus,
+	})
+	return &dispatcher
 }
 
 func ProvideOpentracing(log jaeger.Logger, conf contract.ConfigReader) (opentracing.Tracer, func(), error) {

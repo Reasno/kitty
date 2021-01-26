@@ -10,10 +10,13 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 	"glab.tagtic.cn/ad_gains/kitty/app/handlers"
+	"glab.tagtic.cn/ad_gains/kitty/app/listener"
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka/client"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/otredis"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/sms"
@@ -43,24 +46,25 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	env := config.ProvideEnv(reader)
 	histogram := ProvideHistogramMetrics(appName, env)
 	moduleOverallMiddleware := provideEndpointsMiddleware(logger, securityConfig, histogram, tracer, env, appName)
-	kafkaFactory, cleanup3 := ProvideKafkaFactory(reader, logger)
-	v := providePublisherOptions(tracer, logger)
-	moduleProducerMiddleware := provideProducerMiddleware(tracer, logger)
-	dataStore := provideUserBus(kafkaFactory, reader, v, moduleProducerMiddleware)
-	eventStore := provideEventBus(kafkaFactory, reader, v, moduleProducerMiddleware)
 	client := ProvideHttpClient(tracer)
 	manager := ProvideUploadManager(tracer, reader, client)
 	fileRepo := repository.NewFileRepo(manager, client)
 	userRepo := repository.NewUserRepo(db, fileRepo)
-	universalClient, cleanup4 := ProvideRedis(logger, reader, tracer)
+	universalClient, cleanup3 := ProvideRedis(logger, reader, tracer)
 	keyManager := provideKeyManager(appName, env)
 	codeRepo := repository.NewCodeRepo(universalClient, keyManager, env)
 	senderFactory := sms.NewTransportFactory(reader, client)
 	senderFacade := sms.NewSenderFacade(senderFactory, dynConf)
 	wechaterFactory := wechat.NewWechaterFactory(reader, client)
 	wechaterFacade := wechat.NewWechaterFacade(wechaterFactory, dynConf)
-	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, fileRepo, senderFacade, wechaterFacade)
-	appServer := handlers.ProvideAppServer(dataStore, eventStore, appService)
+	kafkaFactory, cleanup4 := ProvideKafkaFactory(reader, logger)
+	v := providePublisherOptions(tracer, logger)
+	moduleProducerMiddleware := provideProducerMiddleware(tracer, logger)
+	dataStore := provideUserBus(kafkaFactory, reader, v, moduleProducerMiddleware)
+	eventStore := provideEventBus(kafkaFactory, reader, v, moduleProducerMiddleware)
+	dispatcher := ProvideDispatcher(dataStore, eventStore)
+	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, fileRepo, senderFacade, wechaterFacade, dispatcher)
+	appServer := handlers.ProvideAppServer(appService)
 	module := provideModule(db, tracer, logger, moduleOverallMiddleware, appServer, appName)
 	return module, func() {
 		cleanup4()
@@ -93,6 +97,11 @@ var AppServerSet = wire.NewSet(
 	provideKeyManager,
 	ProvideHttpClient,
 	ProvideUploadManager,
+	ProvideDispatcher,
 	ProvideRedis,
-	provideWechatConfig, wechat.NewWechaterFactory, wechat.NewWechaterFacade, sms.NewTransportFactory, sms.NewSenderFacade, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, handlers.NewAppService, handlers.ProvideAppServer, wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(wechat.Wechater), new(*wechat.WechaterFacade)), wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(handlers.FileRepository), new(*repository.FileRepo)),
+	provideWechatConfig,
+	provideUserBus,
+	providePublisherOptions,
+	ProvideKafkaFactory,
+	provideEventBus, wechat.NewWechaterFactory, wechat.NewWechaterFacade, sms.NewTransportFactory, sms.NewSenderFacade, repository.NewUserRepo, repository.NewCodeRepo, repository.NewFileRepo, repository.NewExtraRepo, handlers.NewAppService, handlers.ProvideAppServer, wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)), wire.Bind(new(contract.Keyer), new(otredis.KeyManager)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(listener.UserBus), new(*client.DataStore)), wire.Bind(new(listener.EventBus), new(*client.EventStore)), wire.Bind(new(contract.Dispatcher), new(*event.Dispatcher)), wire.Bind(new(wechat.Wechater), new(*wechat.WechaterFacade)), wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)), wire.Bind(new(handlers.FileRepository), new(*repository.FileRepo)),
 )
