@@ -15,15 +15,17 @@ func NewAppService(
 	fr FileRepository,
 	sender contract.SmsSender,
 	wechat wechat.Wechater,
+	dispatcher contract.Dispatcher,
 ) appService {
 	return appService{
-		conf:   conf,
-		logger: log,
-		ur:     ur,
-		cr:     cr,
-		sender: sender,
-		wechat: wechat,
-		fr:     fr,
+		conf:       conf,
+		logger:     log,
+		ur:         ur,
+		cr:         cr,
+		sender:     sender,
+		wechat:     wechat,
+		fr:         fr,
+		dispatcher: dispatcher,
 	}
 }
 

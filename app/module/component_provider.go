@@ -97,7 +97,7 @@ func provideUserBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, op
 }
 
 func ProvideKafkaFactory(conf contract.ConfigReader, logger log.Logger) (*kkafka.KafkaFactory, func()) {
-	factory := kkafka.NewKafkaFactory(conf.Strings("kafka.brokers"), logger)
+	factory := kkafka.NewKafkaFactory(conf.Strings("kafka.brokers"), log.NewNopLogger())
 	return factory, func() {
 		_ = factory.Close()
 	}

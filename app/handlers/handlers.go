@@ -98,7 +98,9 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 	}
 
 	// 拼装返回结果
-	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(u)))
+	_ = s.dispatcher.
+		Dispatch(event.NewEvent(ctx, s.
+			toDetail(u)))
 	var resp = s.toReply(u)
 	resp.Data.Token = tokenString
 
