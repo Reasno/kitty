@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewErrorMarshallerMiddleware(t *testing.T) {
-	mw := NewErrorMarshallerMiddleware()
+	mw := NewErrorMarshallerMiddleware(false)
 	e1 := func(ctx context.Context, request interface{}) (interface{}, error) {
 		return nil, errors.New("foo")
 	}

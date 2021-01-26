@@ -52,6 +52,7 @@ var AppServerSet = wire.NewSet(
 	provideUserBus,
 	providePublisherOptions,
 	ProvideKafkaFactory,
+	provideEventBus,
 	wechat.NewWechaterFactory,
 	wechat.NewWechaterFacade,
 	sms.NewTransportFactory,
@@ -67,6 +68,7 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(contract.Uploader), new(*ots3.Manager)),
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
 	wire.Bind(new(listener.UserBus), new(*kclient.DataStore)),
+	wire.Bind(new(listener.EventBus), new(*kclient.EventStore)),
 	wire.Bind(new(contract.Dispatcher), new(*event.Dispatcher)),
 	wire.Bind(new(wechat.Wechater), new(*wechat.WechaterFacade)),
 	wire.Bind(new(contract.SmsSender), new(*sms.SenderFacade)),
@@ -83,7 +85,5 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 		provideEndpointsMiddleware,
 		provideProducerMiddleware,
 		provideModule,
-		provideEventBus,
-		wire.Bind(new(handlers.EventBus), new(*kclient.EventStore)),
 	))
 }

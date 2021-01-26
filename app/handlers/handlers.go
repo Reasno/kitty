@@ -15,6 +15,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
+	appevent "glab.tagtic.cn/ad_gains/kitty/app/event"
 	"glab.tagtic.cn/ad_gains/kitty/app/msg"
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
@@ -97,10 +98,14 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		s.warn(err)
 	}
 
+	// 触发事件
+	var detail = s.toDetail(u)
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: detail}))
+	if u.IsNew {
+		_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserCreated{UserInfoDetail: detail}))
+	}
+
 	// 拼装返回结果
-	_ = s.dispatcher.
-		Dispatch(event.NewEvent(ctx, s.
-			toDetail(u)))
 	var resp = s.toReply(u)
 	resp.Data.Token = tokenString
 

@@ -205,10 +205,13 @@ func ProvideJaegerLogAdapter(l log.Logger) jaeger.Logger {
 	return &logging.JaegerLogAdapter{Logging: l}
 }
 
-func ProvideDispatcher(bus listener.UserBus) *event.Dispatcher {
+func ProvideDispatcher(ubus listener.UserBus, ebus listener.EventBus) *event.Dispatcher {
 	dispatcher := event.Dispatcher{}
 	dispatcher.Subscribe(listener.UserChanged{
-		Bus: bus,
+		Bus: ubus,
+	})
+	dispatcher.Subscribe(listener.UserCreated{
+		Bus: ebus,
 	})
 	return &dispatcher
 }

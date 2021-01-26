@@ -31,12 +31,6 @@ func NewAppService(
 
 type ServerMiddleware func(server pb.AppServer) pb.AppServer
 
-func NewMonitorMiddleware(eventBus EventBus) ServerMiddleware {
-	return func(server pb.AppServer) pb.AppServer {
-		return &MonitoredAppService{eventBus: eventBus, AppServer: server}
-	}
-}
-
 func NewInputEnrichMiddleware() ServerMiddleware {
 	return func(server pb.AppServer) pb.AppServer {
 		return &InputEnrichedAppService{AppServer: server}
@@ -52,9 +46,8 @@ func Chain(outer ServerMiddleware, others ...ServerMiddleware) ServerMiddleware 
 	}
 }
 
-func ProvideAppServer(eventBus EventBus, service appService) pb.AppServer {
+func ProvideAppServer(service appService) pb.AppServer {
 	return Chain(
 		NewInputEnrichMiddleware(),
-		NewMonitorMiddleware(eventBus),
 	)(service)
 }

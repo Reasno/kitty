@@ -47,7 +47,7 @@ func provideEndpointsMiddleware(l log.Logger, securityConfig *kmiddleware.Securi
 		in.WrapAllExcept(kmiddleware.NewConfigMiddleware())
 		in.GetInfoEndpoint = kmiddleware.NewOptionalAuthenticationMiddleware(securityConfig)(in.GetInfoEndpoint)
 		in.WrapAllExcept(kmiddleware.NewAuthenticationMiddleware(securityConfig), "Login", "GetCode", "GetInfo")
-		in.WrapAllExcept(kmiddleware.NewErrorMarshallerMiddleware())
+		in.WrapAllExcept(kmiddleware.NewErrorMarshallerMiddleware(env.IsProd()))
 		return in
 	}
 }

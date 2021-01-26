@@ -3,9 +3,9 @@ package listener
 import (
 	"context"
 
+	appevent "glab.tagtic.cn/ad_gains/kitty/app/event"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
-	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 type UserBus interface {
@@ -17,11 +17,11 @@ type UserChanged struct {
 }
 
 func (u UserChanged) Listen() []contract.Event {
-	return event.Of(&pb.UserInfoDetail{})
+	return event.Of(appevent.UserChanged{})
 }
 
 func (u UserChanged) Process(event contract.Event) error {
-	data := event.Data().(*pb.UserInfoDetail)
+	data := event.Data().(appevent.UserChanged)
 	_ = u.Bus.Emit(event.Context(), data)
 	return nil
 }

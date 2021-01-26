@@ -83,7 +83,7 @@ type Endpoints struct {
 
 func newEndpoints(s service.Service, hist metrics.Histogram, logger log.Logger, appName contract.AppName, env contract.Env) Endpoints {
 	l := kmiddleware.NewLoggingMiddleware(logger, env.IsLocal())
-	e := kmiddleware.NewErrorMarshallerMiddleware()
+	e := kmiddleware.NewErrorMarshallerMiddleware(env.IsProd())
 	mw := func(name string) endpoint.Middleware {
 		return endpoint.Chain(e, kmiddleware.NewMetricsMiddleware(hist, appName.String(), name), l)
 	}
