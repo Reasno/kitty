@@ -71,6 +71,14 @@ func (p Payload) Date(s string) time.Time {
 	return date
 }
 
+func (p Payload) DaysAgo(s string) int {
+	return int(time.Now().Sub(p.Date(s)).Hours() / 24)
+}
+
+func (p Payload) HoursAgo(s string) int {
+	return int(time.Now().Sub(p.Date(s)).Hours())
+}
+
 func (p Payload) DateTime(s string) time.Time {
 	date, err := time.Parse("2006-01-02 15:04:05", s)
 	if err != nil {
