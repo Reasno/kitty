@@ -9,12 +9,6 @@ import (
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 )
 
-var loc *time.Location
-
-func init() {
-	loc, _ = time.LoadLocation("PRC")
-}
-
 type Payload struct {
 	Channel     string                 `json:"channel" schema:"channel"`
 	VersionCode int                    `json:"version_code" schema:"version_code"`
@@ -70,7 +64,7 @@ func (p Payload) Now() time.Time {
 }
 
 func (p Payload) Date(s string) time.Time {
-	date, err := time.ParseInLocation("2006-01-02", s, loc)
+	date, err := time.ParseInLocation("2006-01-02", s, time.Local)
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +80,7 @@ func (p Payload) HoursAgo(s string) int {
 }
 
 func (p Payload) DateTime(s string) time.Time {
-	date, err := time.ParseInLocation("2006-01-02 15:04:05", s, loc)
+	date, err := time.ParseInLocation("2006-01-02 15:04:05", s, time.Local)
 	if err != nil {
 		panic(err)
 	}
@@ -99,9 +93,9 @@ func (p Payload) IsBefore(s string) bool {
 		err error
 	)
 	if len(s) == 10 {
-		t, err = time.ParseInLocation("2006-01-02", s, loc)
+		t, err = time.ParseInLocation("2006-01-02", s, time.Local)
 	} else {
-		t, err = time.ParseInLocation("2006-01-02 15:04:05", s, loc)
+		t, err = time.ParseInLocation("2006-01-02 15:04:05", s, time.Local)
 	}
 	if err != nil {
 		panic(err)
@@ -115,9 +109,9 @@ func (p Payload) IsAfter(s string) bool {
 		err error
 	)
 	if len(s) == 10 {
-		t, err = time.ParseInLocation("2006-01-02", s, loc)
+		t, err = time.ParseInLocation("2006-01-02", s, time.Local)
 	} else {
-		t, err = time.ParseInLocation("2006-01-02 15:04:05", s, loc)
+		t, err = time.ParseInLocation("2006-01-02 15:04:05", s, time.Local)
 	}
 	if err != nil {
 		panic(err)
