@@ -72,11 +72,11 @@ func (p Payload) Date(s string) time.Time {
 }
 
 func (p Payload) DaysAgo(s string) int {
-	return int(time.Now().Sub(p.Date(s)).Hours() / 24)
+	return int(time.Now().Sub(p.DateTime(s)).Hours() / 24)
 }
 
 func (p Payload) HoursAgo(s string) int {
-	return int(time.Now().Sub(p.Date(s)).Hours())
+	return int(time.Now().Sub(p.DateTime(s)).Hours())
 }
 
 func (p Payload) DateTime(s string) time.Time {
