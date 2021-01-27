@@ -3,6 +3,7 @@ package dto
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
@@ -56,6 +57,90 @@ func FromTenant(tenant *config.Tenant) *Payload {
 func (p *Payload) String() string {
 	b, _ := json.Marshal(p)
 	return string(b)
+}
+
+func (p Payload) Now() time.Time {
+	return time.Now()
+}
+
+func (p Payload) Date(s string) time.Time {
+	date, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		panic(err)
+	}
+	return date
+}
+
+func (p Payload) DaysAgo(s string) int {
+	return int(time.Now().Sub(p.Date(s)).Hours() / 24)
+}
+
+func (p Payload) HoursAgo(s string) int {
+	return int(time.Now().Sub(p.Date(s)).Hours())
+}
+
+func (p Payload) DateTime(s string) time.Time {
+	date, err := time.Parse("2006-01-02 15:04:05", s)
+	if err != nil {
+		panic(err)
+	}
+	return date
+}
+
+func (p Payload) IsBefore(s string) bool {
+	var (
+		t   time.Time
+		err error
+	)
+	if len(s) == 10 {
+		t, err = time.Parse("2006-01-02", s)
+	} else {
+		t, err = time.Parse("2006-01-02 15:04:05", s)
+	}
+	if err != nil {
+		panic(err)
+	}
+	return time.Now().Before(t)
+}
+
+func (p Payload) IsAfter(s string) bool {
+	var (
+		t   time.Time
+		err error
+	)
+	if len(s) == 10 {
+		t, err = time.Parse("2006-01-02", s)
+	} else {
+		t, err = time.Parse("2006-01-02 15:04:05", s)
+	}
+	if err != nil {
+		panic(err)
+	}
+	return time.Now().After(t)
+}
+
+func (p Payload) IsBetween(begin string, end string) bool {
+	return p.IsAfter(begin) && p.IsBefore(end)
+}
+
+func (p Payload) IsWeekday(day int) bool {
+	return time.Now().Weekday() == time.Weekday(day)
+}
+
+func (p Payload) IsWeekend() bool {
+	if weekday := time.Now().Weekday(); weekday == 0 || weekday == 6 {
+		return true
+	}
+	return false
+}
+
+func (p Payload) IsToday(s string) bool {
+	return time.Now().Format("2006-01-02") == s
+}
+
+func (p Payload) IsHourRange(begin int, end int) bool {
+	now := time.Now().Hour()
+	return now >= begin && now <= end
 }
 
 type Data map[string]interface{}
