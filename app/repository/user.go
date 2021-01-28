@@ -37,7 +37,7 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 	var (
 		u entity.User
 	)
-	err = r.db.WithContext(ctx).Model(entity.User{}).Where("id = ?", id).Updates(user).Error
+	err = r.db.WithContext(ctx).Model(entity.User{}).Unscoped().Where("id = ?", id).Updates(user).Error
 	if err != nil {
 		if err, ok := err.(*mysql.MySQLError); ok {
 			if err.Number == 1062 {
