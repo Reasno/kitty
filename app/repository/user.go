@@ -53,6 +53,10 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 	return &u, nil
 }
 
+func (r *UserRepo) Delete(ctx context.Context, id uint) (err error) {
+	return r.db.WithContext(ctx).Delete(&entity.User{}, id).Error
+}
+
 func (r *UserRepo) UpdateCallback(ctx context.Context, id uint, f func(user *entity.User) error) (err error) {
 	var u entity.User
 	return r.db.Transaction(func(tx *gorm.DB) error {

@@ -25,7 +25,6 @@ import (
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -60,6 +59,7 @@ type UserRepository interface {
 	GetAll(ctx context.Context, where ...clause.Expression) (user []entity.User, err error)
 	Count(ctx context.Context, where ...clause.Expression) (total int64, err error)
 	Save(ctx context.Context, user *entity.User) error
+	Delete(ctx context.Context, id uint) error
 }
 
 type FileRepository interface {
@@ -333,12 +333,7 @@ func (s appService) SoftDelete(ctx context.Context, in *pb.UserSoftDeleteRequest
 	if err != nil {
 		return nil, err
 	}
-	_, err = s.ur.Update(ctx, uint(in.Id), entity.User{Model: gorm.Model{
-		DeletedAt: gorm.DeletedAt{
-			Time:  time.Now(),
-			Valid: true,
-		},
-	}})
+	err = s.ur.Delete(ctx, uint(in.Id))
 	if err != nil && !errors.Is(err, repository.ErrRecordNotFound) {
 		return nil, dbErr(err)
 	}
