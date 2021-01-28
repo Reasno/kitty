@@ -37,7 +37,7 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 	var (
 		u entity.User
 	)
-	err = r.db.WithContext(ctx).Model(entity.User{}).Where("id = ?", id).Updates(user).Error
+	err = r.db.WithContext(ctx).Model(entity.User{}).Unscoped().Where("id = ?", id).Updates(user).Error
 	if err != nil {
 		if err, ok := err.(*mysql.MySQLError); ok {
 			if err.Number == 1062 {
@@ -51,6 +51,10 @@ func (r *UserRepo) Update(ctx context.Context, id uint, user entity.User) (newUs
 		return nil, errors.Wrap(err, emsg)
 	}
 	return &u, nil
+}
+
+func (r *UserRepo) Delete(ctx context.Context, id uint) (err error) {
+	return r.db.WithContext(ctx).Delete(&entity.User{}, id).Error
 }
 
 func (r *UserRepo) UpdateCallback(ctx context.Context, id uint, f func(user *entity.User) error) (err error) {

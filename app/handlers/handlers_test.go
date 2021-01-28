@@ -235,6 +235,7 @@ func TestAppService_SoftDelete(t *testing.T) {
 						assert.True(t, user.Model.DeletedAt.Valid)
 						return &entity.User{PackageName: "foo", Model: user.Model, UserName: "foo"}
 					}, nil).Once()
+					ur.On("Delete", mock.Anything, mock.Anything).Return(nil).Once()
 					return ur
 				})(),
 				cr: (func() CodeRepository {

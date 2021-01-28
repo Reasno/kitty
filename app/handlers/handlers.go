@@ -25,7 +25,6 @@ import (
 	kittyjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/wechat"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -60,6 +59,7 @@ type UserRepository interface {
 	GetAll(ctx context.Context, where ...clause.Expression) (user []entity.User, err error)
 	Count(ctx context.Context, where ...clause.Expression) (total int64, err error)
 	Save(ctx context.Context, user *entity.User) error
+	Delete(ctx context.Context, id uint) error
 }
 
 type FileRepository interface {
@@ -180,7 +180,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		return nil, dbErr(err)
 	}
 
-	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(u)))
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: s.toDetail(u)}))
 	reply := s.toReply(u)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(u.ID),
@@ -305,7 +305,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(u)))
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: s.toDetail(u)}))
 	var resp = s.toReply(u)
 	return resp, nil
 
@@ -333,12 +333,7 @@ func (s appService) SoftDelete(ctx context.Context, in *pb.UserSoftDeleteRequest
 	if err != nil {
 		return nil, err
 	}
-	_, err = s.ur.Update(ctx, uint(in.Id), entity.User{Model: gorm.Model{
-		DeletedAt: gorm.DeletedAt{
-			Time:  time.Now(),
-			Valid: true,
-		},
-	}})
+	err = s.ur.Delete(ctx, uint(in.Id))
 	if err != nil && !errors.Is(err, repository.ErrRecordNotFound) {
 		return nil, dbErr(err)
 	}
@@ -424,7 +419,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 获取Token
-	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(newUser)))
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: s.toDetail(newUser)}))
 	reply := s.toReply(newUser)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(newUser.ID),
@@ -473,7 +468,7 @@ func (s appService) unbindId(ctx context.Context, in *pb.UserUnbindRequest, id u
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(user)))
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: s.toDetail(user)}))
 	var resp = s.toReply(user)
 	return resp, nil
 }

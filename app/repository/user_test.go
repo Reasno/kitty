@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -134,6 +136,20 @@ func TestGetSave(t *testing.T) {
 	if u.ID != user.ID {
 		t.Fatalf("want %d, go %d", user.ID, u.ID)
 	}
+}
+
+func TestUserRepo_Delete(t *testing.T) {
+	setUp(t)
+	defer tearDown()
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil))
+	ctx := context.Background()
+	user := entity.User{Model: gorm.Model{ID: uint(1)}, UserName: "hello"}
+	_ = userRepo.Save(ctx, &user)
+
+	err := userRepo.Delete(ctx, 1)
+	assert.NoError(t, err)
+	_, err = userRepo.Get(ctx, 1)
+	assert.True(t, errors.Is(err, ErrRecordNotFound))
 }
 
 func TestUserRepo_GetAll(t *testing.T) {
