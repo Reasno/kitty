@@ -180,7 +180,7 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		return nil, dbErr(err)
 	}
 
-	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(u)))
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: s.toDetail(u)}))
 	reply := s.toReply(u)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(u.ID),
@@ -305,7 +305,7 @@ func (s appService) UpdateInfo(ctx context.Context, in *pb.UserInfoUpdateRequest
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(u)))
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: s.toDetail(u)}))
 	var resp = s.toReply(u)
 	return resp, nil
 
@@ -419,7 +419,7 @@ func (s appService) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserI
 	}
 
 	// 获取Token
-	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(newUser)))
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: s.toDetail(newUser)}))
 	reply := s.toReply(newUser)
 	reply.Data.Token, err = s.getToken(&tokenParam{
 		uint64(newUser.ID),
@@ -468,7 +468,7 @@ func (s appService) unbindId(ctx context.Context, in *pb.UserUnbindRequest, id u
 	if err != nil {
 		return nil, dbErr(err)
 	}
-	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, s.toDetail(user)))
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: s.toDetail(user)}))
 	var resp = s.toReply(user)
 	return resp, nil
 }
