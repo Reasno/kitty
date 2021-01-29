@@ -71,13 +71,14 @@ func TraceProducer(tracer stdtracing.Tracer, operationName string, kind ext.Span
 			}
 			defer clientSpan.Finish()
 			ext.SpanKindConsumer.Set(clientSpan)
-			clientSpan.LogKV("message", request)
 			ctx = stdtracing.ContextWithSpan(ctx, clientSpan)
 			resp, err := next(ctx, request)
 			if err != nil {
 				ext.Error.Set(clientSpan, true)
 				clientSpan.LogKV("error", err.Error())
 			}
+			clientSpan.LogKV("request", request)
+			clientSpan.LogKV("response", resp)
 			return resp, err
 		}
 	}
