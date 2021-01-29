@@ -67,7 +67,7 @@ rule:
 			`
 style: advanced
 rule:
-- if: Imei == "456" && Oaid = "789"
+- if: Imei == "456" && Oaid == "789"
   then: 
     foo: bar
 - if: Imei == "123" && Oaid == "789"
@@ -97,7 +97,7 @@ rule:
 				t.Fatal(err)
 			}
 			if !reflect.DeepEqual(result, cc.result) {
-				t.Fatalf("want %v, got %v", cc.result, result)
+				t.Fatalf("want %#v, got %#v", cc.result, result)
 			}
 		})
 	}

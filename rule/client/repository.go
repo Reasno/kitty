@@ -42,7 +42,7 @@ func NewRepository(client *clientv3.Client, logger log.Logger, activeContainers 
 
 	// 填充所有容器
 	for k, v := range activeContainers {
-		repo.containers[k] = repository2.Container{DbKey: v, Name: k, RuleSet: []entity.Rule{}}
+		repo.containers[k] = repository2.Container{DbKey: v, Name: k, RuleSet: nil}
 	}
 
 	// 依次拉取规则
@@ -66,7 +66,7 @@ func NewRepository(client *clientv3.Client, logger log.Logger, activeContainers 
 	return repo, nil
 }
 
-func (r *repository) updateRuleSetByDbKey(dbKey string, rules []entity.Rule) {
+func (r *repository) updateRuleSetByDbKey(dbKey string, rules entity.Ruler) {
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
 	for i, v := range r.containers {
@@ -108,7 +108,7 @@ func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (
 	return nil, err
 }
 
-func (r *repository) GetCompiled(ruleName string) []entity.Rule {
+func (r *repository) GetCompiled(ruleName string) entity.Ruler {
 	r.rwLock.RLock()
 	defer r.rwLock.RUnlock()
 	if c, ok := r.containers[ruleName]; ok {

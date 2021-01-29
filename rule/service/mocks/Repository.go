@@ -17,15 +17,15 @@ type Repository struct {
 }
 
 // GetCompiled provides a mock function with given fields: ruleName
-func (_m *Repository) GetCompiled(ruleName string) []entity.Rule {
+func (_m *Repository) GetCompiled(ruleName string) entity.Ruler {
 	ret := _m.Called(ruleName)
 
-	var r0 []entity.Rule
-	if rf, ok := ret.Get(0).(func(string) []entity.Rule); ok {
+	var r0 entity.Ruler
+	if rf, ok := ret.Get(0).(func(string) entity.Ruler); ok {
 		r0 = rf(ruleName)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.Rule)
+			r0 = ret.Get(0).(entity.Ruler)
 		}
 	}
 

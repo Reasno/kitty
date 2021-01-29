@@ -31,7 +31,7 @@ type repository struct {
 }
 
 type Container struct {
-	RuleSet []entity.Rule
+	RuleSet entity.Ruler
 	DbKey   string
 	Name    string
 }
@@ -60,7 +60,7 @@ func NewRepository(client *clientv3.Client, logger log.Logger) (*repository, err
 	return repo, nil
 }
 
-func (r *repository) updateRuleSetByDbKey(dbKey string, rules []entity.Rule) {
+func (r *repository) updateRuleSetByDbKey(dbKey string, rules entity.Ruler) {
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
 	for i, v := range r.containers {
@@ -238,13 +238,13 @@ func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, err
 	return true, nil
 }
 
-func (r *repository) GetCompiled(ruleName string) []entity.Rule {
+func (r *repository) GetCompiled(ruleName string) entity.Ruler {
 	r.rwLock.RLock()
 	defer r.rwLock.RUnlock()
 	if c, ok := r.containers[ruleName]; ok {
 		return c.RuleSet
 	}
-	return []entity.Rule{}
+	return nil
 }
 
 func (r *repository) resetActiveContainers(activeContainers map[string]string) {
@@ -254,9 +254,9 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 	// 更新容器
 	newContainers := make(map[string]Container, len(activeContainers)+1)
 	for k, v := range activeContainers {
-		newContainers[k] = Container{DbKey: v, Name: k, RuleSet: []entity.Rule{}}
+		newContainers[k] = Container{DbKey: v, Name: k, RuleSet: nil}
 	}
-	newContainers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: []entity.Rule{}}
+	newContainers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: nil}
 	r.containers = newContainers
 
 	// 依次拉取规则

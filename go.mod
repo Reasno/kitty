@@ -15,6 +15,7 @@ require (
 	github.com/aws/aws-sdk-go v1.29.5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.4.1
+	github.com/fatih/structs v1.1.0
 	github.com/gabriel-vasile/mimetype v1.1.1
 	github.com/go-gormigrate/gormigrate/v2 v2.0.0
 	github.com/go-kit/kit v0.10.0
@@ -30,6 +31,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.0.0
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/knadh/koanf v0.14.0
+	github.com/mitchellh/mapstructure v1.2.2
 	github.com/oklog/run v1.0.0
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.1.0
