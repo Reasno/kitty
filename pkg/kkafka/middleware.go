@@ -82,7 +82,7 @@ func TracingProducerMiddleware(tracer opentracing.Tracer, opName string) Middlew
 				header.Value = []byte(v)
 			}
 			msg.Headers = append(msg.Headers, header)
-
+			span.LogKV("message", string(msg.Value))
 			err = h.Handle(ctx, msg)
 			if err != nil {
 				span.LogKV("error", err.Error())

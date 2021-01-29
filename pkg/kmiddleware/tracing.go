@@ -77,6 +77,8 @@ func TraceProducer(tracer stdtracing.Tracer, operationName string, kind ext.Span
 				ext.Error.Set(clientSpan, true)
 				clientSpan.LogKV("error", err.Error())
 			}
+			clientSpan.LogKV("request", request)
+			clientSpan.LogKV("response", resp)
 			return resp, err
 		}
 	}
