@@ -26,7 +26,7 @@ type ofRule struct {
 }
 
 type Repository interface {
-	GetCompiled(ruleName string) []entity.Rule
+	GetCompiled(ruleName string) entity.Ruler
 	WatchConfigUpdate(ctx context.Context) error
 }
 
@@ -38,7 +38,7 @@ func (r *ofRule) Tenant(tenant *kconf.Tenant) (contract.ConfigReader, error) {
 func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 	compiled := r.d.repository.GetCompiled(r.ruleName)
 
-	calculated, err := entity.Calculate(compiled, pl, r.d.logger)
+	calculated, err := entity.Calculate(compiled, pl)
 	if err != nil {
 		return nil, err
 	}

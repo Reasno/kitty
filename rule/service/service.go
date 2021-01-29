@@ -25,7 +25,7 @@ type Service interface {
 }
 
 type Repository interface {
-	GetCompiled(ruleName string) []entity.Rule
+	GetCompiled(ruleName string) entity.Ruler
 	GetRaw(ctx context.Context, key string) (value []byte, e error)
 	SetRaw(ctx context.Context, key string, value string) error
 	IsNewest(ctx context.Context, key, value string) (bool, error)
@@ -44,7 +44,10 @@ func NewService(logger log.Logger, repo Repository) *service {
 
 func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *dto.Payload) (dto.Data, error) {
 	rules := r.repo.GetCompiled(ruleName)
-	return entity.Calculate(rules, payload, r.logger)
+	if rules == nil {
+		return nil, errors.New("rule not found")
+	}
+	return entity.Calculate(rules, payload)
 }
 
 func (r *service) GetRules(ctx context.Context, ruleName string) ([]byte, error) {
