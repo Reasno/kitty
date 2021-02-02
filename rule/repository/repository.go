@@ -228,7 +228,12 @@ func (r *repository) ValidateRules(ruleName string, reader io.Reader) error {
 
 // IsNewest 传入的内容是否和ETCD中的最新版本一致
 func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, error) {
-	v, err := r.client.Get(ctx, key)
+	c, ok := r.containers[key]
+	if !ok {
+		return false, fmt.Errorf("unknown rule set %s", key)
+	}
+
+	v, err := r.client.Get(ctx, c.DbKey)
 	if err != nil {
 		return false, err
 	}
