@@ -63,6 +63,7 @@ func WithParallelism(parallelism int) readerOpt {
 }
 
 func (k *KafkaFactory) MakeKafkaServer(topic string, handler Handler, opt ...readerOpt) *sub {
+
 	k.mutex.Lock()
 	defer k.mutex.Unlock()
 
