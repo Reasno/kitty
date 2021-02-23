@@ -142,7 +142,7 @@ func (im *InvitationManager) ClaimReward(ctx context.Context, masterId uint64, a
 func (im *InvitationManager) CompleteStep(ctx context.Context, apprenticeId uint64, event ReceivedEvent) error {
 
 	if !in(event, im.conf.OrientationEvents) {
-		level.Info(im.logger).Log("msg", fmt.Sprintf("invalid event %+v, want %+v", event, im.conf.OrientationEvents))
+		level.Debug(im.logger).Log("msg", fmt.Sprintf("invalid event %+v, want %+v", event, im.conf.OrientationEvents))
 		return nil
 	}
 	level.Info(im.logger).Log("msg", fmt.Sprintf("valid event received %+v", event))
