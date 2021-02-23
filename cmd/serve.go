@@ -127,6 +127,7 @@ func getHttpHandler(ln net.Listener, providers ...func(*mux.Router)) http.Handle
 		p(router)
 	}
 	handler = kittyhttp.AddCorsMiddleware()(router)
+	handler = kittyhttp.AddLogMiddleware(coreModule.Logger)(router)
 	return handler
 }
 
