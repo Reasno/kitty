@@ -9,11 +9,14 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	kittyhttp "glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
+	kclient "glab.tagtic.cn/ad_gains/kitty/pkg/kkafka/client"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/ots3"
 	"glab.tagtic.cn/ad_gains/kitty/share/handlers"
 	"glab.tagtic.cn/ad_gains/kitty/share/internal"
+	"glab.tagtic.cn/ad_gains/kitty/share/listener"
 )
 
 var ShareServiceSet = wire.NewSet(
@@ -29,6 +32,9 @@ var ShareServiceSet = wire.NewSet(
 	repository.NewRelationRepo,
 	repository.NewFileRepo,
 	provideTokenizer,
+	providePublisherOptions,
+	provideInvitationCodeBus,
+	provideDispatcher,
 	internal.NewXTaskRequester,
 	handlers.NewShareService,
 	handlers.ProvideShareServer,
@@ -40,6 +46,8 @@ var ShareServiceSet = wire.NewSet(
 	wire.Bind(new(contract.Uploader), new(*ots3.Manager)),
 	wire.Bind(new(contract.HttpDoer), new(*kittyhttp.Client)),
 	wire.Bind(new(internal.EncodeDecoder), new(*invitecode.Tokenizer)),
+	wire.Bind(new(contract.Dispatcher), new(*event.Dispatcher)),
+	wire.Bind(new(listener.InvitationCodeBus), new(*kclient.DataStore)),
 )
 
 func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {
@@ -50,6 +58,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 		provideHttp,
 		provideGrpc,
 		provideKafkaServer,
+		provideProducerMiddleware,
 		provideModule,
 	))
 }

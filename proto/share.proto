@@ -222,3 +222,10 @@ message SignEvent{
   bool is_double = 10; // 签到是否翻倍
   string ext = 11; // 扩展字段，补充业务使用
 }
+
+message InvitationInfo {
+  uint64 invitee_id = 1; // 受邀者ID 即: 用户ID
+  uint64 inviter_id = 2; // 邀请者ID
+  string date_time = 3; // 邀请时间 2020-12-17 18:12:22
+  string package_name = 4; // 应用包名
+}
