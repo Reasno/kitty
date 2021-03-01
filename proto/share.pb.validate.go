@@ -1062,6 +1062,8 @@ func (m *InvitationInfo) Validate() error {
 
 	// no validation rules for PackageName
 
+	// no validation rules for Channel
+
 	return nil
 }
 

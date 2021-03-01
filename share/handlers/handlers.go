@@ -86,6 +86,7 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 		PackageName: claim.PackageName,
 		InviteCode:  in.GetInviteCode(),
 		DateTime:    time.Now(),
+		Channel:     claim.Channel,
 	}
 
 	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, e))
