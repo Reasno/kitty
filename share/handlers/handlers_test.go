@@ -3,6 +3,9 @@ package handlers
 import (
 	"context"
 	"errors"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/invitecode"
 	"testing"
 
 	"github.com/go-kit/kit/auth/jwt"
@@ -47,6 +50,12 @@ func TestShareService_AddInvitationCode(t *testing.T) {
 					})
 					return &m
 				}(),
+				dispatcher: func() contract.Dispatcher {
+					return &event.Dispatcher{}
+				}(),
+				tokenizer: func() internal.EncodeDecoder {
+					return invitecode.NewTokenizer("")
+				}(),
 			},
 			ctx: ctx(1),
 			req: pb.ShareAddInvitationRequest{
@@ -70,6 +79,12 @@ func TestShareService_AddInvitationCode(t *testing.T) {
 						return f(user)
 					})
 					return &m
+				}(),
+				dispatcher: func() contract.Dispatcher {
+					return &event.Dispatcher{}
+				}(),
+				tokenizer: func() internal.EncodeDecoder {
+					return invitecode.NewTokenizer("")
 				}(),
 			},
 			ctx: ctx(1),
