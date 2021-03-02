@@ -4,6 +4,10 @@ package handlers
 
 import (
 	"context"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
+	shareevent "glab.tagtic.cn/ad_gains/kitty/share/event"
+	"time"
 
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/app/entity"
@@ -18,8 +22,10 @@ import (
 var ErrReenteringInviteCode = errors.New("不能重复填写邀请码")
 
 type shareService struct {
-	manager InvitationManager
-	ur      UserRepository
+	manager    InvitationManager
+	ur         UserRepository
+	dispatcher contract.Dispatcher
+	tokenizer  internal.EncodeDecoder
 }
 
 type InvitationManager interface {
@@ -70,6 +76,20 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 	if err != nil {
 		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
 	}
+
+	inviterId, _ := s.tokenizer.Decode(in.GetInviteCode())
+
+	// 触发事件
+	e := shareevent.InvitationCodeAdded{
+		InviteeId:   claim.UserId,
+		InviterId:   uint64(inviterId),
+		PackageName: claim.PackageName,
+		InviteCode:  in.GetInviteCode(),
+		DateTime:    time.Now(),
+		Channel:     claim.Channel,
+	}
+
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, e))
 
 	var resp pb.ShareGenericReply
 	return &resp, nil

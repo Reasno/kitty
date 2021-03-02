@@ -2,7 +2,14 @@ package module
 
 import (
 	"fmt"
+	"github.com/go-kit/kit/endpoint"
+	"github.com/opentracing/opentracing-go/ext"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
+	kclient "glab.tagtic.cn/ad_gains/kitty/pkg/kkafka/client"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kmiddleware"
+	"glab.tagtic.cn/ad_gains/kitty/share/listener"
 	"net/http"
+	"time"
 
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/log"
@@ -26,6 +33,14 @@ func provideTokenizer(conf contract.ConfigReader) *code.Tokenizer {
 
 func provideEndpoints(middleware overallMiddleware, server kitty.ShareServer) svc.Endpoints {
 	return middleware(svc.NewEndpoints(server))
+}
+
+func provideDispatcher(icBus listener.InvitationCodeBus) *event.Dispatcher {
+	dispatcher := event.Dispatcher{}
+	dispatcher.Subscribe(listener.InvitationCodeAdded{
+		Bus: icBus,
+	})
+	return &dispatcher
 }
 
 type overallMiddleware func(endpoints svc.Endpoints) svc.Endpoints
@@ -70,4 +85,26 @@ func provideKafkaServer(endpoints svc.Endpoints, factory *kkafka.KafkaFactory, c
 		kkafka.SubscriberErrorHandler(kkafka.ErrHandler(logger)),
 	}
 	return svc.MakeKafkaServer(endpoints, factory, conf, serverOptions...)
+}
+
+func providePublisherOptions(tracer stdopentracing.Tracer, logger log.Logger) []kkafka.PublisherOption {
+	return []kkafka.PublisherOption{
+		kkafka.PublisherBefore(kkafka.ContextToKafka(tracer, logger)),
+	}
+}
+
+type producerMiddleware func(operationName string) endpoint.Middleware
+
+func provideProducerMiddleware(tracer stdopentracing.Tracer, logger log.Logger) producerMiddleware {
+	return func(operationName string) endpoint.Middleware {
+		return endpoint.Chain(
+			kmiddleware.NewAsyncMiddleware(logger),
+			kmiddleware.TraceProducer(tracer, operationName, ext.SpanKindProducerEnum),
+			kmiddleware.NewTimeoutMiddleware(time.Second),
+		)
+	}
+}
+
+func provideInvitationCodeBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, option []kkafka.PublisherOption, mw producerMiddleware) *kclient.DataStore {
+	return kclient.NewDataStore(conf.String("kafka.shareInvitationCodeBus"), factory, option, mw("kafka.Share"))
 }
