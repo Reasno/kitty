@@ -28,7 +28,7 @@ func (i InvitationCodeAdded) Process(event contract.Event) error {
 	info = &kitty.InvitationInfo{
 		InviteeId:   data.InviteeId,
 		InviterId:   data.InviterId,
-		DateTime:    data.DateTime.Format("2006-01-02 15-04-05"),
+		DateTime:    data.DateTime.Format("2006-01-02 15:04:05"),
 		PackageName: data.PackageName,
 		Channel:     data.Channel,
 	}
