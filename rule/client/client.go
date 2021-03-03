@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	"regexp"
+	"strings"
 
 	"github.com/go-kit/kit/log"
 	"github.com/knadh/koanf"
@@ -11,7 +13,6 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
-	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
 	"go.etcd.io/etcd/clientv3"
 )
 
@@ -31,12 +32,22 @@ type Repository interface {
 }
 
 func (r *ofRule) Tenant(tenant *kconf.Tenant) (contract.ConfigReader, error) {
-	var pl = dto.FromTenant(tenant)
-	return r.Payload(pl)
+	var payload = dto.FromTenant(tenant)
+	return r.Payload(payload)
 }
 
 func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
-	compiled := r.d.repository.GetCompiled(r.ruleName)
+	var compiled entity.Ruler
+
+	parts := strings.Split(pl.PackageName, ".")
+	if len(parts) > 0 {
+		codeName := parts[len(parts)-1]
+		compiled = r.d.repository.GetCompiled(codeName + "-" + r.ruleName)
+	}
+	// 兼容之前的情况，去商业化平台中心查配置
+	if compiled == nil {
+		compiled = r.d.repository.GetCompiled(r.ruleName)
+	}
 
 	calculated, err := entity.Calculate(compiled, pl)
 	if err != nil {
@@ -72,6 +83,8 @@ type config struct {
 	repo        Repository
 	logger      log.Logger
 	listOfRules []string
+	rulePrefix  string
+	ruleRegexp  *regexp.Regexp
 }
 
 func WithClient(client *clientv3.Client) Option {
@@ -104,6 +117,18 @@ func WithListOfRules(listOfRules []string) Option {
 	}
 }
 
+func WithRulePrefix(prefix string) Option {
+	return func(c *config) {
+		c.rulePrefix = prefix
+	}
+}
+
+func WithRuleRegexp(regexp *regexp.Regexp) Option {
+	return func(c *config) {
+		c.ruleRegexp = regexp
+	}
+}
+
 func Rule(rule string) Option {
 	return func(c *config) {
 		c.listOfRules = append(c.listOfRules, rule)
@@ -131,12 +156,13 @@ func NewRuleEngine(opt ...Option) (*RuleEngine, error) {
 			}
 			c.client = client
 		}
-		var mp = make(map[string]string)
-		for _, v := range c.listOfRules {
-			mp[v] = repository2.OtherConfigPathPrefix + "/" + v
-		}
+
 		var err error
-		c.repo, err = NewRepository(c.client, c.logger, mp)
+		c.repo, err = NewRepositoryWithConfig(c.client, c.logger, RepositoryConfig{
+			Prefix:      c.rulePrefix,
+			Regex:       c.ruleRegexp,
+			ListOfRules: c.listOfRules,
+		})
 		if err != nil {
 			return nil, errors.Wrap(err, "Failed to create repository")
 		}
