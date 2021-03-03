@@ -37,10 +37,13 @@ func (r *ofRule) Tenant(tenant *kconf.Tenant) (contract.ConfigReader, error) {
 }
 
 func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
-	parts := strings.Split(pl.PackageName, ".")
-	codeName := parts[len(parts)-1]
-	compiled := r.d.repository.GetCompiled(codeName + "-" + r.ruleName)
+	var compiled entity.Ruler
 
+	parts := strings.Split(pl.PackageName, ".")
+	if len(parts) > 0 {
+		codeName := parts[len(parts)-1]
+		compiled = r.d.repository.GetCompiled(codeName + "-" + r.ruleName)
+	}
 	// 兼容之前的情况，去商业化平台中心查配置
 	if compiled == nil {
 		compiled = r.d.repository.GetCompiled(r.ruleName)
