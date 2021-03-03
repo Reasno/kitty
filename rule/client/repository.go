@@ -178,7 +178,7 @@ func (r *repository) GetCompiled(ruleName string) entity.Ruler {
 	if c, ok := r.containers[ruleName]; ok {
 		return c.RuleSet
 	}
-	panic(fmt.Sprintf("unregistered rule %s", ruleName))
+	return nil
 }
 
 func dbKeyToName(dbKey string) string {
