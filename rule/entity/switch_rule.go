@@ -11,6 +11,7 @@ import (
 type SwitchRule struct {
 	style    string
 	by       string
+	enrich   bool
 	cases    map[string]Ruler
 	fallback Ruler
 }
@@ -28,6 +29,7 @@ func (s *SwitchRule) Unmarshal(reader *koanf.Koanf) (err error) {
 
 	s.style = reader.String("style")
 	s.by = reader.MustString("by")
+	s.enrich = reader.Bool("enrich")
 	cases := reader.Slices("rule")
 	for i := len(cases) - 1; i >= 0; i-- {
 		style := cases[i].String("style")
@@ -54,6 +56,10 @@ func (s *SwitchRule) Unmarshal(reader *koanf.Koanf) (err error) {
 }
 
 func (s *SwitchRule) Calculate(payload *dto.Payload) (dto.Data, error) {
+	// enrich if necessary
+	if s.enrich && !payload.HasEnriched {
+
+	}
 	m := structs.Map(payload)
 	by, ok := m[s.by]
 	if !ok {

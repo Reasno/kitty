@@ -8,8 +8,9 @@ import (
 )
 
 type AdvancedRuleCollection struct {
-	style string
-	items []*AdvancedRuleItem
+	style  string
+	enrich bool
+	items  []*AdvancedRuleItem
 }
 
 func NewAdvancedRule() *AdvancedRuleCollection {
@@ -26,6 +27,7 @@ func (ar *AdvancedRuleCollection) Unmarshal(reader *koanf.Koanf) (err error) {
 		}
 	}()
 	ar.style = reader.String("style")
+	ar.enrich = reader.Bool("enrich")
 	slc := reader.Slices("rule")
 	for _, subReader := range slc {
 		var item AdvancedRuleItem
@@ -50,6 +52,10 @@ func (ar *AdvancedRuleCollection) Compile() error {
 }
 
 func (ar *AdvancedRuleCollection) Calculate(payload *dto.Payload) (dto.Data, error) {
+	// enrich if necessary
+	if ar.enrich && !payload.HasEnriched {
+
+	}
 	for _, item := range ar.items {
 		data, err := item.Calculate(payload)
 		if err != nil {

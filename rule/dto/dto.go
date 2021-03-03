@@ -24,6 +24,7 @@ type Payload struct {
 	Ip          string                 `json:"ip" schema:"ip"`
 	Q           map[string][]string    `json:"-" schema:"-"`
 	B           map[string]interface{} `json:"-" schema:"-"`
+	HasEnriched bool                   `json:"-" schema:"-"`
 }
 
 func FromClaim(claim jwt2.Claim) *Payload {
