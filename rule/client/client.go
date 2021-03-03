@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -47,6 +48,9 @@ func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 	// 兼容之前的情况，去商业化平台中心查配置
 	if compiled == nil {
 		compiled = r.d.repository.GetCompiled(r.ruleName)
+	}
+	if compiled == nil {
+		return nil, fmt.Errorf("no suitable configuration found for %s", r.ruleName)
 	}
 
 	calculated, err := entity.Calculate(compiled, pl)

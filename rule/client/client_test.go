@@ -112,6 +112,15 @@ rule:
 				if reader.String("foo") != "baz" {
 					t.Fatalf("want %s, got %s", "baz", reader.String("foo"))
 				}
+				reader, err = dynConf.Of("kitty-testing").Payload(&dto.Payload{
+					PackageName: "com.foo.bar2",
+				})
+				if err != nil {
+					t.Fatal(err)
+				}
+				if reader.String("foo") != "bar" {
+					t.Fatalf("want %s, got %s", "bar", reader.String("foo"))
+				}
 			},
 		},
 	}
