@@ -1,0 +1,62 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "dmp.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "DmpRespBlackType": {
+      "type": "string",
+      "enum": [
+        "WHITE",
+        "BLACK"
+      ],
+      "default": "WHITE"
+    },
+    "pbDmpResp": {
+      "type": "object",
+      "properties": {
+        "ad_click": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ad_complete": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ad_display": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "ad_ctr_dev": {
+          "type": "number",
+          "format": "float"
+        },
+        "register": {
+          "type": "string"
+        },
+        "score": {
+          "type": "string",
+          "format": "int64"
+        },
+        "score_total": {
+          "type": "string",
+          "format": "int64"
+        },
+        "black_type": {
+          "$ref": "#/definitions/DmpRespBlackType"
+        },
+        "ext": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

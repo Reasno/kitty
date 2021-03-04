@@ -41,6 +41,7 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/rs/xid v1.2.1
 	github.com/segmentio/kafka-go v0.4.8
+	github.com/sony/gobreaker v0.4.1
 	github.com/speps/go-hashids v2.0.0+incompatible
 	github.com/spf13/cobra v1.1.0
 	github.com/stretchr/testify v1.6.1

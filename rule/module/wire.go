@@ -5,6 +5,7 @@ package module
 import (
 	"github.com/go-kit/kit/log"
 	"github.com/google/wire"
+	"glab.tagtic.cn/ad_gains/kitty/app/module"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/rule/service"
@@ -20,7 +21,9 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	panic(wire.Build(
 		serviceSet,
 		newEndpoints,
+		module.OpenTracingSet,
 		provideModule,
+		provideDmpServer,
 		provideHistogramMetrics,
 		config.ProvideAppName,
 		config.ProvideEnv,
