@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	kconf "glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
@@ -165,18 +166,18 @@ func TestClientIntegration(t *testing.T) {
 style: advanced
 enrich: true
 rule:
-- if: HoursAgo(DMP.Register) > 100
+- if: HoursAgo(DMP.Register) > 1
   then: 
     foo: bar
 - if: true
   then:
     foo: quz
 `)
-	dynConf, err := NewRuleEngine(WithClient(client), Rule("kitty2-testing"), WithDMPAddr("dmp-grpc.dev.tagtic.cn:443"))
+	dynConf, err := NewRuleEngine(WithClient(client), Rule("kitty2-testing"), WithDMPAddr("dmp-grpc.dev.tagtic.cn:443"), WithEnv(kconf.Env("local")))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = dynConf.Of("kitty2-testing").Payload(&dto.Payload{
+	conf, err := dynConf.Of("kitty2-testing").Payload(&dto.Payload{
 		Channel:     "walk",
 		Suuid:       "DoNews1a674f54-6889-4798-bddf-1cb5ca5c6164",
 		PackageName: "com.walk.qnjb",
@@ -186,5 +187,7 @@ rule:
 	if err != nil {
 		t.Fatal(err)
 	}
-	//fmt.Println(conf.String("foo"))
+	if conf.String("foo") != "bar" {
+		t.Fatalf("want %s, got %s", "bar", conf.String("foo"))
+	}
 }
