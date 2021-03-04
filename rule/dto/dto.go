@@ -73,7 +73,7 @@ func (p Payload) Date(s string) time.Time {
 	if err != nil {
 		panic(err)
 	}
-	return date.Add(8 * time.Hour)
+	return date
 }
 
 func (p Payload) DaysAgo(s string) int {
@@ -89,7 +89,7 @@ func (p Payload) DateTime(s string) time.Time {
 	if err != nil {
 		panic(err)
 	}
-	return date.Add(8 * time.Hour)
+	return date
 }
 
 func (p Payload) IsBefore(s string) bool {
