@@ -61,6 +61,9 @@ func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *
 		if err != nil {
 			level.Warn(r.logger).Log("err", errors.Wrap(err, "dmp server error"))
 		}
+		if resp == nil {
+			resp = &pb.DmpResp{}
+		}
 		payload.DMP = *resp
 	}
 	return entity.Calculate(rules, payload)
