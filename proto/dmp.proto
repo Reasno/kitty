@@ -8,12 +8,12 @@ import "google/api/annotations.proto";
 service Dmp{
   rpc UserMore(DmpReq) returns (DmpResp) {
     option (google.api.http) = {
-      get: "/url"
+      get: "/user-more"
     };
   }
 }
 
-message DmpReq{
+message DmpReq {
   uint64 user_id = 1; // 用户id
   string package_name =2; // 包名称
   string suuid =3; // suuid
