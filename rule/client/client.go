@@ -88,7 +88,6 @@ func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 		if resp == nil {
 			resp = &pb.DmpResp{}
 		}
-		fmt.Printf("%#v", resp)
 		pl.DMP = *resp
 	}
 
