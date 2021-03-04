@@ -97,7 +97,6 @@ func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%#v", calculated)
 	c := koanf.New(".")
 	err = c.Load(confmap.Provider(calculated, ""), nil)
 	if err != nil {
