@@ -94,7 +94,7 @@ func newEndpoints(
 	mw := func(name string) endpoint.Middleware {
 		return endpoint.Chain(
 			kmiddleware.NewErrorMarshallerMiddleware(env.IsProd()),
-			kmiddleware.TraceConsumer(tracer, name, ext.SpanKindRPCServerEnum),
+			kmiddleware.TraceConsumer(tracer, fmt.Sprintf("%s(%s)", name, env.String()), ext.SpanKindRPCServerEnum),
 			kmiddleware.NewMetricsMiddleware(hist, appName.String(), name),
 			kmiddleware.NewLoggingMiddleware(logger, env.IsLocal()),
 		)
