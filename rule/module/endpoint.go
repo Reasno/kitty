@@ -91,15 +91,12 @@ func newEndpoints(
 	env contract.Env,
 	tracer opentracing.Tracer,
 ) Endpoints {
-
-	l := kmiddleware.NewLoggingMiddleware(logger, env.IsLocal())
-	e := kmiddleware.NewErrorMarshallerMiddleware(env.IsProd())
 	mw := func(name string) endpoint.Middleware {
 		return endpoint.Chain(
-			e,
-			kmiddleware.TraceConsumer(tracer, name, ext.SpanKindRPCServerEnum),
+			kmiddleware.NewErrorMarshallerMiddleware(env.IsProd()),
+			kmiddleware.TraceConsumer(tracer, fmt.Sprintf("%s(%s)", name, env.String()), ext.SpanKindRPCServerEnum),
 			kmiddleware.NewMetricsMiddleware(hist, appName.String(), name),
-			l,
+			kmiddleware.NewLoggingMiddleware(logger, env.IsLocal()),
 		)
 	}
 	return Endpoints{
