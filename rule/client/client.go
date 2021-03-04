@@ -85,9 +85,10 @@ func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 		if err != nil {
 			level.Warn(r.d.logger).Log("err", err)
 		}
-		if resp != nil {
-			pl.DMP = *resp
+		if resp == nil {
+			resp = &pb.DmpResp{}
 		}
+		pl.DMP = *resp
 	}
 
 	calculated, err := entity.Calculate(compiled, pl)
