@@ -43,7 +43,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 	appName := config.ProvideAppName(reader)
 	histogram := provideHistogramMetrics(appName, env)
 	endpoints := newEndpoints(serviceService, histogram, logger, appName, env, tracer)
-	moduleModule := provideModule(repository, endpoints)
+	moduleModule := provideModule(repository, endpoints, tracer, logger)
 	return moduleModule, func() {
 		cleanup2()
 		cleanup()
