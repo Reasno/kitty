@@ -50,11 +50,18 @@ func provideHistogramMetrics(appName contract.AppName, env contract.Env) metrics
 	return his
 }
 
-func provideModule(repository service.Repository, endpoints Endpoints) *Module {
+func provideModule(
+	repository service.Repository,
+	endpoints Endpoints,
+	tracer stdopentracing.Tracer,
+	logger log.Logger,
+) *Module {
 	// TODO: add middleware
 	return &Module{
 		repository: repository,
 		endpoints:  endpoints,
+		tracer:     tracer,
+		logger:     logger,
 	}
 }
 
