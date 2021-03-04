@@ -4,8 +4,13 @@ option go_package = "kitty";
 
 package pb;
 
+import "google/api/annotations.proto";
 service Dmp{
-  rpc UserMore(DmpReq) returns (DmpResp);
+  rpc UserMore(DmpReq) returns (DmpResp) {
+    option (google.api.http) = {
+      get: "/url"
+    };
+  }
 }
 
 message DmpReq{

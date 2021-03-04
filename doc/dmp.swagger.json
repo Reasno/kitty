@@ -10,7 +10,51 @@
   "produces": [
     "application/json"
   ],
-  "paths": {},
+  "paths": {
+    "/url": {
+      "get": {
+        "operationId": "Dmp_UserMore",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbDmpResp"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "package_name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "suuid",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Dmp"
+        ]
+      }
+    }
+  },
   "definitions": {
     "DmpRespBlackType": {
       "type": "string",
