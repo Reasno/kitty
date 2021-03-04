@@ -186,6 +186,12 @@ func WithEnv(env contract.Env) Option {
 	}
 }
 
+func WithTracer(tracer opentracing.Tracer) Option {
+	return func(c *config) {
+		c.tracer = tracer
+	}
+}
+
 func Rule(rule string) Option {
 	return func(c *config) {
 		c.listOfRules = append(c.listOfRules, rule)
