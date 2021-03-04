@@ -148,6 +148,10 @@ func (p Payload) IsHourRange(begin int, end int) bool {
 	return now >= begin && now <= end
 }
 
+func (p Payload) IsBlackListed() bool {
+	return p.DMP.BlackType == pb.DmpResp_BLACK
+}
+
 type Data map[string]interface{}
 
 type Response struct {
