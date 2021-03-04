@@ -193,9 +193,9 @@ rule:
 }
 
 func TestClientIntegration2(t *testing.T) {
-	if !useEtcd {
-		t.Skip("test dynamic config requires etcd")
-	}
+	//if !useEtcd {
+	//	t.Skip("test dynamic config requires etcd")
+	//}
 	client, err := clientv3.New(clientv3.Config{
 		Endpoints: []string{"etcd-2:2379"},
 	})
@@ -218,6 +218,7 @@ rule:
 		t.Fatal(err)
 	}
 	conf, err := dynConf.Of("wfdj-luckBox-dev").Payload(&dto.Payload{
+		UserId:      2900,
 		Channel:     "walk",
 		Suuid:       "DoNews1fbbe16f-4580-4489-81bb-ff38709e6349",
 		PackageName: "com.wifi.wfdj",
