@@ -193,9 +193,9 @@ rule:
 }
 
 func TestClientIntegration2(t *testing.T) {
-	//if !useEtcd {
-	//	t.Skip("test dynamic config requires etcd")
-	//}
+	if !useEtcd {
+		t.Skip("test dynamic config requires etcd")
+	}
 	client, err := clientv3.New(clientv3.Config{
 		Endpoints: []string{"etcd-2:2379"},
 	})

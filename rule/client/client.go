@@ -88,10 +88,12 @@ func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 		if resp == nil {
 			resp = &pb.DmpResp{}
 		}
+		level.Debug(r.d.logger).Log("msg", "dmp response: "+fmt.Sprintf("%#v", resp))
 		pl.DMP = *resp
 	}
 
 	calculated, err := entity.Calculate(compiled, pl)
+	level.Debug(r.d.logger).Log("msg", "calculated config: "+fmt.Sprintf("%#v", calculated))
 	if err != nil {
 		return nil, err
 	}
