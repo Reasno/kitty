@@ -180,6 +180,12 @@ func WithDMPAddr(dmpAddr string) Option {
 	}
 }
 
+func WithEnv(env contract.Env) Option {
+	return func(c *config) {
+		c.env = env
+	}
+}
+
 func Rule(rule string) Option {
 	return func(c *config) {
 		c.listOfRules = append(c.listOfRules, rule)
