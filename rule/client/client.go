@@ -191,7 +191,7 @@ func NewRuleEngine(opt ...Option) (*RuleEngine, error) {
 		logger:      log.NewNopLogger(),
 		listOfRules: make([]string, 0),
 		env:         kconf.Env("production"),
-		dmpAddr:     "",
+		dmpAddr:     "xtasks.ad:8181",
 	}
 	for _, o := range opt {
 		o(&c)
