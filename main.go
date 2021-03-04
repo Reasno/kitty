@@ -1,5 +1,6 @@
-//go:generate trs proto/app.proto --lib=./proto --doc=./doc
-//go:generate trs proto/share.proto --lib=./proto --doc=./doc
+//go:generate trs proto/app.proto
+//go:generate trs proto/share.proto
+//go:generate trs proto/dmp.proto
 package main
 
 import (

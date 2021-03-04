@@ -20,6 +20,10 @@ func NewAdvancedRule() *AdvancedRuleCollection {
 	}
 }
 
+func (ar *AdvancedRuleCollection) ShouldEnrich() bool {
+	return ar.enrich
+}
+
 func (ar *AdvancedRuleCollection) Unmarshal(reader *koanf.Koanf) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -52,10 +56,6 @@ func (ar *AdvancedRuleCollection) Compile() error {
 }
 
 func (ar *AdvancedRuleCollection) Calculate(payload *dto.Payload) (dto.Data, error) {
-	// enrich if necessary
-	if ar.enrich && !payload.HasEnriched {
-
-	}
 	for _, item := range ar.items {
 		data, err := item.Calculate(payload)
 		if err != nil {

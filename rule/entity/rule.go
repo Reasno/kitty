@@ -18,6 +18,7 @@ type Ruler interface {
 	Unmarshal(reader *koanf.Koanf) error
 	Calculate(payload *dto.Payload) (dto.Data, error)
 	Compile() error
+	ShouldEnrich() bool
 }
 
 func NewRuler(style string) (Ruler, error) {

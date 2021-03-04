@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
 	"go.etcd.io/etcd/clientv3"
@@ -148,4 +149,42 @@ rule:
 			c.asserts(t, dynConf)
 		})
 	}
+}
+
+func TestClientIntegration(t *testing.T) {
+	if !useEtcd {
+		t.Skip("test dynamic config requires etcd")
+	}
+	client, err := clientv3.New(clientv3.Config{
+		Endpoints: []string{"localhost:2379"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Put(context.Background(), repository2.OtherConfigPathPrefix+"/kitty2-testing", `
+style: advanced
+enrich: true
+rule:
+- if: HoursAgo(DMP.Register) > 100
+  then: 
+    foo: bar
+- if: true
+  then:
+    foo: quz
+`)
+	dynConf, err := NewRuleEngine(WithClient(client), Rule("kitty2-testing"), WithDMPAddr("dmp-grpc.dev.tagtic.cn:443"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = dynConf.Of("kitty2-testing").Payload(&dto.Payload{
+		Channel:     "walk",
+		Suuid:       "DoNews1a674f54-6889-4798-bddf-1cb5ca5c6164",
+		PackageName: "com.walk.qnjb",
+		DMP:         pb.DmpResp{},
+		Context:     context.Background(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	//fmt.Println(conf.String("foo"))
 }

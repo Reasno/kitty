@@ -19,6 +19,13 @@ func NewTraceServerMiddleware(tracer stdtracing.Tracer, env string) LabeledMiddl
 	}
 }
 
+func NewClientServerMiddleware(tracer stdtracing.Tracer, env string) LabeledMiddleware {
+	return func(s string, endpoint endpoint.Endpoint) endpoint.Endpoint {
+		name := fmt.Sprintf("%s(%s)", s, env)
+		return TraceProducer(tracer, name, ext.SpanKindRPCServerEnum)(endpoint)
+	}
+}
+
 // TraceConsumer returns a Middleware that wraps the `next` Endpoint in an
 // OpenTracing Span called `operationName`.
 //

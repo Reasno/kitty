@@ -1,12 +1,14 @@
 package dto
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 	"time"
 
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 type Payload struct {
@@ -24,7 +26,8 @@ type Payload struct {
 	Ip          string                 `json:"ip" schema:"ip"`
 	Q           map[string][]string    `json:"-" schema:"-"`
 	B           map[string]interface{} `json:"-" schema:"-"`
-	HasEnriched bool                   `json:"-" schema:"-"`
+	DMP         pb.DmpResp             `json:"-" schema:"-"`
+	Context     context.Context        `json:"-" schema:"-"`
 }
 
 func FromClaim(claim jwt2.Claim) *Payload {
@@ -52,6 +55,7 @@ func FromTenant(tenant *config.Tenant) *Payload {
 		AndroidId:   tenant.AndroidId,
 		PackageName: tenant.PackageName,
 		Ip:          tenant.Ip,
+		Context:     tenant.Context,
 	}
 }
 

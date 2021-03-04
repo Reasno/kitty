@@ -16,6 +16,10 @@ func NewBasicRule() *BasicRule {
 	return &BasicRule{style: "basic", data: dto.Data{}}
 }
 
+func (br *BasicRule) ShouldEnrich() bool {
+	return false
+}
+
 func (br *BasicRule) Unmarshal(reader *koanf.Koanf) error {
 	br.style = reader.String("style")
 	err := reader.Unmarshal("rule", &br.data)

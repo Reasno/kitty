@@ -1,4 +1,5 @@
 //go:generate mockery --name=Repository
+//go:generate mockery --name=DmpServer
 
 package service
 
@@ -8,8 +9,10 @@ import (
 	"io"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
 	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
@@ -34,8 +37,9 @@ type Repository interface {
 }
 
 type service struct {
-	logger log.Logger
-	repo   Repository
+	dmpServer pb.DmpServer
+	logger    log.Logger
+	repo      Repository
 }
 
 func NewService(logger log.Logger, repo Repository) *service {
@@ -46,6 +50,18 @@ func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *
 	rules := r.repo.GetCompiled(ruleName)
 	if rules == nil {
 		return nil, errors.New("rule not found")
+	}
+	if rules.ShouldEnrich() {
+		resp, err := r.dmpServer.UserMore(ctx, &pb.DmpReq{
+			UserId:      payload.UserId,
+			PackageName: payload.PackageName,
+			Suuid:       payload.Suuid,
+			Channel:     payload.Channel,
+		})
+		if err != nil {
+			level.Warn(r.logger).Log("err", errors.Wrap(err, "dmp server error"))
+		}
+		payload.DMP = *resp
 	}
 	return entity.Calculate(rules, payload)
 }
