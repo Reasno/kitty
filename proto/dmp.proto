@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option go_package = "kitty";
+
+package pb;
+
+import "google/api/annotations.proto";
+service Dmp{
+  rpc UserMore(DmpReq) returns (DmpResp) {
+    option (google.api.http) = {
+      get: "/user-more"
+    };
+  }
+}
+
+message DmpReq {
+  uint64 user_id = 1; // 用户id
+  string package_name =2; // 包名称
+  string suuid =3; // suuid
+  string channel =4; //渠道
+}
+
+message DmpResp{
+  enum BlackType{
+    WHITE =0; // 用户白名单
+    BLACK =1; // 用户黑名单
+  }
+
+  uint64 ad_click =1; // 激励视频点击数
+  uint64 ad_complete =2; // 激励视频完成观看次数
+  uint64 ad_display =3; // 激励视频曝光次数
+  float ad_ctr_dev = 4; // 激励视频点击离差率，与平均点击率的偏差值（正负值）
+  string register = 5; // 用户注册时间
+  int64 score =6; // 用户当前的金币值
+  int64 score_total =7; //用户累计积分值
+  BlackType black_type =8; // 黑白名单
+  string ext =9;
+
+}

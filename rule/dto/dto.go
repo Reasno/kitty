@@ -1,12 +1,14 @@
 package dto
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 	"time"
 
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 )
 
 type Payload struct {
@@ -24,6 +26,8 @@ type Payload struct {
 	Ip          string                 `json:"ip" schema:"ip"`
 	Q           map[string][]string    `json:"-" schema:"-"`
 	B           map[string]interface{} `json:"-" schema:"-"`
+	DMP         pb.DmpResp             `json:"-" schema:"-"`
+	Context     context.Context        `json:"-" schema:"-"`
 }
 
 func FromClaim(claim jwt2.Claim) *Payload {
@@ -51,6 +55,7 @@ func FromTenant(tenant *config.Tenant) *Payload {
 		AndroidId:   tenant.AndroidId,
 		PackageName: tenant.PackageName,
 		Ip:          tenant.Ip,
+		Context:     tenant.Context,
 	}
 }
 
@@ -68,14 +73,20 @@ func (p Payload) Date(s string) time.Time {
 	if err != nil {
 		panic(err)
 	}
-	return date.Add(8 * time.Hour)
+	return date
 }
 
 func (p Payload) DaysAgo(s string) int {
+	if s == "" {
+		return 0
+	}
 	return int(time.Now().Sub(p.DateTime(s)).Hours() / 24)
 }
 
 func (p Payload) HoursAgo(s string) int {
+	if s == "" {
+		return 0
+	}
 	return int(time.Now().Sub(p.DateTime(s)).Hours())
 }
 
@@ -84,7 +95,7 @@ func (p Payload) DateTime(s string) time.Time {
 	if err != nil {
 		panic(err)
 	}
-	return date.Add(8 * time.Hour)
+	return date
 }
 
 func (p Payload) IsBefore(s string) bool {
@@ -141,6 +152,10 @@ func (p Payload) IsToday(s string) bool {
 func (p Payload) IsHourRange(begin int, end int) bool {
 	now := time.Now().Hour()
 	return now >= begin && now <= end
+}
+
+func (p Payload) IsBlackListed() bool {
+	return p.DMP.BlackType == pb.DmpResp_BLACK
 }
 
 type Data map[string]interface{}

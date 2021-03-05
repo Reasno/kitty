@@ -10,6 +10,7 @@ import (
 
 type SwitchRule struct {
 	style    string
+	enrich   bool
 	by       string
 	cases    map[string]Ruler
 	fallback Ruler
@@ -19,6 +20,10 @@ func NewSwitchRule() *SwitchRule {
 	return &SwitchRule{style: "switch", cases: make(map[string]Ruler)}
 }
 
+func (s *SwitchRule) ShouldEnrich() bool {
+	return s.enrich
+}
+
 func (s *SwitchRule) Unmarshal(reader *koanf.Koanf) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -26,6 +31,7 @@ func (s *SwitchRule) Unmarshal(reader *koanf.Koanf) (err error) {
 		}
 	}()
 
+	s.enrich = reader.Bool("enrich")
 	s.style = reader.String("style")
 	s.by = reader.MustString("by")
 	cases := reader.Slices("rule")

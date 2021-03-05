@@ -603,7 +603,7 @@
         "version_code": {
           "type": "string"
         },
-        "packageName": {
+        "package_name": {
           "type": "string"
         }
       }

@@ -9,6 +9,8 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kmiddleware"
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
@@ -81,11 +83,21 @@ type Endpoints struct {
 	preflightEndpoint       endpoint.Endpoint
 }
 
-func newEndpoints(s service.Service, hist metrics.Histogram, logger log.Logger, appName contract.AppName, env contract.Env) Endpoints {
-	l := kmiddleware.NewLoggingMiddleware(logger, env.IsLocal())
-	e := kmiddleware.NewErrorMarshallerMiddleware(env.IsProd())
+func newEndpoints(
+	s service.Service,
+	hist metrics.Histogram,
+	logger log.Logger,
+	appName contract.AppName,
+	env contract.Env,
+	tracer opentracing.Tracer,
+) Endpoints {
 	mw := func(name string) endpoint.Middleware {
-		return endpoint.Chain(e, kmiddleware.NewMetricsMiddleware(hist, appName.String(), name), l)
+		return endpoint.Chain(
+			kmiddleware.NewErrorMarshallerMiddleware(env.IsProd()),
+			kmiddleware.TraceConsumer(tracer, fmt.Sprintf("%s(%s)", name, env.String()), ext.SpanKindRPCServerEnum),
+			kmiddleware.NewMetricsMiddleware(hist, appName.String(), name),
+			kmiddleware.NewLoggingMiddleware(logger, env.IsLocal()),
+		)
 	}
 	return Endpoints{
 		calculateRulesEndpoints: mw("CalculateRules")(MakeCalculateRulesEndpoint(s)),

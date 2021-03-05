@@ -2,20 +2,32 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
+	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/providers/confmap"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	kconf "glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
-	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
+	"glab.tagtic.cn/ad_gains/kitty/rule/module"
 	"go.etcd.io/etcd/clientv3"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 type RuleEngine struct {
+	env        contract.Env
+	tracer     opentracing.Tracer
+	dmpConn    *grpc.ClientConn
 	repository Repository
 	logger     log.Logger
 }
@@ -31,18 +43,60 @@ type Repository interface {
 }
 
 func (r *ofRule) Tenant(tenant *kconf.Tenant) (contract.ConfigReader, error) {
-	var pl = dto.FromTenant(tenant)
-	return r.Payload(pl)
+	var payload = dto.FromTenant(tenant)
+	return r.Payload(payload)
 }
 
 func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
-	compiled := r.d.repository.GetCompiled(r.ruleName)
+	var compiled entity.Ruler
+
+	parts := strings.Split(pl.PackageName, ".")
+	if len(parts) > 0 {
+		codeName := parts[len(parts)-1]
+		compiled = r.d.repository.GetCompiled(codeName + "-" + r.ruleName)
+	}
+	// 兼容之前的情况，去商业化平台中心查配置
+	if compiled == nil {
+		compiled = r.d.repository.GetCompiled(r.ruleName)
+	}
+	if compiled == nil {
+		return nil, fmt.Errorf("no suitable configuration found for %s", r.ruleName)
+	}
+
+	if compiled.ShouldEnrich() {
+		endpoints, err := module.NewDmpServer(module.DmpOption{
+			Conn:   r.d.dmpConn,
+			Tracer: r.d.tracer,
+			Logger: r.d.logger,
+			Env:    r.d.env,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to create dmp server")
+		}
+		if pl.Context == nil {
+			pl.Context = context.Background()
+		}
+		resp, err := endpoints.UserMore(pl.Context, &pb.DmpReq{
+			UserId:      pl.UserId,
+			PackageName: pl.PackageName,
+			Suuid:       pl.Suuid,
+			Channel:     pl.Channel,
+		})
+		if err != nil {
+			level.Warn(r.d.logger).Log("err", err)
+		}
+		if resp == nil {
+			resp = &pb.DmpResp{}
+		}
+		level.Debug(r.d.logger).Log("msg", "dmp response: "+fmt.Sprintf("%#v", resp))
+		pl.DMP = *resp
+	}
 
 	calculated, err := entity.Calculate(compiled, pl)
+	level.Debug(r.d.logger).Log("msg", "calculated config: "+fmt.Sprintf("%#v", calculated))
 	if err != nil {
 		return nil, err
 	}
-
 	c := koanf.New(".")
 	err = c.Load(confmap.Provider(calculated, ""), nil)
 	if err != nil {
@@ -68,10 +122,15 @@ type Option func(*config)
 
 type config struct {
 	ctx         context.Context
+	env         contract.Env
+	tracer      opentracing.Tracer
+	dmpAddr     string
 	client      *clientv3.Client
 	repo        Repository
 	logger      log.Logger
 	listOfRules []string
+	rulePrefix  string
+	ruleRegexp  *regexp.Regexp
 }
 
 func WithClient(client *clientv3.Client) Option {
@@ -104,6 +163,36 @@ func WithListOfRules(listOfRules []string) Option {
 	}
 }
 
+func WithRulePrefix(prefix string) Option {
+	return func(c *config) {
+		c.rulePrefix = prefix
+	}
+}
+
+func WithRuleRegexp(regexp *regexp.Regexp) Option {
+	return func(c *config) {
+		c.ruleRegexp = regexp
+	}
+}
+
+func WithDMPAddr(dmpAddr string) Option {
+	return func(c *config) {
+		c.dmpAddr = dmpAddr
+	}
+}
+
+func WithEnv(env contract.Env) Option {
+	return func(c *config) {
+		c.env = env
+	}
+}
+
+func WithTracer(tracer opentracing.Tracer) Option {
+	return func(c *config) {
+		c.tracer = tracer
+	}
+}
+
 func Rule(rule string) Option {
 	return func(c *config) {
 		c.listOfRules = append(c.listOfRules, rule)
@@ -115,6 +204,8 @@ func NewRuleEngine(opt ...Option) (*RuleEngine, error) {
 		ctx:         context.Background(),
 		logger:      log.NewNopLogger(),
 		listOfRules: make([]string, 0),
+		env:         kconf.Env("production"),
+		dmpAddr:     "xtasks.ad:8181",
 	}
 	for _, o := range opt {
 		o(&c)
@@ -131,16 +222,35 @@ func NewRuleEngine(opt ...Option) (*RuleEngine, error) {
 			}
 			c.client = client
 		}
-		var mp = make(map[string]string)
-		for _, v := range c.listOfRules {
-			mp[v] = repository2.OtherConfigPathPrefix + "/" + v
-		}
+
 		var err error
-		c.repo, err = NewRepository(c.client, c.logger, mp)
+		c.repo, err = NewRepositoryWithConfig(c.client, c.logger, RepositoryConfig{
+			Prefix:      c.rulePrefix,
+			Regex:       c.ruleRegexp,
+			ListOfRules: c.listOfRules,
+		})
 		if err != nil {
-			return nil, errors.Wrap(err, "Failed to create repository")
+			return nil, errors.Wrap(err, "failed to create repository")
 		}
 	}
+	var (
+		err  error
+		conn *grpc.ClientConn
+	)
+	if c.env.IsProd() {
+		conn, err = grpc.Dial(c.dmpAddr, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+	} else {
+		conn, err = grpc.Dial(c.dmpAddr, grpc.WithInsecure())
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to dial dmp server")
+	}
 
-	return &RuleEngine{repository: c.repo, logger: c.logger}, nil
+	return &RuleEngine{
+		repository: c.repo,
+		logger:     c.logger,
+		tracer:     c.tracer,
+		env:        c.env,
+		dmpConn:    conn,
+	}, nil
 }
