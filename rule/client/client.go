@@ -237,7 +237,7 @@ func NewRuleEngine(opt ...Option) (*RuleEngine, error) {
 		err  error
 		conn *grpc.ClientConn
 	)
-	if c.env.IsProd() {
+	if c.env.IsLocal() {
 		conn, err = grpc.Dial(c.dmpAddr, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
 	} else {
 		conn, err = grpc.Dial(c.dmpAddr, grpc.WithInsecure())
