@@ -1,9 +1,12 @@
 package repository
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
@@ -26,12 +29,16 @@ func (f *FileRepo) UploadFromUrl(ctx context.Context, url string) (newUrl string
 	if err != nil {
 		return "", errors.Wrap(err, "cannot build request")
 	}
-	req = req.WithContext(ctx)
+	TimeoutCtx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	req = req.WithContext(TimeoutCtx)
 	resp, err := f.client.Do(req)
+	var body io.ReadCloser
 	if err != nil {
-		return "", errors.Wrap(err, "cannot fetch image")
+		body = ioutil.NopCloser(bytes.NewReader(nil))
+	} else {
+		body = resp.Body
 	}
-	body := resp.Body
 	defer body.Close()
 	return f.uploader.Upload(ctx, body)
 }
