@@ -79,14 +79,15 @@ func NewManager(accessKey, accessSecret, endpoint, region, bucket string, opts .
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 	}
+
 	sess := session.Must(session.NewSession(s3Config))
+	// add opentracing capabilities if opt in
+	if c.tracer != nil {
+		sess.Handlers.Build.PushFront(otHandler(c.tracer))
+	}
 
 	m := &Manager{bucket, sess, c.tracer, c.doer, c.locationFunc}
 
-	// add opentracing capabilities if opt in
-	if c.tracer != nil {
-		sess.Handlers.Build.PushFront(m.otHandler())
-	}
 	return m
 }
 
@@ -124,6 +125,7 @@ func (m *Manager) UploadFromUrl(ctx context.Context, url string) (newUrl string,
 	if err != nil {
 		return "", errors.Wrap(err, "cannot build request")
 	}
+	req = req.WithContext(ctx)
 	resp, err := m.doer.Do(req)
 	if err != nil {
 		return "", errors.Wrap(err, "cannot fetch image")
@@ -133,9 +135,7 @@ func (m *Manager) UploadFromUrl(ctx context.Context, url string) (newUrl string,
 	return m.Upload(ctx, body)
 }
 
-func (m *Manager) otHandler() func(*request.Request) {
-	tracer := m.tracer
-
+func otHandler(tracer opentracing.Tracer) func(*request.Request) {
 	return func(r *request.Request) {
 		var sp opentracing.Span
 
@@ -143,7 +143,7 @@ func (m *Manager) otHandler() func(*request.Request) {
 		if ctx == nil || !opentracing.IsGlobalTracerRegistered() {
 			sp = tracer.StartSpan(r.Operation.Name)
 		} else {
-			sp, ctx = opentracing.StartSpanFromContextWithTracer(ctx, m.tracer, r.Operation.Name)
+			sp, ctx = opentracing.StartSpanFromContextWithTracer(ctx, tracer, r.Operation.Name)
 			r.SetContext(ctx)
 		}
 		ext.SpanKindRPCClient.Set(sp)
