@@ -26,6 +26,7 @@ func (f *FileRepo) UploadFromUrl(ctx context.Context, url string) (newUrl string
 	if err != nil {
 		return "", errors.Wrap(err, "cannot build request")
 	}
+	req = req.WithContext(ctx)
 	resp, err := f.client.Do(req)
 	if err != nil {
 		return "", errors.Wrap(err, "cannot fetch image")
