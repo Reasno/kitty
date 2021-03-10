@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -19,6 +20,9 @@ func encodeUserInfoRequest(_ context.Context, msg *kafka.Message, request interf
 	byt, err := marshaller.Marshal()
 	if err != nil {
 		return err
+	}
+	if x, ok := request.(interface{ GetId() uint64 }); ok {
+		binary.LittleEndian.PutUint64(msg.Key, x.GetId())
 	}
 	msg.Value = byt
 	return nil
@@ -45,6 +49,7 @@ func encodeEventRequest(_ context.Context, msg *kafka.Message, request interface
 	if err != nil {
 		return errors.Wrap(err, "unable to marshal dto")
 	}
+	binary.LittleEndian.PutUint64(msg.Key, req.Tenant.UserId)
 	msg.Value = b
 	return nil
 }
