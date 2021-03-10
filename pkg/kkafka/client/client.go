@@ -22,6 +22,7 @@ func encodeUserInfoRequest(_ context.Context, msg *kafka.Message, request interf
 		return err
 	}
 	if x, ok := request.(interface{ GetId() uint64 }); ok {
+		msg.Key = make([]byte, 8)
 		binary.LittleEndian.PutUint64(msg.Key, x.GetId())
 	}
 	msg.Value = byt
@@ -49,6 +50,7 @@ func encodeEventRequest(_ context.Context, msg *kafka.Message, request interface
 	if err != nil {
 		return errors.Wrap(err, "unable to marshal dto")
 	}
+	msg.Key = make([]byte, 8)
 	binary.LittleEndian.PutUint64(msg.Key, req.Tenant.UserId)
 	msg.Value = b
 	return nil
