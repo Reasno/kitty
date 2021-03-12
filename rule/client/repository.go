@@ -62,11 +62,11 @@ func NewRepositoryWithConfig(client *clientv3.Client, logger log.Logger, config 
 
 	var count = 0
 	for k, v := range configMap {
-		count++
 		name := dbKeyToName(k)
 		if config.Regex != nil && !config.Regex.Match([]byte(name)) {
 			continue
 		}
+		count++
 		c := repository2.Container{DbKey: k, Name: name, RuleSet: nil}
 		c.RuleSet = entity.NewRules(bytes.NewReader(v), logger)
 		repo.containers[dbKeyToName(k)] = c
