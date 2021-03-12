@@ -111,7 +111,7 @@ func (r *service) Preflight(ctx context.Context, ruleName string, hash string) e
 }
 
 func (r *service) dmp(rule string) pb.DmpServer {
-	if len(rule) > 5 && rule[len(rule)-6:] == "-prod" {
+	if len(rule) > 5 && rule[len(rule)-5:] == "-prod" {
 		return r.dmpServerProd
 	}
 	return r.dmpServerDev
