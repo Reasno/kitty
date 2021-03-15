@@ -33,13 +33,13 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 		return nil, nil, err
 	}
 	env := config.ProvideEnv(reader)
-	dmpServers, err := provideDmpServer(reader, tracer, logger, env)
+	dmpServer, err := provideDmpServer(reader, tracer, logger, env)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	serviceService := service.ProvideService(logger, repository, dmpServers)
+	serviceService := service.ProvideService(logger, repository, dmpServer)
 	appName := config.ProvideAppName(reader)
 	histogram := provideHistogramMetrics(appName, env)
 	endpoints := newEndpoints(serviceService, histogram, logger, appName, env, tracer)

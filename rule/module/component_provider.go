@@ -65,43 +65,26 @@ func provideModule(
 	}
 }
 
-func provideDmpServer(conf contract.ConfigReader, tracer stdopentracing.Tracer, logger log.Logger, env contract.Env) (service.DmpServers, error) {
+func provideDmpServer(conf contract.ConfigReader, tracer stdopentracing.Tracer, logger log.Logger, env contract.Env) (kitty.DmpServer, error) {
 	var (
-		connProd *grpc.ClientConn
-		connDev  *grpc.ClientConn
-		err      error
+		conn *grpc.ClientConn
+		err  error
 	)
-	dmpAddrProd := conf.String("dmpAddrProd")
-	dmpAddrDev := conf.String("dmpAddrDev")
+	dmpAddr := conf.String("dmpAddr")
 	if env.IsLocal() {
-		connProd, err = grpc.Dial(dmpAddrProd, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
-		connDev, err = grpc.Dial(dmpAddrDev, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+		conn, err = grpc.Dial(dmpAddr, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
 	} else {
-		connProd, err = grpc.Dial(dmpAddrProd, grpc.WithInsecure())
-		connDev, err = grpc.Dial(dmpAddrDev, grpc.WithInsecure())
+		conn, err = grpc.Dial(dmpAddr, grpc.WithInsecure())
 	}
 	if err != nil {
-		return service.DmpServers{}, err
+		return nil, err
 	}
-	serverProd, err := NewDmpServer(DmpOption{
-		Conn:   connProd,
+	return NewDmpServer(DmpOption{
+		Conn:   conn,
 		Tracer: tracer,
 		Logger: logger,
 		Env:    env,
 	})
-	if err != nil {
-		return service.DmpServers{}, err
-	}
-	serverDev, err := NewDmpServer(DmpOption{
-		Conn:   connDev,
-		Tracer: tracer,
-		Logger: logger,
-		Env:    env,
-	})
-	if err != nil {
-		return service.DmpServers{}, err
-	}
-	return service.DmpServers{DmpDev: serverDev, DmpProd: serverProd}, nil
 }
 
 type DmpOption struct {

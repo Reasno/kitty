@@ -37,10 +37,9 @@ type Repository interface {
 }
 
 type service struct {
-	dmpServerProd pb.DmpServer
-	dmpServerDev  pb.DmpServer
-	logger        log.Logger
-	repo          Repository
+	dmpServer pb.DmpServer
+	logger    log.Logger
+	repo      Repository
 }
 
 func NewService(logger log.Logger, repo Repository) *service {
@@ -53,7 +52,7 @@ func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *
 		return nil, errors.New("rule not found")
 	}
 	if rules.ShouldEnrich() {
-		resp, err := r.dmp(ruleName).UserMore(ctx, &pb.DmpReq{
+		resp, err := r.dmpServer.UserMore(ctx, &pb.DmpReq{
 			UserId:      payload.UserId,
 			PackageName: payload.PackageName,
 			Suuid:       payload.Suuid,
@@ -108,11 +107,4 @@ func (r *service) Preflight(ctx context.Context, ruleName string, hash string) e
 		return ErrDataHasChanged
 	}
 	return nil
-}
-
-func (r *service) dmp(rule string) pb.DmpServer {
-	if len(rule) > 5 && rule[len(rule)-5:] == "-prod" {
-		return r.dmpServerProd
-	}
-	return r.dmpServerDev
 }
