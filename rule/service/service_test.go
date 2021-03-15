@@ -151,7 +151,7 @@ rule:
 		cc := c
 		t.Run("", func(t *testing.T) {
 			repo := &mocks.Repository{}
-			ser := ProvideService(log.NewNopLogger(), repo, DmpServers{mockDmpServer{}, mockDmpServer{}})
+			ser := ProvideService(log.NewNopLogger(), repo, mockDmpServer{})
 			repo.On("GetCompiled", mock.Anything).Return(entity.NewRules(bytes.NewReader([]byte(cc.text)), log.NewNopLogger()))
 			result, err := ser.CalculateRules(context.Background(), "", &cc.payload)
 			if err != nil {
