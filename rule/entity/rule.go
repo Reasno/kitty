@@ -140,6 +140,9 @@ func ValidateRules(reader io.Reader) error {
 	if err != nil {
 		return &ErrInvalidRules{err.Error()}
 	}
+	if err = tmp.Unmarshal(c); err != nil {
+		return &ErrInvalidRules{err.Error()}
+	}
 	if err := tmp.Compile(); err != nil {
 		return &ErrInvalidRules{err.Error()}
 	}

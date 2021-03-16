@@ -147,7 +147,43 @@ default:
 				assert.Equal(t, 4.0, data["i"])
 			},
 		},
+		{
+			"nest",
+			`
+style: switch
+by: Channel
+rule:
+  - case: foo
+    style: advanced
+    rule:
+      - if: PackageName == "foo"
+        then:
+          i: 1
+      - if: true
+        then:
+          i: 4
+  - case: foo
+    style: basic
+    rule:
+      i: 2
+default:
+  style: advanced
+  rule:
+    - if: false
+      then:
+        i: 5
+    - if: true
+      then:
+        i: 6
+`,
+			&dto.Payload{Channel: ""},
+			func(t *testing.T, err error, data dto.Data) {
+				assert.NoError(t, err)
+				assert.Equal(t, 6.0, data["i"])
+			},
+		},
 	}
+
 	for _, cc := range cases {
 		c := cc
 		t.Run(c.name, func(t *testing.T) {

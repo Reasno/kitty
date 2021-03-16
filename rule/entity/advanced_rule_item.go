@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"fmt"
+
 	"github.com/antonmedv/expr"
 	"github.com/antonmedv/expr/vm"
 	"github.com/knadh/koanf"
@@ -49,6 +51,9 @@ func (ar *AdvancedRuleItem) Compile() error {
 	ar.program, err = expr.Compile(ar.iff, expr.Env(&dto.Payload{}))
 	if err != nil {
 		return err
+	}
+	if ar.program == nil {
+		return fmt.Errorf("invalid expression: %s", ar.iff)
 	}
 	if ar.child != nil {
 		if err = ar.child.Compile(); err != nil {

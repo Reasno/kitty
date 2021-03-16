@@ -18,6 +18,23 @@ func TestAdvancedRuleItem_Calculate(t *testing.T) {
 		expect  func(*testing.T, error, dto.Data)
 	}{
 		{
+			"error",
+			`
+style: basic
+rule:
+  - if: Channel > 0
+    then:
+      i: 1
+  - if: true
+    then:
+      i: 2
+`,
+			&dto.Payload{Channel: "foo"},
+			func(t *testing.T, err error, data dto.Data) {
+				assert.Error(t, err)
+			},
+		},
+		{
 			"normal",
 			`
 style: basic
