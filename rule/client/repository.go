@@ -26,12 +26,14 @@ type repository struct {
 	prefix     string
 	rwLock     sync.RWMutex
 	regexp     *regexp.Regexp
+	limit      int64
 }
 
 type RepositoryConfig struct {
 	Prefix      string
 	Regex       *regexp.Regexp
 	ListOfRules []string
+	Limit       int64
 }
 
 func NewRepositoryWithConfig(client *clientv3.Client, logger log.Logger, config RepositoryConfig) (*repository, error) {
@@ -43,6 +45,7 @@ func NewRepositoryWithConfig(client *clientv3.Client, logger log.Logger, config 
 		prefix:     repository2.OtherConfigPathPrefix,
 		rwLock:     sync.RWMutex{},
 		regexp:     config.Regex,
+		limit:      config.Limit,
 	}
 
 	if config.Prefix != "" {
@@ -55,7 +58,7 @@ func NewRepositoryWithConfig(client *clientv3.Client, logger log.Logger, config 
 	}
 
 	// 第一次拉取配置
-	configMap, err := repo.getRawRuleSetsFromPrefix(context.Background(), repo.prefix)
+	configMap, err := repo.getRawRuleSetsFromPrefix(context.Background())
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorRules)
 	}
@@ -100,7 +103,7 @@ func NewRepository(client *clientv3.Client, logger log.Logger, activeContainers 
 	}
 
 	// 第一次拉取配置
-	configMap, err := repo.getRawRuleSetsFromPrefix(context.Background(), repo.prefix)
+	configMap, err := repo.getRawRuleSetsFromPrefix(context.Background())
 	if err != nil {
 		return nil, errors.Wrap(err, msg.ErrorRules)
 	}
@@ -160,16 +163,24 @@ func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (
 	return nil, err
 }
 
-func (r *repository) getRawRuleSetsFromPrefix(ctx context.Context, prefix string) (value map[string][]byte, e error) {
+func (r *repository) getRawRuleSetsFromPrefix(ctx context.Context) (value map[string][]byte, e error) {
 	value = make(map[string][]byte)
-	resp, err := r.client.Get(ctx, prefix, clientv3.WithPrefix())
-	if err != nil {
-		return nil, errors.Wrapf(err, "prefix not found %s", prefix)
+	key := r.prefix
+	for {
+		resp, err := r.client.Get(ctx, key, clientv3.WithRange(clientv3.GetPrefixRangeEnd(r.prefix)), clientv3.WithLimit(r.limit))
+		if err != nil {
+			return nil, errors.Wrapf(err, "prefix not found %s", r.prefix)
+		}
+		for _, ev := range resp.Kvs {
+			value[string(ev.Key)] = ev.Value
+		}
+		if !resp.More {
+			return value, err
+		}
+		// move to next key
+		key = string(append(resp.Kvs[len(resp.Kvs)-1].Key, 0))
 	}
-	for _, ev := range resp.Kvs {
-		value[string(ev.Key)] = ev.Value
-	}
-	return value, err
+
 }
 
 func (r *repository) GetCompiled(ruleName string) entity.Ruler {

@@ -131,6 +131,7 @@ type config struct {
 	listOfRules []string
 	rulePrefix  string
 	ruleRegexp  *regexp.Regexp
+	limit       int64
 }
 
 func WithClient(client *clientv3.Client) Option {
@@ -193,6 +194,12 @@ func WithTracer(tracer opentracing.Tracer) Option {
 	}
 }
 
+func WithBatchLimit(limit int64) Option {
+	return func(c *config) {
+		c.limit = limit
+	}
+}
+
 func Rule(rule string) Option {
 	return func(c *config) {
 		c.listOfRules = append(c.listOfRules, rule)
@@ -228,6 +235,7 @@ func NewRuleEngine(opt ...Option) (*RuleEngine, error) {
 			Prefix:      c.rulePrefix,
 			Regex:       c.ruleRegexp,
 			ListOfRules: c.listOfRules,
+			Limit:       c.limit,
 		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create repository")
