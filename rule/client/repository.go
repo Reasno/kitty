@@ -45,7 +45,11 @@ func NewRepositoryWithConfig(client *clientv3.Client, logger log.Logger, config 
 		prefix:     repository2.OtherConfigPathPrefix,
 		rwLock:     sync.RWMutex{},
 		regexp:     config.Regex,
-		limit:      config.Limit,
+		limit:      1000,
+	}
+
+	if config.Limit != 0 {
+		repo.limit = config.Limit
 	}
 
 	if config.Prefix != "" {

@@ -213,6 +213,7 @@ func NewRuleEngine(opt ...Option) (*RuleEngine, error) {
 		listOfRules: make([]string, 0),
 		env:         kconf.Env("production"),
 		dmpAddr:     "xtasks.ad:8181",
+		limit:       1000,
 	}
 	for _, o := range opt {
 		o(&c)
