@@ -3,9 +3,9 @@ package sms
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -51,7 +51,7 @@ func NewTransport(config *TransportConfig) *Transport {
 func (s *Transport) Send(ctx context.Context, mobile string, content string) error {
 	now := time.Now().Format(DATETIMESTRING)
 	args := url.Values{}
-	args.Add("content", fmt.Sprintf(s.tag,content))
+	args.Add("content", fmt.Sprintf(s.tag, content))
 	args.Add("mobile", mobile)
 	args.Add("tkey", now)
 	args.Add("username", s.userName)

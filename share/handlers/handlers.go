@@ -39,13 +39,21 @@ type InvitationManager interface {
 
 type UserRepository interface {
 	UpdateCallback(ctx context.Context, id uint, f func(user *entity.User) error) (err error)
+	Exists(ctx context.Context, id uint) bool
 }
 
 func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvitationRequest) (*pb.ShareGenericReply, error) {
+	var err error
 
 	claim := kittyjwt.ClaimFromContext(ctx)
 
-	err := s.ur.UpdateCallback(ctx, uint(claim.UserId), func(user *entity.User) error {
+	inviterId, err := s.tokenizer.Decode(in.GetInviteCode())
+
+	if err != nil || !s.ur.Exists(ctx, inviterId) {
+		return nil, kerr.FailedPreconditionErr(err, msg.InvalidInviteCode)
+	}
+
+	err = s.ur.UpdateCallback(ctx, uint(claim.UserId), func(user *entity.User) error {
 		if user.InviteCode != "" {
 			return ErrReenteringInviteCode
 		}
@@ -73,11 +81,6 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 	if errors.Is(err, token.ErrFailedToDecodeToken) {
 		return nil, kerr.FailedPreconditionErr(err, msg.InvalidInviteCode)
 	}
-	if err != nil {
-		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
-	}
-
-	inviterId, _ := s.tokenizer.Decode(in.GetInviteCode())
 
 	// 触发事件
 	e := shareevent.InvitationCodeAdded{

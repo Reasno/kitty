@@ -57,6 +57,19 @@ func (r *UserRepo) Delete(ctx context.Context, id uint) (err error) {
 	return r.db.WithContext(ctx).Delete(&entity.User{}, id).Error
 }
 
+func (r *UserRepo) Exists(ctx context.Context, id uint) bool {
+	var (
+		u entity.User
+	)
+	err := r.db.WithContext(ctx).First(&u, "id = ?", id).Error
+
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 func (r *UserRepo) UpdateCallback(ctx context.Context, id uint, f func(user *entity.User) error) (err error) {
 	var u entity.User
 	return r.db.Transaction(func(tx *gorm.DB) error {
