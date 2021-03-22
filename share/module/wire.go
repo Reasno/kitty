@@ -31,6 +31,7 @@ var ShareServiceSet = wire.NewSet(
 	repository.NewUserRepo,
 	repository.NewRelationRepo,
 	repository.NewFileRepo,
+	ProvideRedis,
 	provideTokenizer,
 	providePublisherOptions,
 	provideInvitationCodeBus,

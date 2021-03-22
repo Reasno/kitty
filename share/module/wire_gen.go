@@ -68,8 +68,9 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	}
 	manager := module.ProvideUploadManager(tracer, reader, client)
 	fileRepo := repository.NewFileRepo(manager, client)
-	userRepo := repository.NewUserRepo(db, fileRepo)
-	kafkaFactory, cleanup3 := module.ProvideKafkaFactory(reader, logger)
+	universalClient, cleanup3 := ProvideRedis(logger, reader)
+	userRepo := repository.NewUserRepo(db, fileRepo, universalClient, reader)
+	kafkaFactory, cleanup4 := module.ProvideKafkaFactory(reader, logger)
 	v := providePublisherOptions(tracer, logger)
 	moduleProducerMiddleware := provideProducerMiddleware(tracer, logger)
 	dataStore := provideInvitationCodeBus(kafkaFactory, reader, v, moduleProducerMiddleware)
@@ -82,6 +83,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	server := provideKafkaServer(endpoints, kafkaFactory, reader, tracer, env, logger)
 	moduleModule := provideModule(grpcShareServer, handler, server, appName)
 	return moduleModule, func() {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -90,7 +92,8 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 
 // wire.go:
 
-var ShareServiceSet = wire.NewSet(module.DbSet, module.OpenTracingSet, module.NameAndEnvSet, module.ProvideSecurityConfig, module.ProvideKafkaFactory, module.ProvideHistogramMetrics, module.ProvideHttpClient, module.ProvideUploadManager, repository.NewUserRepo, repository.NewRelationRepo, repository.NewFileRepo, provideTokenizer,
+var ShareServiceSet = wire.NewSet(module.DbSet, module.OpenTracingSet, module.NameAndEnvSet, module.ProvideSecurityConfig, module.ProvideKafkaFactory, module.ProvideHistogramMetrics, module.ProvideHttpClient, module.ProvideUploadManager, repository.NewUserRepo, repository.NewRelationRepo, repository.NewFileRepo, ProvideRedis,
+	provideTokenizer,
 	providePublisherOptions,
 	provideInvitationCodeBus,
 	provideDispatcher, internal.NewXTaskRequester, handlers.NewShareService, handlers.ProvideShareServer, wire.Struct(new(internal.InvitationManagerFactory), "*"), wire.Struct(new(internal.InvitationManagerFacade), "*"), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(internal.RelationRepository), new(*repository.RelationRepo)), wire.Bind(new(handlers.InvitationManager), new(*internal.InvitationManagerFacade)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(internal.EncodeDecoder), new(*invitecode.Tokenizer)), wire.Bind(new(contract.Dispatcher), new(*event.Dispatcher)), wire.Bind(new(listener.InvitationCodeBus), new(*client.DataStore)),

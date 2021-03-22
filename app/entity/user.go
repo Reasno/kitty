@@ -1,10 +1,12 @@
 package entity
 
 import (
+	"context"
 	"crypto/md5"
 	"database/sql"
 	"fmt"
-
+	"github.com/go-redis/redis/v8"
+	"github.com/pkg/errors"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -47,9 +49,43 @@ func (user *User) AddNewDevice(device *Device) {
 	user.Devices = append(user.Devices, *device)
 }
 
+// BeforeCreate is a gorm hook
+func (user *User) BeforeCreate(db *gorm.DB) (err error) {
+	if user.ID != 0 {
+		return
+	}
+
+	var (
+		rds redis.UniversalClient
+		key string
+	)
+
+	if v, ok := db.Get("redis"); ok {
+		rds = v.(redis.UniversalClient)
+	}
+
+	if v, ok := db.Get("incrKey"); ok {
+		key = v.(string)
+	}
+
+	if rds == nil || key == "" {
+		return errors.New("redis not ready or `incrKey` is not exists")
+	}
+
+	res := rds.Incr(context.Background(), key)
+
+	if id, err := res.Uint64(); err != nil {
+		user.ID = uint(id)
+	} else {
+		return err
+	}
+
+	return
+}
+
 // AfterCreate is a gorm hook
-func (u *User) AfterCreate(tx *gorm.DB) (err error) {
-	u.IsNew = true
+func (user *User) AfterCreate(tx *gorm.DB) (err error) {
+	user.IsNew = true
 	return
 }
 

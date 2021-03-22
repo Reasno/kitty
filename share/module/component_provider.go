@@ -3,6 +3,8 @@ package module
 import (
 	"fmt"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log/level"
+	"github.com/go-redis/redis/v8"
 	"github.com/opentracing/opentracing-go/ext"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/event"
 	kclient "glab.tagtic.cn/ad_gains/kitty/pkg/kkafka/client"
@@ -107,4 +109,18 @@ func provideProducerMiddleware(tracer stdopentracing.Tracer, logger log.Logger) 
 
 func provideInvitationCodeBus(factory *kkafka.KafkaFactory, conf contract.ConfigReader, option []kkafka.PublisherOption, mw producerMiddleware) *kclient.DataStore {
 	return kclient.NewDataStore(conf.String("kafka.shareInvitationCodeBus"), factory, option, mw("kafka.Share"))
+}
+
+func ProvideRedis(logging log.Logger, conf contract.ConfigReader) (redis.UniversalClient, func()) {
+	client := redis.NewUniversalClient(
+		&redis.UniversalOptions{
+			Addrs:    conf.Strings("redis.addrs"),
+			DB:       conf.Int("redis.database"),
+			Password: conf.String("redis.password"),
+		})
+	return client, func() {
+		if err := client.Close(); err != nil {
+			level.Error(logging).Log("err", err.Error())
+		}
+	}
 }

@@ -1,7 +1,11 @@
 package repository
 
 import (
+	"context"
 	"flag"
+	"github.com/go-redis/redis/v8"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
+	mc "glab.tagtic.cn/ad_gains/kitty/pkg/contract/mocks"
 	"testing"
 
 	"github.com/go-gormigrate/gormigrate/v2"
@@ -43,6 +47,8 @@ func setUp(t *testing.T) {
 	if err != nil {
 		t.Fatal("failed to connect database")
 	}
+	db.Set("redis", getRedis())
+	db.Set("incrKey", getConf().String("incrKey"))
 	m = ProvideMigrator(db, config.AppName("test"))
 	err = m.Migrate()
 	if err != nil {
@@ -61,4 +67,20 @@ func user(id uint) entity.User {
 			ID: id,
 		},
 	}
+}
+
+func getConf() contract.ConfigReader {
+	conf := &mc.ConfigReader{}
+	conf.On("String", "incrKey").Return("kitty-users-id", nil)
+	return conf
+}
+
+func getRedis() redis.UniversalClient {
+	rds := redis.NewUniversalClient(
+		&redis.UniversalOptions{
+			Addrs: []string{"127.0.0.1:6379"},
+		})
+	rds.FlushAll(context.Background())
+
+	return rds
 }

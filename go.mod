@@ -47,6 +47,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.4.0+incompatible
+	github.com/vektra/mockery/v2 v2.7.4 // indirect
 	go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738
 	golang.org/x/tools v0.0.0-20201102212025-f46e4245211d // indirect
 	google.golang.org/genproto v0.0.0-20201015140912-32ed001d685c

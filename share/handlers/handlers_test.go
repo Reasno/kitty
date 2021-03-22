@@ -48,18 +48,19 @@ func TestShareService_AddInvitationCode(t *testing.T) {
 						user.ID = id
 						return f(user)
 					})
+					m.On("Exists", mock.Anything, mock.Anything).Return(true)
 					return &m
 				}(),
 				dispatcher: func() contract.Dispatcher {
 					return &event.Dispatcher{}
 				}(),
 				tokenizer: func() internal.EncodeDecoder {
-					return invitecode.NewTokenizer("")
+					return invitecode.NewTokenizer("DonewsTeaParty")
 				}(),
 			},
-			ctx: ctx(1),
+			ctx: ctx(2),
 			req: pb.ShareAddInvitationRequest{
-				InviteCode: "foobar",
+				InviteCode: "0w427W2zBG",
 			},
 			err: nil,
 		},
@@ -78,18 +79,19 @@ func TestShareService_AddInvitationCode(t *testing.T) {
 						user.ID = id
 						return f(user)
 					})
+					m.On("Exists", mock.Anything, mock.Anything).Return(true)
 					return &m
 				}(),
 				dispatcher: func() contract.Dispatcher {
 					return &event.Dispatcher{}
 				}(),
 				tokenizer: func() internal.EncodeDecoder {
-					return invitecode.NewTokenizer("")
+					return invitecode.NewTokenizer("DonewsTeaParty")
 				}(),
 			},
-			ctx: ctx(1),
+			ctx: ctx(2),
 			req: pb.ShareAddInvitationRequest{
-				InviteCode: "foobar",
+				InviteCode: "0w427W2zBG",
 			},
 			err: ErrReenteringInviteCode,
 		},
