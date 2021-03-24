@@ -6,6 +6,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
+	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"glab.tagtic.cn/ad_gains/kitty/app/handlers"
 	"glab.tagtic.cn/ad_gains/kitty/app/listener"
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
@@ -61,6 +62,7 @@ var AppServerSet = wire.NewSet(
 	repository.NewCodeRepo,
 	repository.NewFileRepo,
 	repository.NewExtraRepo,
+	repository.NewUniqueID,
 	handlers.NewAppService,
 	handlers.ProvideAppServer,
 	wire.Bind(new(redis.Cmdable), new(redis.UniversalClient)),
@@ -75,6 +77,7 @@ var AppServerSet = wire.NewSet(
 	wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)),
 	wire.Bind(new(handlers.CodeRepository), new(*repository.CodeRepo)),
 	wire.Bind(new(handlers.FileRepository), new(*repository.FileRepo)),
+	wire.Bind(new(entity.IDAssigner), new(*repository.UniqueID)),
 )
 
 func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {

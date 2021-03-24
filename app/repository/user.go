@@ -3,8 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"github.com/go-redis/redis/v8"
-	"glab.tagtic.cn/ad_gains/kitty/pkg/contract"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
@@ -98,8 +96,8 @@ func (r *UserRepo) UpdateCallback(ctx context.Context, id uint, f func(user *ent
 	})
 }
 
-func NewUserRepo(db *gorm.DB, fr *FileRepo, redis redis.UniversalClient, conf contract.ConfigReader) *UserRepo {
-	return &UserRepo{fr, db.Set("redis", redis).Set("incrKey", conf.String("incrKey"))}
+func NewUserRepo(db *gorm.DB, fr *FileRepo, assigner entity.IDAssigner) *UserRepo {
+	return &UserRepo{fr, db.Set("IDAssigner", assigner)}
 }
 
 func (r *UserRepo) GetFromWechat(ctx context.Context, packageName, wechat string, device *entity.Device, wechatUser entity.User) (*entity.User, error) {

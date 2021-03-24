@@ -19,7 +19,7 @@ func TestGetFromWechat(t *testing.T) {
 	}
 	setUp(t)
 	defer tearDown()
-	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), getRedis(), getConf())
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
 	u, err := userRepo.GetFromWechat(ctx, "", "foo", &entity.Device{Suuid: "bar"}, entity.User{UserName: "baz"})
 	if err != nil {
@@ -61,7 +61,7 @@ func TestGetFromWechat(t *testing.T) {
 func TestGetFromMobile(t *testing.T) {
 	setUp(t)
 	defer tearDown()
-	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), getRedis(), getConf())
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
 	u, err := userRepo.GetFromMobile(ctx, "", "110", &entity.Device{Suuid: "bar"})
 	if err != nil {
@@ -94,7 +94,7 @@ func TestGetFromMobile(t *testing.T) {
 func TestGetFromDevice(t *testing.T) {
 	setUp(t)
 	defer tearDown()
-	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), getRedis(), getConf())
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
 	u, err := userRepo.GetFromDevice(ctx, "", "110", &entity.Device{Suuid: "bar"})
 	if err != nil {
@@ -121,7 +121,7 @@ func TestGetFromDevice(t *testing.T) {
 func TestGetSave(t *testing.T) {
 	setUp(t)
 	defer tearDown()
-	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), getRedis(), getConf())
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
 	user := entity.User{}
 	user.ID = 50
@@ -141,7 +141,7 @@ func TestGetSave(t *testing.T) {
 func TestUserRepo_Delete(t *testing.T) {
 	setUp(t)
 	defer tearDown()
-	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), getRedis(), getConf())
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
 	user := entity.User{Model: gorm.Model{ID: uint(1)}, UserName: "hello"}
 	_ = userRepo.Save(ctx, &user)
@@ -156,7 +156,7 @@ func TestUserRepo_GetAll(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 
-	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), getRedis(), getConf())
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
 	for i := 1; i < 5; i++ {
 		user := entity.User{Model: gorm.Model{ID: uint(i)}, UserName: "hello"}
@@ -198,7 +198,7 @@ func TestUserRepo_Count(t *testing.T) {
 	setUp(t)
 	defer tearDown()
 
-	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), getRedis(), getConf())
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
 	for i := 1; i < 5; i++ {
 		user := entity.User{Model: gorm.Model{ID: uint(i)}, UserName: "hello"}
@@ -222,7 +222,7 @@ func TestUniqueConstraint(t *testing.T) {
 	}
 	setUp(t)
 	defer tearDown()
-	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), getRedis(), getConf())
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
 	user := entity.User{
 		Mobile: sql.NullString{String: "110", Valid: true},
@@ -252,4 +252,29 @@ func TestUniqueConstraint(t *testing.T) {
 	if err != ErrAlreadyBind {
 		t.Fatal(err)
 	}
+}
+
+func TestUser_UpdateCallback(t *testing.T) {
+	if !useMysql {
+		t.Skip("update callback tests must be run on mysql")
+	}
+	setUp(t)
+	defer tearDown()
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
+	err := userRepo.UpdateCallback(context.Background(), 1, func(user *entity.User) error {
+		return nil
+	})
+	assert.Error(t, err)
+}
+
+func TestUser_Exists(t *testing.T) {
+	setUp(t)
+	defer tearDown()
+	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
+	ok := userRepo.Exists(context.Background(), 1)
+	assert.False(t, ok)
+	user := user(1)
+	userRepo.Save(context.Background(), &user)
+	ok = userRepo.Exists(context.Background(), 1)
+	assert.True(t, ok)
 }

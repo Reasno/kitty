@@ -8,6 +8,7 @@ package module
 import (
 	"github.com/go-kit/kit/log"
 	"github.com/google/wire"
+	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"glab.tagtic.cn/ad_gains/kitty/app/module"
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
@@ -69,7 +70,8 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	manager := module.ProvideUploadManager(tracer, reader, client)
 	fileRepo := repository.NewFileRepo(manager, client)
 	universalClient, cleanup3 := ProvideRedis(logger, reader)
-	userRepo := repository.NewUserRepo(db, fileRepo, universalClient, reader)
+	uniqueID := repository.NewUniqueID(universalClient, reader)
+	userRepo := repository.NewUserRepo(db, fileRepo, uniqueID)
 	kafkaFactory, cleanup4 := module.ProvideKafkaFactory(reader, logger)
 	v := providePublisherOptions(tracer, logger)
 	moduleProducerMiddleware := provideProducerMiddleware(tracer, logger)
@@ -92,9 +94,9 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 
 // wire.go:
 
-var ShareServiceSet = wire.NewSet(module.DbSet, module.OpenTracingSet, module.NameAndEnvSet, module.ProvideSecurityConfig, module.ProvideKafkaFactory, module.ProvideHistogramMetrics, module.ProvideHttpClient, module.ProvideUploadManager, repository.NewUserRepo, repository.NewRelationRepo, repository.NewFileRepo, ProvideRedis,
+var ShareServiceSet = wire.NewSet(module.DbSet, module.OpenTracingSet, module.NameAndEnvSet, module.ProvideSecurityConfig, module.ProvideKafkaFactory, module.ProvideHistogramMetrics, module.ProvideHttpClient, module.ProvideUploadManager, repository.NewUserRepo, repository.NewRelationRepo, repository.NewFileRepo, repository.NewUniqueID, ProvideRedis,
 	provideTokenizer,
 	providePublisherOptions,
 	provideInvitationCodeBus,
-	provideDispatcher, internal.NewXTaskRequester, handlers.NewShareService, handlers.ProvideShareServer, wire.Struct(new(internal.InvitationManagerFactory), "*"), wire.Struct(new(internal.InvitationManagerFacade), "*"), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(internal.RelationRepository), new(*repository.RelationRepo)), wire.Bind(new(handlers.InvitationManager), new(*internal.InvitationManagerFacade)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(internal.EncodeDecoder), new(*invitecode.Tokenizer)), wire.Bind(new(contract.Dispatcher), new(*event.Dispatcher)), wire.Bind(new(listener.InvitationCodeBus), new(*client.DataStore)),
+	provideDispatcher, internal.NewXTaskRequester, handlers.NewShareService, handlers.ProvideShareServer, wire.Struct(new(internal.InvitationManagerFactory), "*"), wire.Struct(new(internal.InvitationManagerFacade), "*"), wire.Bind(new(handlers.UserRepository), new(*repository.UserRepo)), wire.Bind(new(internal.RelationRepository), new(*repository.RelationRepo)), wire.Bind(new(handlers.InvitationManager), new(*internal.InvitationManagerFacade)), wire.Bind(new(contract.Uploader), new(*ots3.Manager)), wire.Bind(new(contract.HttpDoer), new(*khttp.Client)), wire.Bind(new(internal.EncodeDecoder), new(*invitecode.Tokenizer)), wire.Bind(new(contract.Dispatcher), new(*event.Dispatcher)), wire.Bind(new(listener.InvitationCodeBus), new(*client.DataStore)), wire.Bind(new(entity.IDAssigner), new(*repository.UniqueID)),
 )

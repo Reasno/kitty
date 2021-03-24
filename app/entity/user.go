@@ -1,11 +1,10 @@
 package entity
 
 import (
-	"context"
 	"crypto/md5"
 	"database/sql"
 	"fmt"
-	"github.com/go-redis/redis/v8"
+
 	"github.com/pkg/errors"
 	_ "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -56,31 +55,24 @@ func (user *User) BeforeCreate(db *gorm.DB) (err error) {
 	}
 
 	var (
-		rds redis.UniversalClient
-		key string
+		assigner IDAssigner
 	)
 
-	if v, ok := db.Get("redis"); ok {
-		rds = v.(redis.UniversalClient)
+	if v, ok := db.Get("IDAssigner"); ok {
+		assigner, _ = v.(IDAssigner)
 	}
 
-	if v, ok := db.Get("incrKey"); ok {
-		key = v.(string)
+	if assigner == nil {
+		return errors.New("IDAssigner missing")
 	}
 
-	if rds == nil || key == "" {
-		return errors.New("redis not ready or `incrKey` is not exists")
+	id, err := assigner.ID(db.Statement.Context)
+	if err != nil {
+		return errors.Wrap(err, "failed to assign ID in BeforeCreate hook")
 	}
 
-	res := rds.Incr(context.Background(), key)
-
-	if id, err := res.Uint64(); err != nil {
-		user.ID = uint(id)
-	} else {
-		return err
-	}
-
-	return
+	user.ID = id
+	return nil
 }
 
 // AfterCreate is a gorm hook

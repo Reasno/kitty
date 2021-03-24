@@ -5,6 +5,7 @@ package module
 import (
 	"github.com/go-kit/kit/log"
 	"github.com/google/wire"
+	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	"glab.tagtic.cn/ad_gains/kitty/app/module"
 	"glab.tagtic.cn/ad_gains/kitty/app/repository"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
@@ -31,6 +32,7 @@ var ShareServiceSet = wire.NewSet(
 	repository.NewUserRepo,
 	repository.NewRelationRepo,
 	repository.NewFileRepo,
+	repository.NewUniqueID,
 	ProvideRedis,
 	provideTokenizer,
 	providePublisherOptions,
@@ -49,6 +51,7 @@ var ShareServiceSet = wire.NewSet(
 	wire.Bind(new(internal.EncodeDecoder), new(*invitecode.Tokenizer)),
 	wire.Bind(new(contract.Dispatcher), new(*event.Dispatcher)),
 	wire.Bind(new(listener.InvitationCodeBus), new(*kclient.DataStore)),
+	wire.Bind(new(entity.IDAssigner), new(*repository.UniqueID)),
 )
 
 func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) (*Module, func(), error) {
