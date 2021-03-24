@@ -1,6 +1,7 @@
 global:
   version: 0.2.0
   env: local
+  incrKey: kitty-users-id
   http:
     addr: :8080
   grpc:

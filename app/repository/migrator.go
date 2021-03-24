@@ -236,5 +236,32 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 				return db.Migrator().AlterColumn(&User{}, "UserName")
 			},
 		},
+		{
+			ID: "202103240100",
+			Migrate: func(db *gorm.DB) error {
+				type User struct {
+					PackageName string `gorm:"type:varchar(255);index:suuid_index,priority:1;uniqueIndex:mobile_index,priority:1;uniqueIndex:wechat_openid_index,priority:1;uniqueIndex:taobao_openid_index,priority:1"`
+					CommonSUUID string `gorm:"type:varchar(255);index:suuid_index,priority:2"`
+				}
+				if err := db.Migrator().AlterColumn(&User{}, "common_s_uuid"); err != nil {
+					return err
+				}
+				return db.Migrator().CreateIndex(&User{}, "suuid_index")
+			},
+			Rollback: func(db *gorm.DB) error {
+				type User struct {
+					PackageName string `gorm:"type:varchar(255);uniqueIndex:mobile_index,priority:1;uniqueIndex:wechat_openid_index,priority:1;uniqueIndex:taobao_openid_index,priority:1"`
+					CommonSUUID string `gorm:""`
+				}
+
+				if err := db.Migrator().DropIndex(&User{}, "suuid_index"); err != nil {
+					return err
+				}
+				if err := db.Migrator().AlterColumn(&User{}, "common_s_uuid"); err != nil {
+					return err
+				}
+				return nil
+			},
+		},
 	})
 }
