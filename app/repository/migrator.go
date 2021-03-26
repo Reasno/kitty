@@ -263,5 +263,26 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 				return nil
 			},
 		},
+		{
+			ID: "202103260100",
+			Migrate: func(db *gorm.DB) error {
+				type User struct {
+					CommonSMID string `gorm:"type:varchar(255);"`
+				}
+				if err := db.Migrator().AddColumn(&User{}, "common_sm_id"); err != nil {
+					return err
+				}
+				return nil
+			},
+			Rollback: func(db *gorm.DB) error {
+				type User struct {
+					CommonSMID string
+				}
+				if err := db.Migrator().DropColumn(&User{}, "common_sm_id"); err != nil {
+					return err
+				}
+				return nil
+			},
+		},
 	})
 }

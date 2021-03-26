@@ -106,6 +106,7 @@ func (r *UserRepo) GetFromWechat(ctx context.Context, packageName, wechat string
 	)
 
 	wechatUser.CommonSUUID = device.Suuid
+	wechatUser.CommonSMID = device.SMID
 	wechatUser.PackageName = packageName
 	wechatUser.WechatOpenId = sql.NullString{String: wechat, Valid: true}
 
@@ -143,7 +144,7 @@ func (r *UserRepo) GetFromMobile(ctx context.Context, packageName, mobile string
 	var (
 		u entity.User
 	)
-	err := r.db.WithContext(ctx).Where("package_name = ? and mobile = ?", packageName, mobile).Attrs(entity.User{CommonSUUID: device.Suuid, PackageName: packageName, Mobile: sql.NullString{String: mobile, Valid: true}}).FirstOrCreate(&u).Error
+	err := r.db.WithContext(ctx).Where("package_name = ? and mobile = ?", packageName, mobile).Attrs(entity.User{CommonSUUID: device.Suuid, CommonSMID: device.SMID, PackageName: packageName, Mobile: sql.NullString{String: mobile, Valid: true}}).FirstOrCreate(&u).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.Wrap(err, emsg)
 	}
@@ -158,7 +159,7 @@ func (r *UserRepo) GetFromDevice(ctx context.Context, packageName, suuid string,
 		u   entity.User
 	)
 
-	err = r.db.WithContext(ctx).Where("package_name = ? and common_s_uuid = ?", packageName, suuid).Attrs(entity.User{PackageName: packageName, CommonSUUID: suuid}).FirstOrCreate(&u).Error
+	err = r.db.WithContext(ctx).Where("package_name = ? and common_s_uuid = ?", packageName, suuid).Attrs(entity.User{PackageName: packageName, CommonSUUID: suuid, CommonSMID: device.SMID}).FirstOrCreate(&u).Error
 	if err != nil {
 		return nil, errors.Wrap(err, emsg)
 	}

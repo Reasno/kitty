@@ -55,7 +55,7 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 	serverOptions = append(serverOptions, options...)
 	m := mux.NewRouter()
 
-	m.Methods("GET").Path("/url").Handler(httptransport.NewServer(
+	m.Methods("GET").Path("/user-more").Handler(httptransport.NewServer(
 		endpoints.UserMoreEndpoint,
 		DecodeHTTPUserMoreZeroRequest,
 		EncodeHTTPGenericResponse,

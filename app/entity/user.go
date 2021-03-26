@@ -21,6 +21,7 @@ type User struct {
 	Birthday      string         `json:"birthday" gorm:"default:2000-01-01"`
 	Mobile        sql.NullString `json:"mobile" gorm:"type:varchar(255);uniqueIndex:mobile_index"`
 	CommonSUUID   string         `json:"common_suuid"`
+	CommonSMID    string         `json:"common_smid"`
 	Devices       []Device
 	Channel       string `json:"channel"`
 	VersionCode   string `json:"version_code"`
@@ -92,6 +93,7 @@ type Device struct {
 	Suuid     string
 	Mac       string
 	AndroidId string
+	SMID      string
 	// 仅供数据库去重使用，应用不应依赖该字段，以免去重条件发生变化
 	Hash string `gorm:"type:varchar(255);uniqueIndex:hash_index,sort:desc"`
 }

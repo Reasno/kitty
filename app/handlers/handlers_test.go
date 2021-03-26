@@ -386,6 +386,44 @@ func TestAppService_Refresh(t *testing.T) {
 				Code: 0,
 			},
 		},
+		{
+			"刷新token",
+			appService{
+				conf:   getConf(),
+				logger: log.NewNopLogger(),
+				ur: (func() UserRepository {
+					ur := &mocks.UserRepository{}
+					ur.On("Get", mock.Anything, mock.Anything).Return(func(ctx context.Context, id uint) *entity.User {
+						return &entity.User{Mobile: ns("123"), PackageName: "foo"}
+					}, nil).Once()
+					ur.On("Save", mock.Anything, mock.AnythingOfType("*entity.User")).Return(nil).Once()
+					return ur
+				})(),
+				cr: (func() CodeRepository {
+					cr := &mocks.CodeRepository{}
+					cr.On("CheckCode", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+					cr.On("DeleteCode", mock.Anything, mock.Anything).Return(nil)
+					return cr
+				})(),
+				sender: &mc.SmsSender{},
+				wechat: &wm.Wechater{},
+				dispatcher: (func() contract.Dispatcher {
+					m := &mc.Dispatcher{}
+					m.On("Dispatch", mock.Anything).Return(nil).Once()
+					return m
+				})(),
+			},
+
+			pb.UserRefreshRequest{
+				Device: &pb.Device{
+					Smid: "fooo",
+				},
+				VersionCode: "100",
+			},
+			pb.UserInfoReply{
+				Code: 0,
+			},
+		},
 	}
 	for _, c := range cases {
 		cc := c
@@ -400,6 +438,7 @@ func TestAppService_Refresh(t *testing.T) {
 			if out.Data.Token == "" {
 				t.Fatal("missing jwt token")
 			}
+			cc.service.ur.(*mocks.UserRepository).AssertExpectations(t)
 		})
 	}
 }

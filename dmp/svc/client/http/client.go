@@ -54,7 +54,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.DmpServer, 
 	{
 		UserMoreZeroEndpoint = httptransport.NewClient(
 			"GET",
-			copyURL(u, "/url"),
+			copyURL(u, "/user-more"),
 			EncodeHTTPUserMoreZeroRequest,
 			DecodeHTTPUserMoreResponse,
 			options...,
@@ -133,7 +133,7 @@ func EncodeHTTPUserMoreZeroRequest(_ context.Context, r *http.Request, request i
 	// Set the path parameters
 	path := strings.Join([]string{
 		"",
-		"url",
+		"user-more",
 	}, "/")
 	u, err := url.Parse(path)
 	if err != nil {

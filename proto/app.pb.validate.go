@@ -614,6 +614,8 @@ func (m *Device) Validate() error {
 
 	// no validation rules for Oaid
 
+	// no validation rules for Smid
+
 	return nil
 }
 
@@ -846,6 +848,8 @@ func (m *UserInfoDetail) Validate() error {
 	// no validation rules for VersionCode
 
 	// no validation rules for PackageName
+
+	// no validation rules for Smid
 
 	return nil
 }

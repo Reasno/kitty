@@ -21,7 +21,7 @@ func TestGetFromWechat(t *testing.T) {
 	defer tearDown()
 	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
-	u, err := userRepo.GetFromWechat(ctx, "", "foo", &entity.Device{Suuid: "bar"}, entity.User{UserName: "baz"})
+	u, err := userRepo.GetFromWechat(ctx, "", "foo", &entity.Device{Suuid: "bar", SMID: "baz"}, entity.User{UserName: "baz"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,6 +53,9 @@ func TestGetFromWechat(t *testing.T) {
 	if u2.CommonSUUID != "bar" {
 		t.Fatalf("want bar, got %s", u2.CommonSUUID)
 	}
+	if u2.CommonSMID != "baz" {
+		t.Fatalf("want baz, got %s", u2.CommonSMID)
+	}
 	if u2.UserName != "baz" {
 		t.Fatalf("want baz, got %s", u2.Devices[0].Suuid)
 	}
@@ -63,7 +66,7 @@ func TestGetFromMobile(t *testing.T) {
 	defer tearDown()
 	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
-	u, err := userRepo.GetFromMobile(ctx, "", "110", &entity.Device{Suuid: "bar"})
+	u, err := userRepo.GetFromMobile(ctx, "", "110", &entity.Device{Suuid: "bar", SMID: "baz"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,6 +89,9 @@ func TestGetFromMobile(t *testing.T) {
 	if u2.Devices[0].Suuid != "bar2" {
 		t.Fatalf("want bar2, got %s", u2.Devices[0].Suuid)
 	}
+	if u2.CommonSMID != "baz" {
+		t.Fatalf("want baz, got %s", u2.CommonSMID)
+	}
 	if u2.CommonSUUID != "bar" {
 		t.Fatalf("want bar, got %s", u2.CommonSUUID)
 	}
@@ -96,7 +102,7 @@ func TestGetFromDevice(t *testing.T) {
 	defer tearDown()
 	userRepo := NewUserRepo(db, NewFileRepo(nil, nil), &mockID{})
 	ctx := context.Background()
-	u, err := userRepo.GetFromDevice(ctx, "", "110", &entity.Device{Suuid: "bar"})
+	u, err := userRepo.GetFromDevice(ctx, "", "110", &entity.Device{Suuid: "bar", SMID: "baz"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,6 +118,9 @@ func TestGetFromDevice(t *testing.T) {
 	}
 	if u2.CommonSUUID != "110" {
 		t.Fatalf("want foo, got %s", u2.CommonSUUID)
+	}
+	if u2.CommonSMID != "baz" {
+		t.Fatalf("want baz, got %s", u2.CommonSMID)
 	}
 	if u2.Devices[0].Suuid != "bar2" {
 		t.Fatalf("want bar2, got %s", u2.Devices[0].Suuid)

@@ -95,6 +95,7 @@ service App {
       body: "*"
     };
   }
+
   // 用户已登录后，绑定额外的手机号或微信号。
   // 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
   rpc Bind (UserBindRequest) returns (UserInfoReply) {
@@ -142,7 +143,6 @@ service App {
     };
   }
 }
-
 
 message UserBindRequest {
   // 手机号
@@ -264,6 +264,7 @@ message Device {
   // 1 苹果，2 安卓
   OS os = 6;
   string oaid = 7;
+  string smid = 8;
 }
 
 enum Gender {
@@ -316,6 +317,7 @@ message UserInfoDetail {
   string channel = 18;
   string version_code = 19;
   string package_name = 20;
+  string smid = 21;
 }
 
 message UserInfoReply {

@@ -81,6 +81,7 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		Oaid:      in.Device.Oaid,
 		Mac:       in.Device.Mac,
 		AndroidId: in.Device.AndroidId,
+		SMID:      in.Device.Smid,
 	}
 	u, err = s.loginFrom(ctx, in, device)
 	if err != nil {
@@ -165,15 +166,17 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		Oaid:      in.Device.Oaid,
 		Mac:       in.Device.Mac,
 		AndroidId: in.Device.AndroidId,
+		SMID:      in.Device.Smid,
 	}
 	u, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
 		return nil, dbErr(err)
 	}
 
-	u.CommonSUUID = in.Device.Suuid
 	u.Channel = in.Channel
 	u.VersionCode = in.VersionCode
+	u.CommonSMID = device.SMID
+	u.CommonSUUID = device.Suuid
 	u.AddNewDevice(device)
 
 	if err := s.ur.Save(ctx, u); err != nil {
@@ -714,6 +717,7 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 		InviteCode:   inviteCode,
 		IsInvited:    user.InviteCode != "",
 		Suuid:        user.CommonSUUID,
+		Smid:         user.CommonSMID,
 		Channel:      user.Channel,
 		VersionCode:  user.VersionCode,
 		CreatedAt:    user.CreatedAt.Format("2006-01-02 15:04:05"),
