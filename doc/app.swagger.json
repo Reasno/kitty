@@ -611,6 +611,28 @@
         },
         "smid": {
           "type": "string"
+        },
+        "oaid": {
+          "type": "string"
+        },
+        "imei": {
+          "type": "string"
+        },
+        "idfa": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "mac": {
+          "type": "string"
+        },
+        "android_id": {
+          "type": "string"
+        },
+        "os": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

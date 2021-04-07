@@ -9,4 +9,10 @@ type Message struct {
 	UserId      string `json:"user_id"`
 	PackageName string `json:"account"`
 	AppKey      string `json:"appkey"`
+	DeviceID    string `json:"device_id"`
+	OAID        string `json:"oaid"`
+	AndroidID   string `json:"android_id"`
+	MAC         string `json:"mac"`
+	IP          string `json:"ip"`
+	Platform    string `json:"platform"`
 }

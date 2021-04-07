@@ -83,6 +83,9 @@ func (s appService) Login(ctx context.Context, in *pb.UserLoginRequest) (*pb.Use
 		AndroidId: in.Device.AndroidId,
 		SMID:      in.Device.Smid,
 	}
+	if ip, ok := ctx.Value(contract.IpKey).(string); ok {
+		device.IP = ip
+	}
 	u, err = s.loginFrom(ctx, in, device)
 	if err != nil {
 		return nil, err
@@ -168,6 +171,10 @@ func (s appService) Refresh(ctx context.Context, in *pb.UserRefreshRequest) (*pb
 		AndroidId: in.Device.AndroidId,
 		SMID:      in.Device.Smid,
 	}
+	if ip, ok := ctx.Value(contract.IpKey).(string); ok {
+		device.IP = ip
+	}
+
 	u, err := s.ur.Get(ctx, uint(claim.UserId))
 	if err != nil {
 		return nil, dbErr(err)
@@ -702,7 +709,7 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 	_ = taobaoExtra.Unmarshal(user.TaobaoExtra)
 	var tokenizer = code.NewTokenizer(s.conf.String("salt"))
 	inviteCode, _ := tokenizer.Encode(user.ID)
-	return &pb.UserInfoDetail{
+	details := &pb.UserInfoDetail{
 		Id:           uint64(user.ID),
 		UserName:     user.UserName,
 		Wechat:       user.WechatOpenId.String,
@@ -722,5 +729,16 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 		VersionCode:  user.VersionCode,
 		CreatedAt:    user.CreatedAt.Format("2006-01-02 15:04:05"),
 		PackageName:  user.PackageName,
+		Oaid:         user.Devices[0].Oaid,
+		Imei:         user.Devices[0].Imei,
 	}
+	if len(user.Devices) > 0 {
+		last := len(user.Devices) - 1
+		details.Oaid = user.Devices[last].Oaid
+		details.Imei = user.Devices[last].Imei
+		details.Idfa = user.Devices[last].Idfa
+		details.AndroidId = user.Devices[last].AndroidId
+		details.Os = uint32(user.Devices[last].Os)
+	}
+	return details
 }

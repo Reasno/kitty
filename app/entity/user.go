@@ -94,6 +94,7 @@ type Device struct {
 	Mac       string
 	AndroidId string
 	SMID      string
+	IP        string `gorm:"-"`
 	// 仅供数据库去重使用，应用不应依赖该字段，以免去重条件发生变化
 	Hash string `gorm:"type:varchar(255);uniqueIndex:hash_index,sort:desc"`
 }
@@ -108,6 +109,7 @@ func (my Device) HashCode() string {
 	m.Write([]byte(my.Suuid))
 	m.Write([]byte(my.Mac))
 	m.Write([]byte(my.AndroidId))
+	m.Write([]byte(my.SMID))
 	return fmt.Sprintf("%x", m.Sum(nil))
 }
 

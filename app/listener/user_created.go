@@ -29,6 +29,12 @@ func (u UserCreated) Process(event contract.Event) error {
 		Suuid:       data.Suuid,
 		Channel:     data.Channel,
 		VersionCode: data.VersionCode,
+		Os:          uint8(data.Os),
+		Idfa:        data.Idfa,
+		Imei:        data.Imei,
+		Mac:         data.Mac,
+		Oaid:        data.Oaid,
+		Ip:          data.Ip,
 	}
 	_ = u.Bus.Emit(event.Context(), "new_user", &claim)
 	return nil

@@ -851,6 +851,20 @@ func (m *UserInfoDetail) Validate() error {
 
 	// no validation rules for Smid
 
+	// no validation rules for Oaid
+
+	// no validation rules for Imei
+
+	// no validation rules for Idfa
+
+	// no validation rules for Ip
+
+	// no validation rules for Mac
+
+	// no validation rules for AndroidId
+
+	// no validation rules for Os
+
 	return nil
 }
 

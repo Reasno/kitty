@@ -317,7 +317,14 @@ message UserInfoDetail {
   string channel = 18;
   string version_code = 19;
   string package_name = 20;
-  string smid = 21;
+  string smid = 21; // 数美ID
+  string oaid = 22;
+  string imei = 23;
+  string idfa = 24;
+  string ip = 25;
+  string mac = 26;
+  string android_id = 27;
+  uint32 os = 28;
 }
 
 message UserInfoReply {

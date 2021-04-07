@@ -45,6 +45,18 @@ func encodeEventRequest(_ context.Context, msg *kafka.Message, request interface
 		UserId:      fmt.Sprintf("%d", req.Tenant.UserId),
 		PackageName: req.Tenant.PackageName,
 		AppKey:      "appwangzhuan",
+		OAID:        req.Tenant.Oaid,
+		IP:          req.Tenant.Ip,
+		MAC:         req.Tenant.Mac,
+		AndroidID:   req.Tenant.AndroidId,
+	}
+	if req.Tenant.Os == 1 {
+		dto.DeviceID = req.Tenant.Idfa
+		dto.Platform = "ios"
+	}
+	if req.Tenant.Os == 2 {
+		dto.DeviceID = req.Tenant.Imei
+		dto.Platform = "android"
 	}
 	b, err := json.Marshal(dto)
 	if err != nil {

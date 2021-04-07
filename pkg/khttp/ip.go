@@ -2,6 +2,7 @@ package khttp
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"strings"
 
@@ -30,7 +31,7 @@ func realIP(r *http.Request) string {
 		ip = xrip
 	}
 	if ip == "" {
-		ip = r.RemoteAddr
+		ip, _, _ = net.SplitHostPort(r.RemoteAddr)
 	}
 	return ip
 }
