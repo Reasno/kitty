@@ -729,8 +729,6 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 		VersionCode:  user.VersionCode,
 		CreatedAt:    user.CreatedAt.Format("2006-01-02 15:04:05"),
 		PackageName:  user.PackageName,
-		Oaid:         user.Devices[0].Oaid,
-		Imei:         user.Devices[0].Imei,
 	}
 	if len(user.Devices) > 0 {
 		last := len(user.Devices) - 1
