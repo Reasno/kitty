@@ -305,5 +305,54 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 				return nil
 			},
 		},
+		{
+			ID: "202104070100",
+			Migrate: func(db *gorm.DB) error {
+				type Device struct {
+					IP string `gorm:"type:varchar(255);"`
+				}
+				type User struct {
+					CampaignID string `gorm:"type:varchar(255);"`
+					CID        string `gorm:"type:varchar(255);"`
+					AID        string `gorm:"type:varchar(255);"`
+				}
+				if err := db.Migrator().AddColumn(&Device{}, "ip"); err != nil {
+					return err
+				}
+				if err := db.Migrator().AddColumn(&User{}, "campaign_id"); err != nil {
+					return err
+				}
+				if err := db.Migrator().AddColumn(&User{}, "c_id"); err != nil {
+					return err
+				}
+				if err := db.Migrator().AddColumn(&User{}, "a_id"); err != nil {
+					return err
+				}
+				return nil
+			},
+			Rollback: func(db *gorm.DB) error {
+				type Device struct {
+					IP string
+				}
+				type User struct {
+					CampaignID string
+					CID        string
+					AID        string
+				}
+				if err := db.Migrator().DropColumn(&Device{}, "ip"); err != nil {
+					return err
+				}
+				if err := db.Migrator().DropColumn(&User{}, "campaign_id"); err != nil {
+					return err
+				}
+				if err := db.Migrator().DropColumn(&User{}, "c_id"); err != nil {
+					return err
+				}
+				if err := db.Migrator().DropColumn(&User{}, "a_id"); err != nil {
+					return err
+				}
+				return nil
+			},
+		},
 	})
 }

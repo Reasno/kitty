@@ -65,6 +65,12 @@ func MakeGRPCServer(endpoints Endpoints, options ...grpctransport.ServerOption) 
 			EncodeGRPCBindResponse,
 			serverOptions...,
 		),
+		bindad: grpctransport.NewServer(
+			endpoints.BindAdEndpoint,
+			DecodeGRPCBindAdRequest,
+			EncodeGRPCBindAdResponse,
+			serverOptions...,
+		),
 		unbind: grpctransport.NewServer(
 			endpoints.UnbindEndpoint,
 			DecodeGRPCUnbindRequest,
@@ -94,6 +100,7 @@ type grpcServer struct {
 	getinfobatch grpctransport.Handler
 	updateinfo   grpctransport.Handler
 	bind         grpctransport.Handler
+	bindad       grpctransport.Handler
 	unbind       grpctransport.Handler
 	refresh      grpctransport.Handler
 	softdelete   grpctransport.Handler
@@ -147,6 +154,14 @@ func (s *grpcServer) Bind(ctx context.Context, req *pb.UserBindRequest) (*pb.Use
 		return nil, err
 	}
 	return rep.(*pb.UserInfoReply), nil
+}
+
+func (s *grpcServer) BindAd(ctx context.Context, req *pb.UserBindAdRequest) (*pb.GenericReply, error) {
+	_, rep, err := s.bindad.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.GenericReply), nil
 }
 
 func (s *grpcServer) Unbind(ctx context.Context, req *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
@@ -217,6 +232,13 @@ func DecodeGRPCBindRequest(_ context.Context, grpcReq interface{}) (interface{},
 	return req, nil
 }
 
+// DecodeGRPCBindAdRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC bindad request to a user-domain bindad request. Primarily useful in a server.
+func DecodeGRPCBindAdRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.UserBindAdRequest)
+	return req, nil
+}
+
 // DecodeGRPCUnbindRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC unbind request to a user-domain unbind request. Primarily useful in a server.
 func DecodeGRPCUnbindRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -279,6 +301,13 @@ func EncodeGRPCUpdateInfoResponse(_ context.Context, response interface{}) (inte
 // user-domain bind response to a gRPC bind reply. Primarily useful in a server.
 func EncodeGRPCBindResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.UserInfoReply)
+	return resp, nil
+}
+
+// EncodeGRPCBindAdResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain bindad response to a gRPC bindad reply. Primarily useful in a server.
+func EncodeGRPCBindAdResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.GenericReply)
 	return resp, nil
 }
 

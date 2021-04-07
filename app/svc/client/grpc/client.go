@@ -99,6 +99,19 @@ func New(conn *grpc.ClientConn, options ...grpctransport.ClientOption) (svc.Endp
 		).Endpoint()
 	}
 
+	var bindadEndpoint endpoint.Endpoint
+	{
+		bindadEndpoint = grpctransport.NewClient(
+			conn,
+			"app.v2.App",
+			"BindAd",
+			EncodeGRPCBindAdRequest,
+			DecodeGRPCBindAdResponse,
+			pb.GenericReply{},
+			options...,
+		).Endpoint()
+	}
+
 	var unbindEndpoint endpoint.Endpoint
 	{
 		unbindEndpoint = grpctransport.NewClient(
@@ -145,6 +158,7 @@ func New(conn *grpc.ClientConn, options ...grpctransport.ClientOption) (svc.Endp
 		GetInfoBatchEndpoint: getinfobatchEndpoint,
 		UpdateInfoEndpoint:   updateinfoEndpoint,
 		BindEndpoint:         bindEndpoint,
+		BindAdEndpoint:       bindadEndpoint,
 		UnbindEndpoint:       unbindEndpoint,
 		RefreshEndpoint:      refreshEndpoint,
 		SoftDeleteEndpoint:   softdeleteEndpoint,
@@ -192,6 +206,13 @@ func DecodeGRPCUpdateInfoResponse(_ context.Context, grpcReply interface{}) (int
 // gRPC bind reply to a user-domain bind response. Primarily useful in a client.
 func DecodeGRPCBindResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*pb.UserInfoReply)
+	return reply, nil
+}
+
+// DecodeGRPCBindAdResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC bindad reply to a user-domain bindad response. Primarily useful in a client.
+func DecodeGRPCBindAdResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.GenericReply)
 	return reply, nil
 }
 
@@ -257,6 +278,13 @@ func EncodeGRPCUpdateInfoRequest(_ context.Context, request interface{}) (interf
 // user-domain bind request to a gRPC bind request. Primarily useful in a client.
 func EncodeGRPCBindRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.UserBindRequest)
+	return req, nil
+}
+
+// EncodeGRPCBindAdRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain bindad request to a gRPC bindad request. Primarily useful in a client.
+func EncodeGRPCBindAdRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.UserBindAdRequest)
 	return req, nil
 }
 

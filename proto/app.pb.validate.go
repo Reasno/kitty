@@ -1619,3 +1619,78 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserSoftDeleteRequestValidationError{}
+
+// Validate checks the field values on UserBindAdRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *UserBindAdRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	// no validation rules for CampaignId
+
+	// no validation rules for Cid
+
+	// no validation rules for Aid
+
+	return nil
+}
+
+// UserBindAdRequestValidationError is the validation error returned by
+// UserBindAdRequest.Validate if the designated constraints aren't met.
+type UserBindAdRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UserBindAdRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UserBindAdRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UserBindAdRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UserBindAdRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UserBindAdRequestValidationError) ErrorName() string {
+	return "UserBindAdRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UserBindAdRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUserBindAdRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UserBindAdRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UserBindAdRequestValidationError{}

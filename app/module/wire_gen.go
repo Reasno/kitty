@@ -67,7 +67,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger, dynConf confi
 	dispatcher := ProvideDispatcher(dataStore, eventStore)
 	appService := handlers.NewAppService(reader, logger, userRepo, codeRepo, fileRepo, senderFacade, wechaterFacade, dispatcher)
 	appServer := handlers.ProvideAppServer(appService)
-	module := provideModule(db, tracer, logger, moduleOverallMiddleware, appServer, appName)
+	module := provideModule(db, tracer, logger, moduleOverallMiddleware, appServer, appName, reader, kafkaFactory)
 	return module, func() {
 		cleanup4()
 		cleanup3()

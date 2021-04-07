@@ -39,6 +39,7 @@ type Endpoints struct {
 	GetInfoBatchEndpoint endpoint.Endpoint
 	UpdateInfoEndpoint   endpoint.Endpoint
 	BindEndpoint         endpoint.Endpoint
+	BindAdEndpoint       endpoint.Endpoint
 	UnbindEndpoint       endpoint.Endpoint
 	RefreshEndpoint      endpoint.Endpoint
 	SoftDeleteEndpoint   endpoint.Endpoint
@@ -54,6 +55,7 @@ func NewEndpoints(service pb.AppServer) Endpoints {
 		getinfobatchEndpoint = MakeGetInfoBatchEndpoint(service)
 		updateinfoEndpoint   = MakeUpdateInfoEndpoint(service)
 		bindEndpoint         = MakeBindEndpoint(service)
+		bindadEndpoint       = MakeBindAdEndpoint(service)
 		unbindEndpoint       = MakeUnbindEndpoint(service)
 		refreshEndpoint      = MakeRefreshEndpoint(service)
 		softdeleteEndpoint   = MakeSoftDeleteEndpoint(service)
@@ -66,6 +68,7 @@ func NewEndpoints(service pb.AppServer) Endpoints {
 		GetInfoBatchEndpoint: getinfobatchEndpoint,
 		UpdateInfoEndpoint:   updateinfoEndpoint,
 		BindEndpoint:         bindEndpoint,
+		BindAdEndpoint:       bindadEndpoint,
 		UnbindEndpoint:       unbindEndpoint,
 		RefreshEndpoint:      refreshEndpoint,
 		SoftDeleteEndpoint:   softdeleteEndpoint,
@@ -122,6 +125,14 @@ func (e Endpoints) Bind(ctx context.Context, in *pb.UserBindRequest) (*pb.UserIn
 		return nil, err
 	}
 	return response.(*pb.UserInfoReply), nil
+}
+
+func (e Endpoints) BindAd(ctx context.Context, in *pb.UserBindAdRequest) (*pb.GenericReply, error) {
+	response, err := e.BindAdEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.GenericReply), nil
 }
 
 func (e Endpoints) Unbind(ctx context.Context, in *pb.UserUnbindRequest) (*pb.UserInfoReply, error) {
@@ -216,6 +227,17 @@ func MakeBindEndpoint(s pb.AppServer) endpoint.Endpoint {
 	}
 }
 
+func MakeBindAdEndpoint(s pb.AppServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.UserBindAdRequest)
+		v, err := s.BindAd(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 func MakeUnbindEndpoint(s pb.AppServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*pb.UserUnbindRequest)
@@ -262,6 +284,7 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		"GetInfoBatch": {},
 		"UpdateInfo":   {},
 		"Bind":         {},
+		"BindAd":       {},
 		"Unbind":       {},
 		"Refresh":      {},
 		"SoftDelete":   {},
@@ -293,6 +316,9 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		if inc == "Bind" {
 			e.BindEndpoint = middleware(e.BindEndpoint)
 		}
+		if inc == "BindAd" {
+			e.BindAdEndpoint = middleware(e.BindAdEndpoint)
+		}
 		if inc == "Unbind" {
 			e.UnbindEndpoint = middleware(e.UnbindEndpoint)
 		}
@@ -322,6 +348,7 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		"GetInfoBatch": {},
 		"UpdateInfo":   {},
 		"Bind":         {},
+		"BindAd":       {},
 		"Unbind":       {},
 		"Refresh":      {},
 		"SoftDelete":   {},
@@ -352,6 +379,9 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		}
 		if inc == "Bind" {
 			e.BindEndpoint = middleware("Bind", e.BindEndpoint)
+		}
+		if inc == "BindAd" {
+			e.BindAdEndpoint = middleware("BindAd", e.BindAdEndpoint)
 		}
 		if inc == "Unbind" {
 			e.UnbindEndpoint = middleware("Unbind", e.UnbindEndpoint)

@@ -1,11 +1,14 @@
 package module
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/oklog/run"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kgrpc"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/khttp"
+	"glab.tagtic.cn/ad_gains/kitty/pkg/kkafka"
 
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/log"
@@ -24,12 +27,30 @@ import (
 )
 
 type Module struct {
-	appName   contract.AppName
-	logger    log.Logger
-	db        *gorm.DB
-	tracer    stdopentracing.Tracer
-	cleanup   func()
-	endpoints svc.Endpoints
+	appName     contract.AppName
+	conf        contract.ConfigReader
+	factory     *kkafka.KafkaFactory
+	logger      log.Logger
+	db          *gorm.DB
+	tracer      stdopentracing.Tracer
+	cleanup     func()
+	endpoints   svc.Endpoints
+	kafkaServer kkafka.Server
+}
+
+func (a *Module) ProvideRunGroup(group *run.Group) {
+	serverOptions := []kkafka.SubscriberOption{
+		kkafka.SubscriberBefore(kkafka.KafkaToContext(a.tracer, "app", a.logger)),
+		kkafka.SubscriberBefore(kkafka.Trust()),
+		kkafka.SubscriberErrorHandler(kkafka.ErrHandler(a.logger)),
+	}
+	kafkaServer := svc.MakeKafkaServer(a.endpoints, a.factory, a.conf, serverOptions...)
+	ctx, cancel := context.WithCancel(context.Background())
+	group.Add(func() error {
+		return kafkaServer.Serve(ctx)
+	}, func(err error) {
+		cancel()
+	})
 }
 
 func New(appModuleConfig contract.ConfigReader, logger log.Logger, dynConf config.DynamicConfigReader) *Module {

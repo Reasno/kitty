@@ -129,6 +129,33 @@
         ]
       }
     },
+    "/bind-ad": {
+      "post": {
+        "summary": "绑定买量侧广告ID",
+        "operationId": "App_BindAd",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v2GenericReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v2UserBindAdRequest"
+            }
+          }
+        ],
+        "tags": [
+          "用户信息"
+        ]
+      }
+    },
     "/code": {
       "get": {
         "summary": "获得验证码",
@@ -427,6 +454,24 @@
           "type": "string"
         },
         "top_expire_time": {
+          "type": "string"
+        }
+      }
+    },
+    "v2UserBindAdRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "campaign_id": {
+          "type": "string"
+        },
+        "cid": {
+          "type": "string"
+        },
+        "aid": {
           "type": "string"
         }
       }

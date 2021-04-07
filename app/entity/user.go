@@ -29,9 +29,12 @@ type User struct {
 	PackageName   string `gorm:"type:varchar(255);uniqueIndex:mobile_index,priority:1;uniqueIndex:wechat_openid_index,priority:1;uniqueIndex:taobao_openid_index,priority:1"`
 	ThirdPartyId  string
 	TaobaoOpenId  sql.NullString `json:"taobao_openid" gorm:"type:varchar(255);uniqueIndex:taobao_openid_index"`
-	IsNew         bool           `gorm:"-"`
-	WechatExtra   []byte         `gorm:"type:blob"`
-	TaobaoExtra   []byte         `gorm:"type:blob"`
+	CampaignID    string
+	AID           string
+	CID           string
+	IsNew         bool   `gorm:"-"`
+	WechatExtra   []byte `gorm:"type:blob"`
+	TaobaoExtra   []byte `gorm:"type:blob"`
 }
 
 func (user *User) HasDevice(device *Device) bool {
@@ -94,7 +97,7 @@ type Device struct {
 	Mac       string
 	AndroidId string
 	SMID      string
-	IP        string `gorm:"-"`
+	IP        string
 	// 仅供数据库去重使用，应用不应依赖该字段，以免去重条件发生变化
 	Hash string `gorm:"type:varchar(255);uniqueIndex:hash_index,sort:desc"`
 }

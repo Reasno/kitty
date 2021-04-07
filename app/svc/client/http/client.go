@@ -110,6 +110,16 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 			options...,
 		).Endpoint()
 	}
+	var BindAdZeroEndpoint endpoint.Endpoint
+	{
+		BindAdZeroEndpoint = httptransport.NewClient(
+			"POST",
+			copyURL(u, "/bind-ad"),
+			EncodeHTTPBindAdZeroRequest,
+			DecodeHTTPBindAdResponse,
+			options...,
+		).Endpoint()
+	}
 	var UnbindZeroEndpoint endpoint.Endpoint
 	{
 		UnbindZeroEndpoint = httptransport.NewClient(
@@ -148,6 +158,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.AppServer, 
 		GetInfoBatchEndpoint: GetInfoBatchZeroEndpoint,
 		UpdateInfoEndpoint:   UpdateInfoZeroEndpoint,
 		BindEndpoint:         BindZeroEndpoint,
+		BindAdEndpoint:       BindAdZeroEndpoint,
 		UnbindEndpoint:       UnbindZeroEndpoint,
 		RefreshEndpoint:      RefreshZeroEndpoint,
 		SoftDeleteEndpoint:   SoftDeleteZeroEndpoint,
@@ -332,6 +343,33 @@ func DecodeHTTPBindResponse(_ context.Context, r *http.Response) (interface{}, e
 	}
 
 	var resp pb.UserInfoReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
+// DecodeHTTPBindAdResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded GenericReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPBindAdResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.GenericReply
 	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
 		return nil, errorDecoder(buf)
 	}
@@ -710,6 +748,57 @@ func EncodeHTTPBindZeroRequest(_ context.Context, r *http.Request, request inter
 	toRet.WechatExtra = req.WechatExtra
 
 	toRet.MergeInfo = req.MergeInfo
+
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(toRet); err != nil {
+		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
+	}
+	r.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// EncodeHTTPBindAdZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a bindad request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPBindAdZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.UserBindAdRequest)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"bind-ad",
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	r.URL.RawQuery = values.Encode()
+	// Set the body parameters
+	var buf bytes.Buffer
+	toRet := request.(*pb.UserBindAdRequest)
+
+	toRet.Id = req.Id
+
+	toRet.CampaignId = req.CampaignId
+
+	toRet.Cid = req.Cid
+
+	toRet.Aid = req.Aid
 
 	encoder := json.NewEncoder(&buf)
 	encoder.SetEscapeHTML(false)

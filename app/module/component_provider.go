@@ -255,12 +255,23 @@ func ProvideOpentracing(log jaeger.Logger, conf contract.ConfigReader) (opentrac
 
 type overallMiddleware func(endpoints svc.Endpoints) svc.Endpoints
 
-func provideModule(db *gorm.DB, tracer opentracing.Tracer, logger log.Logger, middleware overallMiddleware, server kitty.AppServer, appName contract.AppName) *Module {
+func provideModule(
+	db *gorm.DB,
+	tracer opentracing.Tracer,
+	logger log.Logger,
+	middleware overallMiddleware,
+	server kitty.AppServer,
+	appName contract.AppName,
+	conf contract.ConfigReader,
+	factory *kkafka.KafkaFactory,
+) *Module {
 	return &Module{
 		appName:   appName,
 		db:        db,
 		logger:    logger,
 		tracer:    tracer,
 		endpoints: middleware(svc.NewEndpoints(server)),
+		conf:      conf,
+		factory:   factory,
 	}
 }

@@ -740,3 +740,18 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 	}
 	return details
 }
+
+func (s appService) BindAd(ctx context.Context, in *pb.UserBindAdRequest) (*pb.GenericReply, error) {
+	if in.Id != 0 {
+		return nil, nil
+	}
+	_, err := s.ur.Update(ctx, uint(in.Id), entity.User{
+		CampaignID: in.CampaignId,
+		AID:        in.Aid,
+		CID:        in.Cid,
+	})
+	if err != nil {
+		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
+	}
+	return nil, nil
+}

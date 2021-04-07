@@ -107,6 +107,18 @@ service App {
       body: "*"
     };
   }
+
+  // 绑定买量侧广告ID
+  rpc BindAd (UserBindAdRequest) returns (GenericReply) {
+    option (options.openapiv2_operation) = {
+      tags: "用户信息"
+    };
+    option (google.api.http) = {
+      post: "/bind-ad"
+      body: "*"
+    };
+  }
+
   // 针对已登录用户，取消绑定手机或微信登录方式
   // 本接口会返回新的token，后续请求务必请将老JWT替换为新token。
   rpc Unbind (UserUnbindRequest) returns (UserInfoReply) {
@@ -407,4 +419,11 @@ message GenericReply {
 
 message UserSoftDeleteRequest {
   uint64 id = 1;
+}
+
+message UserBindAdRequest {
+  uint64 id = 1;
+  string campaign_id = 2;
+  string cid = 3;
+  string aid = 4;
 }
