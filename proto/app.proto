@@ -337,6 +337,9 @@ message UserInfoDetail {
   string mac = 26;
   string android_id = 27;
   uint32 os = 28;
+  string campaign_id = 29;
+  string aid = 30;
+  string cid = 31;
 }
 
 message UserInfoReply {

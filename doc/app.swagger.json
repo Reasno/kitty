@@ -678,6 +678,15 @@
         "os": {
           "type": "integer",
           "format": "int64"
+        },
+        "campaign_id": {
+          "type": "string"
+        },
+        "aid": {
+          "type": "string"
+        },
+        "cid": {
+          "type": "string"
         }
       }
     },

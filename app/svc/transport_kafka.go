@@ -30,9 +30,9 @@ func provideBindAdSubscriber(endpoint endpoint.Endpoint, options ...kkafka.Subsc
 func MakeKafkaServer(endpoints Endpoints, factory *kkafka.KafkaFactory, conf contract.ConfigReader, options ...kkafka.SubscriberOption) kkafka.Server {
 	group := conf.String("kafka.groupId")
 
-	sign := provideBindAdSubscriber(endpoints.BindAdEndpoint, options...)
+	bindAd := provideBindAdSubscriber(endpoints.BindAdEndpoint, options...)
 
 	return kkafka.NewMux(
-		factory.MakeKafkaServer(conf.String("kafka.bindAd"), sign, kkafka.WithGroup(group)),
+		factory.MakeKafkaServer(conf.String("kafka.bindAd"), bindAd, kkafka.WithGroup(group)),
 	)
 }

@@ -729,6 +729,9 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 		VersionCode:  user.VersionCode,
 		CreatedAt:    user.CreatedAt.Format("2006-01-02 15:04:05"),
 		PackageName:  user.PackageName,
+		CampaignId:   user.CampaignID,
+		Aid:          user.AID,
+		Cid:          user.CID,
 	}
 	if len(user.Devices) > 0 {
 		last := len(user.Devices) - 1
@@ -745,13 +748,16 @@ func (s appService) BindAd(ctx context.Context, in *pb.UserBindAdRequest) (*pb.G
 	if in.Id != 0 {
 		return nil, nil
 	}
-	_, err := s.ur.Update(ctx, uint(in.Id), entity.User{
+	u, err := s.ur.Update(ctx, uint(in.Id), entity.User{
 		CampaignID: in.CampaignId,
 		AID:        in.Aid,
 		CID:        in.Cid,
 	})
+
 	if err != nil {
 		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
 	}
+	var detail = s.toDetail(u)
+	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, appevent.UserChanged{UserInfoDetail: detail}))
 	return nil, nil
 }

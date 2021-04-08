@@ -865,6 +865,12 @@ func (m *UserInfoDetail) Validate() error {
 
 	// no validation rules for Os
 
+	// no validation rules for CampaignId
+
+	// no validation rules for Aid
+
+	// no validation rules for Cid
+
 	return nil
 }
 
