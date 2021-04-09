@@ -267,7 +267,7 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 			ID: "202103260100",
 			Migrate: func(db *gorm.DB) error {
 				type User struct {
-					CommonSMID string `gorm:"type:varchar(255);"`
+					CommonSMID sql.NullString `gorm:"type:varchar(255);"`
 				}
 				if err := db.Migrator().AddColumn(&User{}, "common_sm_id"); err != nil {
 					return err
@@ -276,7 +276,7 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 			},
 			Rollback: func(db *gorm.DB) error {
 				type User struct {
-					CommonSMID string
+					CommonSMID sql.NullString
 				}
 				if err := db.Migrator().DropColumn(&User{}, "common_sm_id"); err != nil {
 					return err
@@ -316,9 +316,9 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 					IP string `gorm:"type:varchar(255);"`
 				}
 				type User struct {
-					CampaignID string `gorm:"type:varchar(255);"`
-					CID        string `gorm:"type:varchar(255);"`
-					AID        string `gorm:"type:varchar(255);"`
+					CampaignID sql.NullString `gorm:"type:varchar(255);"`
+					CID        sql.NullString `gorm:"type:varchar(255);"`
+					AID        sql.NullString `gorm:"type:varchar(255);"`
 				}
 				raw, _ := db.DB()
 				raw.Exec("LOCK TABLES kitty_devices WRITE;")
