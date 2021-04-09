@@ -729,9 +729,9 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 		VersionCode:  user.VersionCode,
 		CreatedAt:    user.CreatedAt.Format("2006-01-02 15:04:05"),
 		PackageName:  user.PackageName,
-		CampaignId:   user.CampaignID,
-		Aid:          user.AID,
-		Cid:          user.CID,
+		CampaignId:   user.CampaignID.String,
+		Aid:          user.AID.String,
+		Cid:          user.CID.String,
 	}
 	if len(user.Devices) > 0 {
 		last := len(user.Devices) - 1
@@ -745,13 +745,13 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 }
 
 func (s appService) BindAd(ctx context.Context, in *pb.UserBindAdRequest) (*pb.GenericReply, error) {
-	if in.Id != 0 {
+	if in.Id == 0 {
 		return nil, nil
 	}
 	u, err := s.ur.Update(ctx, uint(in.Id), entity.User{
-		CampaignID: in.CampaignId,
-		AID:        in.Aid,
-		CID:        in.Cid,
+		CampaignID: ns(in.CampaignId),
+		AID:        ns(in.Aid),
+		CID:        ns(in.Cid),
 	})
 
 	if err != nil {

@@ -29,12 +29,12 @@ type User struct {
 	PackageName   string `gorm:"type:varchar(255);uniqueIndex:mobile_index,priority:1;uniqueIndex:wechat_openid_index,priority:1;uniqueIndex:taobao_openid_index,priority:1"`
 	ThirdPartyId  string
 	TaobaoOpenId  sql.NullString `json:"taobao_openid" gorm:"type:varchar(255);uniqueIndex:taobao_openid_index"`
-	CampaignID    string
-	AID           string
-	CID           string
-	IsNew         bool   `gorm:"-"`
-	WechatExtra   []byte `gorm:"type:blob"`
-	TaobaoExtra   []byte `gorm:"type:blob"`
+	CampaignID    sql.NullString `gorm:"type:varchar(255)`
+	AID           sql.NullString `gorm:"type:varchar(255)`
+	CID           sql.NullString `gorm:"type:varchar(255)`
+	IsNew         bool           `gorm:"-"`
+	WechatExtra   []byte         `gorm:"type:blob"`
+	TaobaoExtra   []byte         `gorm:"type:blob"`
 }
 
 func (user *User) HasDevice(device *Device) bool {
