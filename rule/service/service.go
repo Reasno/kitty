@@ -68,6 +68,7 @@ func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *
 		payload.DMP = *resp
 	}
 	payload.Redis = r.redisClient
+	payload.Context = ctx
 	return entity.Calculate(rules, payload)
 }
 

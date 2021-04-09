@@ -174,6 +174,9 @@ func (p Payload) SIsMember(key string, needle string) bool {
 	if p.Redis == nil {
 		return false
 	}
+	if p.Context == nil {
+		p.Context = context.Background()
+	}
 	ok, _ := p.Redis.SIsMember(p.Context, key, needle).Result()
 	return ok
 }
