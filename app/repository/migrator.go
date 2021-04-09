@@ -290,9 +290,13 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 				type Device struct {
 					SMID string `gorm:"type:varchar(255);"`
 				}
+				raw, _ := db.DB()
+				raw.Exec("LOCK TABLES kitty_devices WRITE;")
+				defer raw.Exec("UNLOCK TABLES;")
 				if err := db.Migrator().AddColumn(&Device{}, "sm_id"); err != nil {
 					return err
 				}
+
 				return nil
 			},
 			Rollback: func(db *gorm.DB) error {
@@ -316,6 +320,9 @@ func ProvideMigrator(db *gorm.DB, appName contract.AppName) *gormigrate.Gormigra
 					CID        string `gorm:"type:varchar(255);"`
 					AID        string `gorm:"type:varchar(255);"`
 				}
+				raw, _ := db.DB()
+				raw.Exec("LOCK TABLES kitty_devices WRITE;")
+				defer raw.Exec("UNLOCK TABLES;")
 				if err := db.Migrator().AddColumn(&Device{}, "ip"); err != nil {
 					return err
 				}
