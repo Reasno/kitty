@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
@@ -28,19 +29,29 @@ type Payload struct {
 	B           map[string]interface{} `json:"-" schema:"-"`
 	DMP         pb.DmpResp             `json:"-" schema:"-"`
 	Context     context.Context        `json:"-" schema:"-"`
+	Redis       redis.UniversalClient  `json:"-" schema:"-"`
 }
 
 func FromClaim(claim jwt2.Claim) *Payload {
+	return FromClaimWithRedis(claim, nil)
+}
+
+func FromClaimWithRedis(claim jwt2.Claim, client redis.UniversalClient) *Payload {
 	versionCode, _ := strconv.Atoi(claim.VersionCode)
 	return &Payload{
 		Channel:     claim.Channel,
 		VersionCode: versionCode,
 		Suuid:       claim.Suuid,
 		UserId:      claim.UserId,
+		Redis:       client,
 	}
 }
 
 func FromTenant(tenant *config.Tenant) *Payload {
+	return FromTenantWithRedis(tenant, nil)
+}
+
+func FromTenantWithRedis(tenant *config.Tenant, client redis.UniversalClient) *Payload {
 	versionCode, _ := strconv.Atoi(tenant.VersionCode)
 	return &Payload{
 		Channel:     tenant.Channel,
@@ -56,6 +67,7 @@ func FromTenant(tenant *config.Tenant) *Payload {
 		PackageName: tenant.PackageName,
 		Ip:          tenant.Ip,
 		Context:     tenant.Context,
+		Redis:       client,
 	}
 }
 
@@ -156,6 +168,14 @@ func (p Payload) IsHourRange(begin int, end int) bool {
 
 func (p Payload) IsBlackListed() bool {
 	return p.DMP.BlackType == pb.DmpResp_BLACK
+}
+
+func (p Payload) SIsMember(key string, needle string) bool {
+	if p.Redis == nil {
+		return false
+	}
+	ok, _ := p.Redis.SIsMember(p.Context, key, needle).Result()
+	return ok
 }
 
 type Data map[string]interface{}

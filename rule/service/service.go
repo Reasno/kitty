@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/kerr"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
@@ -36,13 +37,14 @@ type Repository interface {
 }
 
 type service struct {
-	dmpServer pb.DmpServer
-	logger    log.Logger
-	repo      Repository
+	redisClient redis.UniversalClient
+	dmpServer   pb.DmpServer
+	logger      log.Logger
+	repo        Repository
 }
 
-func NewService(logger log.Logger, repo Repository) *service {
-	return &service{logger: logger, repo: repo}
+func NewService(logger log.Logger, repo Repository, redisClient redis.UniversalClient) *service {
+	return &service{logger: logger, repo: repo, redisClient: redisClient}
 }
 
 func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *dto.Payload) (dto.Data, error) {
@@ -65,6 +67,7 @@ func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *
 		}
 		payload.DMP = *resp
 	}
+	payload.Redis = r.redisClient
 	return entity.Calculate(rules, payload)
 }
 

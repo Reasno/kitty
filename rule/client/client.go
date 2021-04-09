@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/go-redis/redis/v8"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/opentracing/opentracing-go"
@@ -25,16 +26,18 @@ import (
 )
 
 type RuleEngine struct {
-	env        contract.Env
-	tracer     opentracing.Tracer
-	dmpConn    *grpc.ClientConn
-	repository Repository
-	logger     log.Logger
+	env         contract.Env
+	tracer      opentracing.Tracer
+	dmpConn     *grpc.ClientConn
+	redisClient redis.UniversalClient
+	repository  Repository
+	logger      log.Logger
 }
 
 type ofRule struct {
-	d        *RuleEngine
-	ruleName string
+	redisClient redis.UniversalClient
+	d           *RuleEngine
+	ruleName    string
 }
 
 type Repository interface {
@@ -43,7 +46,7 @@ type Repository interface {
 }
 
 func (r *ofRule) Tenant(tenant *kconf.Tenant) (contract.ConfigReader, error) {
-	var payload = dto.FromTenant(tenant)
+	var payload = dto.FromTenantWithRedis(tenant, r.redisClient)
 	return r.Payload(payload)
 }
 
@@ -91,6 +94,7 @@ func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 		level.Debug(r.d.logger).Log("msg", "dmp response: "+fmt.Sprintf("%#v", resp))
 		pl.DMP = *resp
 	}
+	pl.Redis = r.redisClient
 
 	calculated, err := entity.Calculate(compiled, pl)
 	level.Debug(r.d.logger).Log("msg", "calculated config: "+fmt.Sprintf("%#v", calculated))
@@ -109,8 +113,9 @@ func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 
 func (d *RuleEngine) Of(ruleName string) *ofRule {
 	return &ofRule{
-		ruleName: ruleName,
-		d:        d,
+		redisClient: d.redisClient,
+		ruleName:    ruleName,
+		d:           d,
 	}
 }
 
@@ -132,11 +137,18 @@ type config struct {
 	rulePrefix  string
 	ruleRegexp  *regexp.Regexp
 	limit       int64
+	redis       redis.UniversalClient
 }
 
 func WithClient(client *clientv3.Client) Option {
 	return func(c *config) {
 		c.client = client
+	}
+}
+
+func WithRedis(client redis.UniversalClient) Option {
+	return func(c *config) {
+		c.redis = client
 	}
 }
 
@@ -256,10 +268,11 @@ func NewRuleEngine(opt ...Option) (*RuleEngine, error) {
 	}
 
 	return &RuleEngine{
-		repository: c.repo,
-		logger:     c.logger,
-		tracer:     c.tracer,
-		env:        c.env,
-		dmpConn:    conn,
+		repository:  c.repo,
+		logger:      c.logger,
+		tracer:      c.tracer,
+		env:         c.env,
+		dmpConn:     conn,
+		redisClient: c.redis,
 	}, nil
 }
