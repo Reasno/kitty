@@ -25,6 +25,7 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 		provideModule,
 		provideDmpServer,
 		provideHistogramMetrics,
+		module.ProvideRedis,
 		config.ProvideAppName,
 		config.ProvideEnv,
 		wire.Bind(new(contract.Env), new(config.Env)),

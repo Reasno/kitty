@@ -19,7 +19,8 @@ require (
 	github.com/gabriel-vasile/mimetype v1.1.1
 	github.com/go-gormigrate/gormigrate/v2 v2.0.0
 	github.com/go-kit/kit v0.10.0
-	github.com/go-redis/redis/v8 v8.3.2
+	github.com/go-redis/redis/v8 v8.8.0
+	github.com/go-redis/redismock/v8 v8.0.6
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.3
@@ -31,7 +32,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.0.0
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/knadh/koanf v0.14.0
-	github.com/mitchellh/mapstructure v1.2.2
 	github.com/oklog/run v1.0.0
 	github.com/opentracing-contrib/go-stdlib v1.0.0
 	github.com/opentracing/opentracing-go v1.1.0
@@ -44,12 +44,10 @@ require (
 	github.com/sony/gobreaker v0.4.1
 	github.com/speps/go-hashids v2.0.0+incompatible
 	github.com/spf13/cobra v1.1.0
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.4.0+incompatible
-	github.com/vektra/mockery/v2 v2.7.4 // indirect
 	go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738
-	golang.org/x/tools v0.0.0-20201102212025-f46e4245211d // indirect
 	google.golang.org/genproto v0.0.0-20201015140912-32ed001d685c
 	google.golang.org/grpc v1.33.0
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect

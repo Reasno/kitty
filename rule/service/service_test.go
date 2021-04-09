@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redismock/v8"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
@@ -17,6 +19,10 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
 	"glab.tagtic.cn/ad_gains/kitty/rule/service/mocks"
 )
+
+type mockClient struct {
+	redis.UniversalClient
+}
 
 type mockDmpServer struct {
 }
@@ -146,12 +152,36 @@ rule:
 				"foo": "bar",
 			},
 		},
+		{
+			`
+style: advanced
+rule:
+- if: SIsMember("imei", Oaid)
+  then:
+    foo: bar
+- if: SIsMember("imei", Imei)
+  then:
+    foo: foo
+- if: true
+  then:
+    foo: quz
+`,
+			dto.Payload{
+				Imei: "123",
+				Oaid: "345",
+			},
+			dto.Data{
+				"foo": "foo",
+			},
+		},
 	}
 	for _, c := range cases {
 		cc := c
 		t.Run("", func(t *testing.T) {
 			repo := &mocks.Repository{}
-			ser := ProvideService(log.NewNopLogger(), repo, mockDmpServer{})
+			db, rmock := redismock.NewClientMock()
+			rmock.ExpectSIsMember("imei", "123").SetVal(true)
+			ser := ProvideService(log.NewNopLogger(), repo, mockDmpServer{}, db)
 			repo.On("GetCompiled", mock.Anything).Return(entity.NewRules(bytes.NewReader([]byte(cc.text)), log.NewNopLogger()))
 			result, err := ser.CalculateRules(context.Background(), "", &cc.payload)
 			if err != nil {
@@ -163,10 +193,9 @@ rule:
 		})
 	}
 }
-
 func TestService_UpdateRules(t *testing.T) {
 	repo := &mocks.Repository{}
-	ser := NewService(log.NewNopLogger(), repo)
+	ser := NewService(log.NewNopLogger(), repo, mockClient{})
 	repo.On("SetRaw", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	repo.On("ValidateRules", mock.Anything, mock.Anything).Return(func(ruleName string, reader io.Reader) error {
 		return entity.ValidateRules(reader)
@@ -190,7 +219,7 @@ rule:
 
 func TestService_Preflight(t *testing.T) {
 	repo := &mocks.Repository{}
-	ser := NewService(log.NewNopLogger(), repo)
+	ser := NewService(log.NewNopLogger(), repo, mockClient{})
 
 	{
 		repo.On("IsNewest", mock.Anything, mock.Anything, mock.Anything).Return(true, nil).Once()
@@ -211,7 +240,7 @@ func TestService_Preflight(t *testing.T) {
 
 func TestService_GetRules(t *testing.T) {
 	repo := &mocks.Repository{}
-	ser := NewService(log.NewNopLogger(), repo)
+	ser := NewService(log.NewNopLogger(), repo, mockClient{})
 	{
 		repo.On("GetRaw", mock.Anything, mock.Anything).Return([]byte("foo"), nil).Once()
 		byt, err := ser.GetRules(context.Background(), "foo")

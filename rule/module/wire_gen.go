@@ -39,12 +39,14 @@ func injectModule(reader contract.ConfigReader, logger log.Logger) (*Module, fun
 		cleanup()
 		return nil, nil, err
 	}
-	serviceService := service.ProvideService(logger, repository, dmpServer)
+	universalClient, cleanup3 := module.ProvideRedis(logger, reader, tracer)
+	serviceService := service.ProvideService(logger, repository, dmpServer, universalClient)
 	appName := config.ProvideAppName(reader)
 	histogram := provideHistogramMetrics(appName, env)
 	endpoints := newEndpoints(serviceService, histogram, logger, appName, env, tracer)
 	moduleModule := provideModule(repository, endpoints, tracer, logger)
 	return moduleModule, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
