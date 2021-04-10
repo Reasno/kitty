@@ -7,7 +7,7 @@ type Message struct {
 	Channel     string `json:"channel"`
 	Event       string `json:"event"`
 	UserId      string `json:"user_id"`
-	PackageName string `json:"account"`
+	PackageName string `json:"pkg"`
 	AppKey      string `json:"appkey"`
 	DeviceID    string `json:"device_id"`
 	OAID        string `json:"oaid"`
