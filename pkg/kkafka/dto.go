@@ -8,6 +8,7 @@ type Message struct {
 	Event       string `json:"event"`
 	UserId      string `json:"user_id"`
 	PackageName string `json:"pkg"`
+	Account     string `json:"account"`
 	AppKey      string `json:"appkey"`
 	DeviceID    string `json:"device_id"`
 	OAID        string `json:"oaid"`

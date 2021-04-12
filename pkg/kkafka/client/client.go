@@ -44,6 +44,7 @@ func encodeEventRequest(_ context.Context, msg *kafka.Message, request interface
 		Event:       req.Name,
 		UserId:      fmt.Sprintf("%d", req.Tenant.UserId),
 		PackageName: req.Tenant.PackageName,
+		Account:     req.Tenant.PackageName,
 		AppKey:      "appwangzhuan",
 		OAID:        req.Tenant.Oaid,
 		IP:          req.Tenant.Ip,
