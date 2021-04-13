@@ -1,3 +1,5 @@
 package contract
 
-var IpKey = struct{}{}
+type ipKeyType string
+
+var IpKey ipKeyType = "ipKey"
