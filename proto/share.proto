@@ -229,4 +229,5 @@ message InvitationInfo {
   string date_time = 3; // 邀请时间 2020-12-17 18:12:22
   string package_name = 4; // 应用包名
   string channel = 5; // 渠道
+  string ipv4 = 6; // IP 地址
 }

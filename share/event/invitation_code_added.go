@@ -11,4 +11,5 @@ type InvitationCodeAdded struct {
 	PackageName string    // 应用包名
 	DateTime    time.Time // 时间
 	Channel     string    // 渠道
+	Ipv4        string    // IP 地址
 }

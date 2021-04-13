@@ -31,6 +31,7 @@ func (i InvitationCodeAdded) Process(event contract.Event) error {
 		DateTime:    data.DateTime.Format("2006-01-02 15:04:05"),
 		PackageName: data.PackageName,
 		Channel:     data.Channel,
+		Ipv4:        data.Ipv4,
 	}
 
 	_ = i.Bus.Emit(event.Context(), info)

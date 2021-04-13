@@ -92,6 +92,10 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 		Channel:     claim.Channel,
 	}
 
+	if ip, ok := ctx.Value(contract.IpKey).(string); ok {
+		e.Ipv4 = ip
+	}
+
 	_ = s.dispatcher.Dispatch(event.NewEvent(ctx, e))
 
 	var resp pb.ShareGenericReply

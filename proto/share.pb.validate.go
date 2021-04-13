@@ -1064,6 +1064,8 @@ func (m *InvitationInfo) Validate() error {
 
 	// no validation rules for Channel
 
+	// no validation rules for Ipv4
+
 	return nil
 }
 
