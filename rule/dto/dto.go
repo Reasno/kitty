@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/spf13/cast"
 	"glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 	pb "glab.tagtic.cn/ad_gains/kitty/proto"
@@ -179,6 +180,14 @@ func (p Payload) SIsMember(key string, needle string) bool {
 	}
 	ok, _ := p.Redis.SIsMember(p.Context, key, needle).Result()
 	return ok
+}
+
+func (p Payload) ToString(str interface{}) string {
+	return cast.ToString(str)
+}
+
+func (p Payload) ToInt(int interface{}) int {
+	return cast.ToInt(int)
 }
 
 type Data map[string]interface{}

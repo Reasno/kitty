@@ -35,6 +35,7 @@ func (u UserCreated) Process(event contract.Event) error {
 		Mac:         data.Mac,
 		Oaid:        data.Oaid,
 		Ip:          data.Ip,
+		AndroidId:   data.AndroidId,
 	}
 	_ = u.Bus.Emit(event.Context(), "new_user", &claim)
 	return nil
