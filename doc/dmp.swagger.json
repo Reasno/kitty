@@ -10,51 +10,7 @@
   "produces": [
     "application/json"
   ],
-  "paths": {
-    "/user-more": {
-      "get": {
-        "operationId": "Dmp_UserMore",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/pbDmpResp"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "user_id",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "package_name",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "suuid",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "channel",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "Dmp"
-        ]
-      }
-    }
-  },
+  "paths": {},
   "definitions": {
     "DmpRespBlackType": {
       "type": "string",
@@ -63,6 +19,16 @@
         "BLACK"
       ],
       "default": "WHITE"
+    },
+    "SkyNetRiskLevel": {
+      "type": "string",
+      "enum": [
+        "RiskLevelUnknown",
+        "RiskLevelPass",
+        "RiskLevelReview",
+        "RiskLevelReject"
+      ],
+      "default": "RiskLevelUnknown"
     },
     "pbDmpResp": {
       "type": "object",
@@ -99,6 +65,35 @@
         },
         "ext": {
           "type": "string"
+        },
+        "skynet": {
+          "$ref": "#/definitions/pbSkyNet"
+        }
+      }
+    },
+    "pbSkyNet": {
+      "type": "object",
+      "properties": {
+        "register": {
+          "$ref": "#/definitions/SkyNetRiskLevel"
+        },
+        "login": {
+          "$ref": "#/definitions/SkyNetRiskLevel"
+        },
+        "fission": {
+          "$ref": "#/definitions/SkyNetRiskLevel"
+        },
+        "browse": {
+          "$ref": "#/definitions/SkyNetRiskLevel"
+        },
+        "task": {
+          "$ref": "#/definitions/SkyNetRiskLevel"
+        },
+        "withdraw": {
+          "$ref": "#/definitions/SkyNetRiskLevel"
+        },
+        "level": {
+          "$ref": "#/definitions/SkyNetRiskLevel"
         }
       }
     }

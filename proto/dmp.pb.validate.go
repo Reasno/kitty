@@ -133,6 +133,16 @@ func (m *DmpResp) Validate() error {
 
 	// no validation rules for Ext
 
+	if v, ok := interface{}(m.GetSkynet()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return DmpRespValidationError{
+				field:  "Skynet",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -189,3 +199,81 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DmpRespValidationError{}
+
+// Validate checks the field values on SkyNet with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *SkyNet) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Register
+
+	// no validation rules for Login
+
+	// no validation rules for Fission
+
+	// no validation rules for Browse
+
+	// no validation rules for Task
+
+	// no validation rules for Withdraw
+
+	// no validation rules for Level
+
+	return nil
+}
+
+// SkyNetValidationError is the validation error returned by SkyNet.Validate if
+// the designated constraints aren't met.
+type SkyNetValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SkyNetValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SkyNetValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SkyNetValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SkyNetValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SkyNetValidationError) ErrorName() string { return "SkyNetValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SkyNetValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSkyNet.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SkyNetValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SkyNetValidationError{}

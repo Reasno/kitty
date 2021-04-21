@@ -47,20 +47,8 @@ var (
 // MakeHTTPHandler returns a handler that makes a set of endpoints available
 // on predefined paths.
 func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption) http.Handler {
-	serverOptions := []httptransport.ServerOption{
-		httptransport.ServerBefore(headersToContext),
-		httptransport.ServerErrorEncoder(errorEncoder),
-		httptransport.ServerAfter(httptransport.SetContentType(contentType)),
-	}
-	serverOptions = append(serverOptions, options...)
 	m := mux.NewRouter()
 
-	m.Methods("GET").Path("/user-more").Handler(httptransport.NewServer(
-		endpoints.UserMoreEndpoint,
-		DecodeHTTPUserMoreZeroRequest,
-		EncodeHTTPGenericResponse,
-		serverOptions...,
-	))
 	return m
 }
 
@@ -113,69 +101,6 @@ func (h httpError) Headers() http.Header {
 }
 
 // Server Decode
-
-// DecodeHTTPUserMoreZeroRequest is a transport/http.DecodeRequestFunc that
-// decodes a JSON-encoded usermore request from the HTTP request
-// body. Primarily useful in a server.
-func DecodeHTTPUserMoreZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	defer r.Body.Close()
-	var req pb.DmpReq
-	buf, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot read body of http request")
-	}
-	if len(buf) > 0 {
-		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
-		unmarshaller := jsonpb.Unmarshaler{
-			AllowUnknownFields: true,
-		}
-		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
-			const size = 8196
-			if len(buf) > size {
-				buf = buf[:size]
-			}
-			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
-				http.StatusBadRequest,
-				nil,
-			}
-		}
-	}
-
-	pathParams := mux.Vars(r)
-	_ = pathParams
-
-	queryParams := r.URL.Query()
-	_ = queryParams
-
-	if UserIdUserMoreStrArr, ok := queryParams["user_id"]; ok {
-		UserIdUserMoreStr := UserIdUserMoreStrArr[0]
-		UserIdUserMore, err := strconv.ParseUint(UserIdUserMoreStr, 10, 64)
-		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting UserIdUserMore from query, queryParams: %v", queryParams))
-		}
-		req.UserId = UserIdUserMore
-	}
-
-	if PackageNameUserMoreStrArr, ok := queryParams["package_name"]; ok {
-		PackageNameUserMoreStr := PackageNameUserMoreStrArr[0]
-		PackageNameUserMore := PackageNameUserMoreStr
-		req.PackageName = PackageNameUserMore
-	}
-
-	if SuuidUserMoreStrArr, ok := queryParams["suuid"]; ok {
-		SuuidUserMoreStr := SuuidUserMoreStrArr[0]
-		SuuidUserMore := SuuidUserMoreStr
-		req.Suuid = SuuidUserMore
-	}
-
-	if ChannelUserMoreStrArr, ok := queryParams["channel"]; ok {
-		ChannelUserMoreStr := ChannelUserMoreStrArr[0]
-		ChannelUserMore := ChannelUserMoreStr
-		req.Channel = ChannelUserMore
-	}
-
-	return &req, err
-}
 
 // EncodeHTTPGenericResponse is a transport/http.EncodeResponseFunc that encodes
 // the response as JSON to the response writer. Primarily useful in a server.

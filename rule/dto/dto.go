@@ -28,9 +28,13 @@ type Payload struct {
 	Ip          string                 `json:"ip" schema:"ip"`
 	Q           map[string][]string    `json:"-" schema:"-"`
 	B           map[string]interface{} `json:"-" schema:"-"`
-	DMP         pb.DmpResp             `json:"-" schema:"-"`
+	DMP         Dmp                    `json:"-" schema:"-"`
 	Context     context.Context        `json:"-" schema:"-"`
 	Redis       redis.UniversalClient  `json:"-" schema:"-"`
+}
+
+type Dmp struct {
+	pb.DmpResp
 }
 
 func FromClaim(claim jwt2.Claim) *Payload {
@@ -201,4 +205,57 @@ type Response struct {
 func (p Response) String() string {
 	b, _ := json.Marshal(p)
 	return string(b)
+}
+
+func (d Dmp) IsBlackListed() bool {
+	return d.BlackType == pb.DmpResp_BLACK
+}
+
+func (d Dmp) RegisterRisk() int {
+	if d.Skynet == nil {
+		return 0
+	}
+	return int(d.Skynet.Register)
+}
+
+func (d Dmp) BrowseRisk() int {
+	if d.Skynet == nil {
+		return 0
+	}
+	return int(d.Skynet.Browse)
+}
+
+func (d Dmp) FissionRisk() int {
+	if d.Skynet == nil {
+		return 0
+	}
+	return int(d.Skynet.Fission)
+}
+
+func (d Dmp) LevelRisk() int {
+	if d.Skynet == nil {
+		return 0
+	}
+	return int(d.Skynet.Level)
+}
+
+func (d Dmp) LoginRisk() int {
+	if d.Skynet == nil {
+		return 0
+	}
+	return int(d.Skynet.Login)
+}
+
+func (d Dmp) TaskRisk() int {
+	if d.Skynet == nil {
+		return 0
+	}
+	return int(d.Skynet.Task)
+}
+
+func (d Dmp) WithdrawRisk() int {
+	if d.Skynet == nil {
+		return 0
+	}
+	return int(d.Skynet.Withdraw)
 }
