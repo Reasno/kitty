@@ -218,6 +218,14 @@ func (d Dmp) RegisterRisk() int {
 	return int(d.Skynet.Register)
 }
 
+func (d Dmp) RegisteredDays() int {
+	date, err := time.ParseInLocation("2006-01-02", d.Register, time.Local)
+	if err != nil {
+		panic(err)
+	}
+	return int(time.Now().Sub(date).Hours() / 24)
+}
+
 func (d Dmp) BrowseRisk() int {
 	if d.Skynet == nil {
 		return 0
