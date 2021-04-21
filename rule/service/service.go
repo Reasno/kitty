@@ -65,7 +65,7 @@ func (r *service) CalculateRules(ctx context.Context, ruleName string, payload *
 		if resp == nil {
 			resp = &pb.DmpResp{}
 		}
-		payload.DMP = *resp
+		payload.DMP = dto.Dmp{DmpResp: *resp}
 	}
 	payload.Redis = r.redisClient
 	payload.Context = ctx

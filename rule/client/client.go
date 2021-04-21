@@ -92,7 +92,7 @@ func (r *ofRule) Payload(pl *dto.Payload) (contract.ConfigReader, error) {
 			resp = &pb.DmpResp{}
 		}
 		level.Debug(r.d.logger).Log("msg", "dmp response: "+fmt.Sprintf("%#v", resp))
-		pl.DMP = *resp
+		pl.DMP = dto.Dmp{DmpResp: *resp}
 	}
 	pl.Redis = r.redisClient
 

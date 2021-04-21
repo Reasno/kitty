@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	kconf "glab.tagtic.cn/ad_gains/kitty/pkg/config"
-	pb "glab.tagtic.cn/ad_gains/kitty/proto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
 	"go.etcd.io/etcd/clientv3"
@@ -181,7 +180,7 @@ rule:
 		Channel:     "walk",
 		Suuid:       "DoNews1a674f54-6889-4798-bddf-1cb5ca5c6164",
 		PackageName: "com.walk.qnjb",
-		DMP:         pb.DmpResp{},
+		DMP:         dto.Dmp{},
 		Context:     context.Background(),
 	})
 	if err != nil {
