@@ -26,22 +26,33 @@ func TestPayload_HoursAgo(t *testing.T) {
 
 func TestDMP(t *testing.T) {
 	env := Dmp{pb.DmpResp{
-		AdClick:              1,
-		AdComplete:           0,
-		AdDisplay:            0,
-		AdCtrDev:             0,
-		Register:             "",
-		Score:                0,
-		ScoreTotal:           0,
-		BlackType:            0,
-		Ext:                  "",
-		Skynet:               nil,
+		AdClick:    1,
+		AdComplete: 0,
+		AdDisplay:  0,
+		AdCtrDev:   0,
+		Register:   "",
+		Score:      0,
+		ScoreTotal: 0,
+		BlackType:  0,
+		Ext:        "",
+		Skynet: &pb.SkyNet{
+			Register:             pb.SkyNet_RiskLevelReject,
+			Login:                0,
+			Fission:              0,
+			Browse:               0,
+			Task:                 0,
+			Withdraw:             0,
+			Level:                0,
+			XXX_NoUnkeyedLiteral: struct{}{},
+			XXX_unrecognized:     nil,
+			XXX_sizecache:        0,
+		},
 		XXX_NoUnkeyedLiteral: struct{}{},
 		XXX_unrecognized:     nil,
 		XXX_sizecache:        0,
 	}}
 
-	code := `BlackType.String() == "WHITE"`
+	code := `RegisterRisk() == 3`
 
 	program, err := expr.Compile(code, expr.Env(env))
 	if err != nil {
@@ -53,5 +64,5 @@ func TestDMP(t *testing.T) {
 		panic(err)
 	}
 
-	t.Log(output)
+	assert.Equal(t, true, output)
 }
