@@ -240,7 +240,7 @@ func (d Dmp) FissionRisk() int {
 	return int(d.Skynet.Fission)
 }
 
-func (d Dmp) LevelRisk() int {
+func (d Dmp) OverallRisk() int {
 	if d.Skynet == nil {
 		return 0
 	}
