@@ -186,6 +186,17 @@ func (p Payload) SIsMember(key string, needle string) bool {
 	return ok
 }
 
+func (p Payload) Get(key string) string {
+	if p.Redis == nil {
+		return ""
+	}
+	if p.Context == nil {
+		p.Context = context.Background()
+	}
+	result, _ := p.Redis.Get(p.Context, key).Result()
+	return result
+}
+
 func (p Payload) ToString(str interface{}) string {
 	return cast.ToString(str)
 }
