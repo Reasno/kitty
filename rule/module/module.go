@@ -51,7 +51,7 @@ func tenantToContext() httptransport.RequestFunc {
 	return func(ctx context.Context, request *http.Request) context.Context {
 		query := request.URL.Query()
 		userID, _ := strconv.ParseUint(query.Get("user_id"), 10, 64)
-		return context.WithValue(ctx, config.TenantKey, config.Tenant{
+		return context.WithValue(ctx, config.TenantKey, &config.Tenant{
 			Channel:     query.Get("channel"),
 			VersionCode: query.Get("version_code"),
 			UserId:      userID,
