@@ -741,6 +741,7 @@ func (s appService) toDetail(user *entity.User) *pb.UserInfoDetail {
 		details.AndroidId = user.Devices[last].AndroidId
 		details.Os = uint32(user.Devices[last].Os)
 		details.Ip = user.Devices[last].IP
+		details.Mac = user.Devices[last].Mac
 	}
 	return details
 }
