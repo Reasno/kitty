@@ -620,11 +620,11 @@ func (s appService) addChannelAndVersionInfo(ctx context.Context, in *pb.UserLog
 		hasExtra = true
 	}
 
-	if in.Channel != "" && u.Channel != in.Channel {
+	if u.Channel != in.Channel {
 		u.Channel = in.Channel
 		hasExtra = true
 	}
-	if in.VersionCode != "" && in.VersionCode != u.VersionCode {
+	if in.VersionCode != u.VersionCode {
 		u.VersionCode = in.VersionCode
 		hasExtra = true
 	}
