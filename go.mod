@@ -46,6 +46,7 @@ require (
 	github.com/spf13/cast v1.3.0
 	github.com/spf13/cobra v1.1.0
 	github.com/stretchr/testify v1.7.0
+	github.com/tsenart/vegeta/v12 v12.8.4
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/uber/jaeger-lib v2.4.0+incompatible
 	go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738
