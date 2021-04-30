@@ -275,8 +275,8 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 	}
 
 	r.rwLock.Lock()
-	defer r.rwLock.Unlock()
 	r.containers = newContainers
+	r.rwLock.Unlock()
 	level.Info(r.logger).Log("msg", fmt.Sprintf("%d rules have been added", count))
 }
 
