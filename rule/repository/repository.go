@@ -253,8 +253,6 @@ func (r *repository) GetCompiled(ruleName string) entity.Ruler {
 }
 
 func (r *repository) resetActiveContainers(activeContainers map[string]string) {
-	r.rwLock.Lock()
-	defer r.rwLock.Unlock()
 
 	// 更新容器
 	newContainers := make(map[string]Container, len(activeContainers)+1)
@@ -262,11 +260,10 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 		newContainers[k] = Container{DbKey: v, Name: k, RuleSet: nil}
 	}
 	newContainers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: nil}
-	r.containers = newContainers
 
 	// 依次拉取规则
 	var count = 0
-	for k, v := range r.containers {
+	for k, v := range newContainers {
 		count++
 		value, err := r.getRawRuleSetFromDbKey(context.Background(), v.DbKey)
 		if err != nil {
@@ -274,8 +271,12 @@ func (r *repository) resetActiveContainers(activeContainers map[string]string) {
 			value = []byte("{}")
 		}
 		v.RuleSet = entity.NewRules(bytes.NewReader(value), r.logger)
-		r.containers[k] = v
+		newContainers[k] = v
 	}
+
+	r.rwLock.Lock()
+	defer r.rwLock.Unlock()
+	r.containers = newContainers
 	level.Info(r.logger).Log("msg", fmt.Sprintf("%d rules have been added", count))
 }
 
