@@ -22,7 +22,7 @@ import (
 	kitty "glab.tagtic.cn/ad_gains/kitty/proto"
 	"glab.tagtic.cn/ad_gains/kitty/rule/repository"
 	"glab.tagtic.cn/ad_gains/kitty/rule/service"
-	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

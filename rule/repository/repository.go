@@ -18,7 +18,7 @@ import (
 	"github.com/pkg/errors"
 	"glab.tagtic.cn/ad_gains/kitty/rule/entity"
 	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
-	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/client/v3"
 )
 
 type repository struct {

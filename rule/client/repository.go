@@ -15,7 +15,7 @@ import (
 	"glab.tagtic.cn/ad_gains/kitty/rule/module"
 	"glab.tagtic.cn/ad_gains/kitty/rule/msg"
 	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
-	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/client/v3"
 )
 
 // repository 专门为客户端提供的 repository，不具备自举性，可以只watch需要的规则

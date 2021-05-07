@@ -9,7 +9,7 @@ import (
 	kconf "glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
-	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/client/v3"
 )
 
 var useEtcd bool

@@ -375,7 +375,7 @@ import (
 
     "glab.tagtic.cn/ad_gains/kitty/pkg/rule/client"
     "glab.tagtic.cn/ad_gains/kitty/pkg/rule/dto"
-    "go.etcd.io/etcd/clientv3"
+    "go.etcd.io/etcd/client/v3"
 )
 
 func main() {

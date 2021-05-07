@@ -98,7 +98,7 @@ func NewRules(reader io.Reader, logger log.Logger) Ruler {
 	c := koanf.New(".")
 	b, err = ioutil.ReadAll(reader)
 	if err != nil {
-		level.Warn(logger).Log("error", errors.Wrap(err, "reader is not valid"))
+		level.Warn(logger).Log("err", errors.Wrap(err, "reader is not valid"))
 		b = []byte("{}")
 	}
 
