@@ -29,6 +29,7 @@ const (
 	InvalidInviteCode              = "不合法的邀请码"
 	NoRewardAvailable              = "没有可供领取的奖励"
 	InvalidInviteTarget            = "不合法的邀请对象"
+	InvalidInviteSequence          = "邀请者的注册日期晚于被邀请者"
 	XTastAbnormally                = "任务服务繁忙，请稍后再试"
 	ReenteringCode                 = "不能重复填写邀请码"
 	AdminOnly                      = "当前操作需要管理员权限"

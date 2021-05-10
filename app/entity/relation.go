@@ -10,6 +10,7 @@ import (
 var ErrRewardClaimed = errors.New(msg.RewardClaimed)
 var ErrRelationCircled = errors.New("关系中不能有环")
 var ErrRelationArgument = errors.New("错误的关系参数")
+var ErrRelationSequence = errors.New("邀请者的注册日期晚于被邀请者")
 var ErrRelationExist = errors.New("关系已经存在")
 var ErrOrientationHasNotBeenCompleted = errors.New(msg.OrientationHasNotBeenCompleted)
 
@@ -77,6 +78,9 @@ func (r *Relation) Validate() error {
 	}
 	if r.ApprenticeID == r.MasterID {
 		return ErrRelationArgument
+	}
+	if r.Master.CreatedAt.After(r.Apprentice.CreatedAt) {
+		return ErrRelationSequence
 	}
 	return nil
 }

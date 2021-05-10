@@ -19,13 +19,13 @@ type InvitationManager struct {
 	mock.Mock
 }
 
-// AddToken provides a mock function with given fields: ctx, userId, token
-func (_m *InvitationManager) AddToken(ctx context.Context, userId uint64, token string) error {
-	ret := _m.Called(ctx, userId, token)
+// AddToken provides a mock function with given fields: ctx, apprentice, master
+func (_m *InvitationManager) AddToken(ctx context.Context, apprentice *entity.User, master *entity.User) error {
+	ret := _m.Called(ctx, apprentice, master)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, string) error); ok {
-		r0 = rf(ctx, userId, token)
+	if rf, ok := ret.Get(0).(func(context.Context, *entity.User, *entity.User) error); ok {
+		r0 = rf(ctx, apprentice, master)
 	} else {
 		r0 = ret.Error(0)
 	}

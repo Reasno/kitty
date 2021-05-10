@@ -43,11 +43,11 @@ func (m MockClient) Request(ctx context.Context, dto *XTaskRequest) (*XTaskRespo
 func TestInvitationManager_AddToken(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		name    string
-		service InvitationManager
-		userId  uint
-		token   string
-		out     error
+		name     string
+		service  InvitationManager
+		userId   uint
+		masterId uint
+		out      error
 	}{
 		{
 			"插入token",
@@ -62,30 +62,16 @@ func TestInvitationManager_AddToken(t *testing.T) {
 			},
 
 			1,
-			"bnJaEZ8WJN",
+			2,
 			nil,
-		},
-		{
-			"插入错误token",
-			InvitationManager{
-				conf: getConf(),
-				rr: (func() RelationRepository {
-					ur := &mocks.RelationRepository{}
-					ur.On("AddRelations", mock.Anything, mock.Anything).Return(nil).Once()
-					return ur
-				})(),
-				tokenizer: code.NewTokenizer("foo"),
-			},
-
-			1,
-			"发阿斯顿发",
-			code.ErrFailedToDecodeToken,
 		},
 	}
 	for _, c := range cases {
 		cc := c
 		t.Run(cc.name, func(t *testing.T) {
-			err := cc.service.AddToken(context.Background(), uint64(cc.userId), cc.token)
+			apprentice := user(cc.userId)
+			master := user(cc.masterId)
+			err := cc.service.AddToken(context.Background(), &apprentice, &master)
 			assert.True(t, errors.Is(err, cc.out))
 		})
 	}

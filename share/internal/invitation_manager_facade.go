@@ -24,12 +24,12 @@ func (im *InvitationManagerFacade) ListMaster(ctx context.Context, apprenticeId 
 	return m.ListMaster(ctx, apprenticeId)
 }
 
-func (im *InvitationManagerFacade) AddToken(ctx context.Context, userId uint64, token string) error {
+func (im *InvitationManagerFacade) AddToken(ctx context.Context, apprentice, master *entity.User) error {
 	m, err := im.getManager(ctx)
 	if err != nil {
 		return err
 	}
-	return m.AddToken(ctx, userId, token)
+	return m.AddToken(ctx, apprentice, master)
 }
 
 func (im *InvitationManagerFacade) ClaimReward(ctx context.Context, masterId uint64, apprenticeId uint64) error {

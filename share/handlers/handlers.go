@@ -29,7 +29,7 @@ type shareService struct {
 }
 
 type InvitationManager interface {
-	AddToken(ctx context.Context, userId uint64, token string) error
+	AddToken(ctx context.Context, apprentice, master *entity.User) error
 	ClaimReward(ctx context.Context, masterId uint64, apprenticeId uint64) error
 	CompleteStep(ctx context.Context, apprenticeId uint64, event internal.ReceivedEvent) error
 	ListApprentices(ctx context.Context, masterId uint64, depth int) ([]internal.RelationWithRewardAmount, error)
@@ -40,7 +40,7 @@ type InvitationManager interface {
 
 type UserRepository interface {
 	UpdateCallback(ctx context.Context, id uint, f func(user *entity.User) error) (err error)
-	Exists(ctx context.Context, id uint) bool
+	Get(ctx context.Context, id uint) (*entity.User, error)
 }
 
 func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvitationRequest) (*pb.ShareGenericReply, error) {
@@ -50,7 +50,12 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 
 	inviterId, err := s.tokenizer.Decode(in.GetInviteCode())
 
-	if err != nil || !s.ur.Exists(ctx, inviterId) {
+	if err != nil {
+		return nil, kerr.FailedPreconditionErr(err, msg.InvalidInviteCode)
+	}
+
+	master, err := s.ur.Get(ctx, inviterId)
+	if err != nil {
 		return nil, kerr.FailedPreconditionErr(err, msg.InvalidInviteCode)
 	}
 
@@ -59,7 +64,7 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 			return ErrReenteringInviteCode
 		}
 
-		err := s.manager.AddToken(ctx, claim.UserId, in.InviteCode)
+		err := s.manager.AddToken(ctx, user, master)
 		if err != nil {
 			return errors.Wrap(err, msg.InvalidInviteCode)
 		}
@@ -72,6 +77,9 @@ func (s shareService) AddInvitationCode(ctx context.Context, in *pb.ShareAddInvi
 	}
 	if errors.Is(err, entity.ErrRelationArgument) {
 		return nil, kerr.InvalidArgumentErr(err, msg.InvalidInviteTarget)
+	}
+	if errors.Is(err, entity.ErrRelationSequence) {
+		return nil, kerr.InvalidArgumentErr(err, msg.InvalidInviteSequence)
 	}
 	if errors.Is(err, entity.ErrRelationCircled) {
 		return nil, kerr.FailedPreconditionErr(err, msg.ErrorCircledInvitation)

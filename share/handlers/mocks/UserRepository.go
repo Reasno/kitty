@@ -15,18 +15,27 @@ type UserRepository struct {
 	mock.Mock
 }
 
-// Exists provides a mock function with given fields: ctx, id
-func (_m *UserRepository) Exists(ctx context.Context, id uint) bool {
+// Get provides a mock function with given fields: ctx, id
+func (_m *UserRepository) Get(ctx context.Context, id uint) (*entity.User, error) {
 	ret := _m.Called(ctx, id)
 
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(context.Context, uint) bool); ok {
+	var r0 *entity.User
+	if rf, ok := ret.Get(0).(func(context.Context, uint) *entity.User); ok {
 		r0 = rf(ctx, id)
 	} else {
-		r0 = ret.Get(0).(bool)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entity.User)
+		}
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, uint) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // UpdateCallback provides a mock function with given fields: ctx, id, f

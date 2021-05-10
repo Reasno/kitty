@@ -94,16 +94,10 @@ func user(id uint) entity.User {
 	}
 }
 
-func (im *InvitationManager) AddToken(ctx context.Context, userId uint64, token string) error {
-	masterId, err := im.tokenizer.Decode(token)
-	if err != nil {
-		return errors.Wrap(err, "invalid token")
-	}
+func (im *InvitationManager) AddToken(ctx context.Context, apprentice, master *entity.User) error {
 
-	master := user(masterId)
-	apprentice := user(uint(userId))
 	steps := getSteps(im.conf.OrientationEvents)
-	relation := entity.NewRelation(&apprentice, &master, steps)
+	relation := entity.NewRelation(apprentice, master, steps)
 
 	return im.rr.AddRelations(ctx, relation)
 }

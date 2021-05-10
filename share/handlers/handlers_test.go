@@ -48,7 +48,7 @@ func TestShareService_AddInvitationCode(t *testing.T) {
 						user.ID = id
 						return f(user)
 					})
-					m.On("Exists", mock.Anything, mock.Anything).Return(true)
+					m.On("Get", mock.Anything, mock.Anything).Return(&entity.User{}, nil)
 					return &m
 				}(),
 				dispatcher: func() contract.Dispatcher {
@@ -79,7 +79,7 @@ func TestShareService_AddInvitationCode(t *testing.T) {
 						user.ID = id
 						return f(user)
 					})
-					m.On("Exists", mock.Anything, mock.Anything).Return(true)
+					m.On("Get", mock.Anything, mock.Anything).Return(&entity.User{}, nil)
 					return &m
 				}(),
 				dispatcher: func() contract.Dispatcher {

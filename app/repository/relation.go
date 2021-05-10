@@ -65,10 +65,6 @@ func (r *RelationRepo) AddRelations(
 			return entity.ErrRelationExist
 		}
 
-		if ancestor.CreatedAt.After(candidate.Apprentice.CreatedAt) {
-			return errors.New("master created after apprentice")
-		}
-
 		newRelations, err = candidate.Connect(&secondaryAncestor.Master, descendants)
 		if err != nil {
 			return err
