@@ -38,6 +38,7 @@ type Endpoints struct {
 	AddInvitationCodeEndpoint endpoint.Endpoint
 	ListFriendEndpoint        endpoint.Endpoint
 	ClaimRewardEndpoint       endpoint.Endpoint
+	GetMasterEndpoint         endpoint.Endpoint
 	PushSignEventEndpoint     endpoint.Endpoint
 	PushTaskEventEndpoint     endpoint.Endpoint
 }
@@ -51,6 +52,7 @@ func NewEndpoints(service pb.ShareServer) Endpoints {
 		addinvitationcodeEndpoint = MakeAddInvitationCodeEndpoint(service)
 		listfriendEndpoint        = MakeListFriendEndpoint(service)
 		claimrewardEndpoint       = MakeClaimRewardEndpoint(service)
+		getmasterEndpoint         = MakeGetMasterEndpoint(service)
 		pushsigneventEndpoint     = MakePushSignEventEndpoint(service)
 		pushtaskeventEndpoint     = MakePushTaskEventEndpoint(service)
 	)
@@ -61,6 +63,7 @@ func NewEndpoints(service pb.ShareServer) Endpoints {
 		AddInvitationCodeEndpoint: addinvitationcodeEndpoint,
 		ListFriendEndpoint:        listfriendEndpoint,
 		ClaimRewardEndpoint:       claimrewardEndpoint,
+		GetMasterEndpoint:         getmasterEndpoint,
 		PushSignEventEndpoint:     pushsigneventEndpoint,
 		PushTaskEventEndpoint:     pushtaskeventEndpoint,
 	}
@@ -108,6 +111,14 @@ func (e Endpoints) ClaimReward(ctx context.Context, in *pb.ShareClaimRewardReque
 		return nil, err
 	}
 	return response.(*pb.ShareGenericReply), nil
+}
+
+func (e Endpoints) GetMaster(ctx context.Context, in *pb.ShareGetMasterRequest) (*pb.ShareGetMasterReply, error) {
+	response, err := e.GetMasterEndpoint(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return response.(*pb.ShareGetMasterReply), nil
 }
 
 func (e Endpoints) PushSignEvent(ctx context.Context, in *pb.SignEvent) (*pb.ShareGenericReply, error) {
@@ -183,6 +194,17 @@ func MakeClaimRewardEndpoint(s pb.ShareServer) endpoint.Endpoint {
 	}
 }
 
+func MakeGetMasterEndpoint(s pb.ShareServer) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*pb.ShareGetMasterRequest)
+		v, err := s.GetMaster(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
+	}
+}
+
 func MakePushSignEventEndpoint(s pb.ShareServer) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(*pb.SignEvent)
@@ -217,6 +239,7 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		"AddInvitationCode": {},
 		"ListFriend":        {},
 		"ClaimReward":       {},
+		"GetMaster":         {},
 		"PushSignEvent":     {},
 		"PushTaskEvent":     {},
 	}
@@ -244,6 +267,9 @@ func (e *Endpoints) WrapAllExcept(middleware endpoint.Middleware, excluded ...st
 		if inc == "ClaimReward" {
 			e.ClaimRewardEndpoint = middleware(e.ClaimRewardEndpoint)
 		}
+		if inc == "GetMaster" {
+			e.GetMasterEndpoint = middleware(e.GetMasterEndpoint)
+		}
 		if inc == "PushSignEvent" {
 			e.PushSignEventEndpoint = middleware(e.PushSignEventEndpoint)
 		}
@@ -269,6 +295,7 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		"AddInvitationCode": {},
 		"ListFriend":        {},
 		"ClaimReward":       {},
+		"GetMaster":         {},
 		"PushSignEvent":     {},
 		"PushTaskEvent":     {},
 	}
@@ -295,6 +322,9 @@ func (e *Endpoints) WrapAllLabeledExcept(middleware func(string, endpoint.Endpoi
 		}
 		if inc == "ClaimReward" {
 			e.ClaimRewardEndpoint = middleware("ClaimReward", e.ClaimRewardEndpoint)
+		}
+		if inc == "GetMaster" {
+			e.GetMasterEndpoint = middleware("GetMaster", e.GetMasterEndpoint)
 		}
 		if inc == "PushSignEvent" {
 			e.PushSignEventEndpoint = middleware("PushSignEvent", e.PushSignEventEndpoint)

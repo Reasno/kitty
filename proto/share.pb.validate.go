@@ -732,6 +732,156 @@ var _ interface {
 	ErrorName() string
 } = ShareAddInvitationRequestValidationError{}
 
+// Validate checks the field values on ShareGetMasterRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ShareGetMasterRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	return nil
+}
+
+// ShareGetMasterRequestValidationError is the validation error returned by
+// ShareGetMasterRequest.Validate if the designated constraints aren't met.
+type ShareGetMasterRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ShareGetMasterRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ShareGetMasterRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ShareGetMasterRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ShareGetMasterRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ShareGetMasterRequestValidationError) ErrorName() string {
+	return "ShareGetMasterRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ShareGetMasterRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sShareGetMasterRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ShareGetMasterRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ShareGetMasterRequestValidationError{}
+
+// Validate checks the field values on ShareGetMasterReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ShareGetMasterReply) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Msg
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ShareGetMasterReplyValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ShareGetMasterReplyValidationError is the validation error returned by
+// ShareGetMasterReply.Validate if the designated constraints aren't met.
+type ShareGetMasterReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ShareGetMasterReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ShareGetMasterReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ShareGetMasterReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ShareGetMasterReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ShareGetMasterReplyValidationError) ErrorName() string {
+	return "ShareGetMasterReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ShareGetMasterReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sShareGetMasterReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ShareGetMasterReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ShareGetMasterReplyValidationError{}
+
 // Validate checks the field values on ShareEmptyRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an
 // error is returned.
@@ -1260,3 +1410,90 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ShareDataTokenReply_CodeValidationError{}
+
+// Validate checks the field values on ShareGetMasterReply_Data with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ShareGetMasterReply_Data) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetMaster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ShareGetMasterReply_DataValidationError{
+				field:  "Master",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetGrandMaster()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ShareGetMasterReply_DataValidationError{
+				field:  "GrandMaster",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ShareGetMasterReply_DataValidationError is the validation error returned by
+// ShareGetMasterReply_Data.Validate if the designated constraints aren't met.
+type ShareGetMasterReply_DataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ShareGetMasterReply_DataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ShareGetMasterReply_DataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ShareGetMasterReply_DataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ShareGetMasterReply_DataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ShareGetMasterReply_DataValidationError) ErrorName() string {
+	return "ShareGetMasterReply_DataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ShareGetMasterReply_DataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sShareGetMasterReply_Data.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ShareGetMasterReply_DataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ShareGetMasterReply_DataValidationError{}

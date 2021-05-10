@@ -86,6 +86,19 @@ func New(conn *grpc.ClientConn, options ...grpctransport.ClientOption) (svc.Endp
 		).Endpoint()
 	}
 
+	var getmasterEndpoint endpoint.Endpoint
+	{
+		getmasterEndpoint = grpctransport.NewClient(
+			conn,
+			"share.v1.Share",
+			"GetMaster",
+			EncodeGRPCGetMasterRequest,
+			DecodeGRPCGetMasterResponse,
+			pb.ShareGetMasterReply{},
+			options...,
+		).Endpoint()
+	}
+
 	var pushsigneventEndpoint endpoint.Endpoint
 	{
 		pushsigneventEndpoint = grpctransport.NewClient(
@@ -118,6 +131,7 @@ func New(conn *grpc.ClientConn, options ...grpctransport.ClientOption) (svc.Endp
 		AddInvitationCodeEndpoint: addinvitationcodeEndpoint,
 		ListFriendEndpoint:        listfriendEndpoint,
 		ClaimRewardEndpoint:       claimrewardEndpoint,
+		GetMasterEndpoint:         getmasterEndpoint,
 		PushSignEventEndpoint:     pushsigneventEndpoint,
 		PushTaskEventEndpoint:     pushtaskeventEndpoint,
 	}, nil
@@ -157,6 +171,13 @@ func DecodeGRPCListFriendResponse(_ context.Context, grpcReply interface{}) (int
 // gRPC claimreward reply to a user-domain claimreward response. Primarily useful in a client.
 func DecodeGRPCClaimRewardResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*pb.ShareGenericReply)
+	return reply, nil
+}
+
+// DecodeGRPCGetMasterResponse is a transport/grpc.DecodeResponseFunc that converts a
+// gRPC getmaster reply to a user-domain getmaster response. Primarily useful in a client.
+func DecodeGRPCGetMasterResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.ShareGetMasterReply)
 	return reply, nil
 }
 
@@ -208,6 +229,13 @@ func EncodeGRPCListFriendRequest(_ context.Context, request interface{}) (interf
 // user-domain claimreward request to a gRPC claimreward request. Primarily useful in a client.
 func EncodeGRPCClaimRewardRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.ShareClaimRewardRequest)
+	return req, nil
+}
+
+// EncodeGRPCGetMasterRequest is a transport/grpc.EncodeRequestFunc that converts a
+// user-domain getmaster request to a gRPC getmaster request. Primarily useful in a client.
+func EncodeGRPCGetMasterRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.ShareGetMasterRequest)
 	return req, nil
 }
 

@@ -5,6 +5,8 @@ package mocks
 import (
 	context "context"
 
+	entity "glab.tagtic.cn/ad_gains/kitty/app/entity"
+
 	internal "glab.tagtic.cn/ad_gains/kitty/share/internal"
 
 	kjwt "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
@@ -108,4 +110,36 @@ func (_m *InvitationManager) ListApprentices(ctx context.Context, masterId uint6
 	}
 
 	return r0, r1
+}
+
+// ListMaster provides a mock function with given fields: ctx, apprenticeId
+func (_m *InvitationManager) ListMaster(ctx context.Context, apprenticeId uint64) (*entity.User, *entity.User, error) {
+	ret := _m.Called(ctx, apprenticeId)
+
+	var r0 *entity.User
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) *entity.User); ok {
+		r0 = rf(ctx, apprenticeId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entity.User)
+		}
+	}
+
+	var r1 *entity.User
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) *entity.User); ok {
+		r1 = rf(ctx, apprenticeId)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*entity.User)
+		}
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, uint64) error); ok {
+		r2 = rf(ctx, apprenticeId)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }

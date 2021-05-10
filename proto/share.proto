@@ -98,6 +98,16 @@ service Share {
     };
   }
 
+  // 通过徒弟反查师傅和师爷。填0获取本人信息
+  rpc GetMaster (ShareGetMasterRequest) returns (ShareGetMasterReply) {
+    option (options.openapiv2_operation) = {
+      tags: "分享"
+    };
+    option (google.api.http) = {
+      get: "/get-master/{id}"
+    };
+  }
+
   // 手动推送签到事件
   rpc PushSignEvent (SignEvent) returns (ShareGenericReply) {
     option (options.openapiv2_operation) = {
@@ -130,7 +140,7 @@ message ShareClaimRewardReply {
 }
 
 message ShareListFriendRequest {
-  int32 depth = 1 [(validate.rules).int32 = {in: [1,2]}];
+  int32 depth = 1 [(validate.rules).int32 = {in: [1, 2]}];
 }
 
 message ShareListFriendReply {
@@ -185,6 +195,21 @@ message ShareAddInvitationRequest {
   string invite_code = 1;
 }
 
+message ShareGetMasterRequest {
+  uint64 id = 1; // 徒弟用户ID
+}
+
+message ShareGetMasterReply {
+  message Data {
+    app.v2.UserInfo master = 1;
+    app.v2.UserInfo grandMaster = 2;
+  }
+  int32 code = 1 [(gogoproto.jsontag) = "code"];
+  string msg = 2;
+  Data data = 3;
+
+}
+
 message ShareEmptyRequest {
 }
 
@@ -195,14 +220,14 @@ message ShareGenericReply {
 
 message TaskEvent {
   int32 id = 1; // 任务id
-  uint64 user_id  = 2; // 用户id
+  uint64 user_id = 2; // 用户id
   string package_name = 3; // 应用包名
   string channel = 4; // 渠道
   string name = 5; // 任务名称
-  string event_name  = 6; // 自定义事件名称
+  string event_name = 6; // 自定义事件名称
   int32 score = 7; // 任务分数
-  string date_time  = 8; // 时间发生时间 2020-12-17 18:12:22
-  string third_party_id  = 9; // 第三方id，用于给第三方系统回调
+  string date_time = 8; // 时间发生时间 2020-12-17 18:12:22
+  string third_party_id = 9; // 第三方id，用于给第三方系统回调
   int32 done_num = 10; // 任务完成次数
   int32 total_num = 11; // 任务每日可执行次数
   bool is_done = 12; // 任务是否完成
@@ -211,14 +236,14 @@ message TaskEvent {
 
 message SignEvent{
   int32 id = 1; // 签到天数
-  uint64 user_id  = 2; // 用户id
+  uint64 user_id = 2; // 用户id
   string package_name = 3; // 应用包名
   string channel = 4; // 渠道
   string name = 5; // 任务名称
-  string event_name  = 6; // 自定义事件名称
+  string event_name = 6; // 自定义事件名称
   int32 score = 7; // 任务分数
-  string date_time  = 8; // 时间发生时间 2020-12-17 18:12:22
-  string third_party_id  = 9; // 第三方id，用于给第三方系统回调
+  string date_time = 8; // 时间发生时间 2020-12-17 18:12:22
+  string third_party_id = 9; // 第三方id，用于给第三方系统回调
   bool is_double = 10; // 签到是否翻倍
   string ext = 11; // 扩展字段，补充业务使用
 }

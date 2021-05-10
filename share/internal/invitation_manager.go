@@ -176,6 +176,25 @@ func (im *InvitationManager) ListApprentices(ctx context.Context, masterId uint6
 	return out, nil
 }
 
+func (im *InvitationManager) ListMaster(ctx context.Context, apprenticeId uint64) (master *entity.User, grandMaster *entity.User, err error) {
+	rels, err := im.rr.QueryRelations(ctx, entity.Relation{
+		ApprenticeID: uint(apprenticeId),
+	})
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "error querying relations")
+	}
+	for i := range rels {
+		if rels[i].Depth == 1 {
+			master = &rels[i].Master
+			continue
+		}
+		if rels[i].Depth == 2 {
+			grandMaster = &rels[i].Master
+		}
+	}
+	return master, grandMaster, nil
+}
+
 func (im *InvitationManager) GetToken(_ context.Context, id uint) string {
 	value, err := im.tokenizer.Encode(id)
 	if err != nil {

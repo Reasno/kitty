@@ -139,6 +139,32 @@
         ]
       }
     },
+    "/get-master/{id}": {
+      "get": {
+        "summary": "通过徒弟反查师傅和师爷。填0获取本人信息",
+        "operationId": "Share_GetMaster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ShareGetMasterReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "分享"
+        ]
+      }
+    },
     "/list": {
       "get": {
         "summary": "获取邀请列表",
@@ -197,6 +223,17 @@
       "properties": {
         "url": {
           "type": "string"
+        }
+      }
+    },
+    "ShareGetMasterReplyData": {
+      "type": "object",
+      "properties": {
+        "master": {
+          "$ref": "#/definitions/v2UserInfo"
+        },
+        "grandMaster": {
+          "$ref": "#/definitions/v2UserInfo"
         }
       }
     },
@@ -266,6 +303,21 @@
         },
         "msg": {
           "type": "string"
+        }
+      }
+    },
+    "v1ShareGetMasterReply": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "msg": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/ShareGetMasterReplyData"
         }
       }
     },
@@ -436,6 +488,143 @@
         "GENDER_FEMALE"
       ],
       "default": "GENDER_UNKNOWN"
+    },
+    "v2TaobaoExtra": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "open_sid": {
+          "type": "string"
+        },
+        "top_access_token": {
+          "type": "string"
+        },
+        "avatar_url": {
+          "type": "string"
+        },
+        "havana_sso_token": {
+          "type": "string"
+        },
+        "nick": {
+          "type": "string"
+        },
+        "open_id": {
+          "type": "string"
+        },
+        "top_auth_code": {
+          "type": "string"
+        },
+        "top_expire_time": {
+          "type": "string"
+        }
+      }
+    },
+    "v2UserInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "user_name": {
+          "type": "string"
+        },
+        "wechat": {
+          "type": "string"
+        },
+        "head_img": {
+          "type": "string",
+          "title": "头像地址"
+        },
+        "gender": {
+          "$ref": "#/definitions/v2Gender"
+        },
+        "birthday": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "third_party_id": {
+          "type": "string",
+          "title": "第三方ID"
+        },
+        "is_new": {
+          "type": "boolean"
+        },
+        "wechat_extra": {
+          "$ref": "#/definitions/v2WechatExtra"
+        },
+        "taobao_extra": {
+          "$ref": "#/definitions/v2TaobaoExtra"
+        },
+        "mobile": {
+          "type": "string"
+        },
+        "invite_code": {
+          "type": "string"
+        },
+        "is_deleted": {
+          "type": "boolean"
+        },
+        "is_invited": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "type": "string"
+        }
+      }
+    },
+    "v2WechatExtra": {
+      "type": "object",
+      "properties": {
+        "access_token": {
+          "type": "string"
+        },
+        "expires_in": {
+          "type": "string",
+          "format": "int64"
+        },
+        "refresh_token": {
+          "type": "string"
+        },
+        "open_id": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "nick_name": {
+          "type": "string"
+        },
+        "sex": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "province": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "headimgurl": {
+          "type": "string"
+        },
+        "privilege": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unionid": {
+          "type": "string"
+        }
+      }
     }
   },
   "securityDefinitions": {

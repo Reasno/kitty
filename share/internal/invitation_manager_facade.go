@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"glab.tagtic.cn/ad_gains/kitty/app/entity"
 	jwt2 "glab.tagtic.cn/ad_gains/kitty/pkg/kjwt"
 
 	"github.com/pkg/errors"
@@ -13,6 +14,14 @@ type InvitationManagerFacade struct {
 	Name    contract.AppName
 	Factory InvitationManagerFactory
 	DynConf config.DynamicConfigReader
+}
+
+func (im *InvitationManagerFacade) ListMaster(ctx context.Context, apprenticeId uint64) (master *entity.User, grandMaster *entity.User, err error) {
+	m, err := im.getManager(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	return m.ListMaster(ctx, apprenticeId)
 }
 
 func (im *InvitationManagerFacade) AddToken(ctx context.Context, userId uint64, token string) error {

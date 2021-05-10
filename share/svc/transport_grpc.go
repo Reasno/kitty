@@ -59,6 +59,12 @@ func MakeGRPCServer(endpoints Endpoints, options ...grpctransport.ServerOption) 
 			EncodeGRPCClaimRewardResponse,
 			serverOptions...,
 		),
+		getmaster: grpctransport.NewServer(
+			endpoints.GetMasterEndpoint,
+			DecodeGRPCGetMasterRequest,
+			EncodeGRPCGetMasterResponse,
+			serverOptions...,
+		),
 		pushsignevent: grpctransport.NewServer(
 			endpoints.PushSignEventEndpoint,
 			DecodeGRPCPushSignEventRequest,
@@ -81,6 +87,7 @@ type grpcServer struct {
 	addinvitationcode grpctransport.Handler
 	listfriend        grpctransport.Handler
 	claimreward       grpctransport.Handler
+	getmaster         grpctransport.Handler
 	pushsignevent     grpctransport.Handler
 	pushtaskevent     grpctransport.Handler
 }
@@ -125,6 +132,14 @@ func (s *grpcServer) ClaimReward(ctx context.Context, req *pb.ShareClaimRewardRe
 		return nil, err
 	}
 	return rep.(*pb.ShareGenericReply), nil
+}
+
+func (s *grpcServer) GetMaster(ctx context.Context, req *pb.ShareGetMasterRequest) (*pb.ShareGetMasterReply, error) {
+	_, rep, err := s.getmaster.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.ShareGetMasterReply), nil
 }
 
 func (s *grpcServer) PushSignEvent(ctx context.Context, req *pb.SignEvent) (*pb.ShareGenericReply, error) {
@@ -180,6 +195,13 @@ func DecodeGRPCClaimRewardRequest(_ context.Context, grpcReq interface{}) (inter
 	return req, nil
 }
 
+// DecodeGRPCGetMasterRequest is a transport/grpc.DecodeRequestFunc that converts a
+// gRPC getmaster request to a user-domain getmaster request. Primarily useful in a server.
+func DecodeGRPCGetMasterRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.ShareGetMasterRequest)
+	return req, nil
+}
+
 // DecodeGRPCPushSignEventRequest is a transport/grpc.DecodeRequestFunc that converts a
 // gRPC pushsignevent request to a user-domain pushsignevent request. Primarily useful in a server.
 func DecodeGRPCPushSignEventRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -228,6 +250,13 @@ func EncodeGRPCListFriendResponse(_ context.Context, response interface{}) (inte
 // user-domain claimreward response to a gRPC claimreward reply. Primarily useful in a server.
 func EncodeGRPCClaimRewardResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(*pb.ShareGenericReply)
+	return resp, nil
+}
+
+// EncodeGRPCGetMasterResponse is a transport/grpc.EncodeResponseFunc that converts a
+// user-domain getmaster response to a gRPC getmaster reply. Primarily useful in a server.
+func EncodeGRPCGetMasterResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(*pb.ShareGetMasterReply)
 	return resp, nil
 }
 

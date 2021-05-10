@@ -100,6 +100,16 @@ func New(instance string, options ...httptransport.ClientOption) (pb.ShareServer
 			options...,
 		).Endpoint()
 	}
+	var GetMasterZeroEndpoint endpoint.Endpoint
+	{
+		GetMasterZeroEndpoint = httptransport.NewClient(
+			"GET",
+			copyURL(u, "/get-master/"),
+			EncodeHTTPGetMasterZeroRequest,
+			DecodeHTTPGetMasterResponse,
+			options...,
+		).Endpoint()
+	}
 	var PushSignEventZeroEndpoint endpoint.Endpoint
 	{
 		PushSignEventZeroEndpoint = httptransport.NewClient(
@@ -127,6 +137,7 @@ func New(instance string, options ...httptransport.ClientOption) (pb.ShareServer
 		AddInvitationCodeEndpoint: AddInvitationCodeZeroEndpoint,
 		ListFriendEndpoint:        ListFriendZeroEndpoint,
 		ClaimRewardEndpoint:       ClaimRewardZeroEndpoint,
+		GetMasterEndpoint:         GetMasterZeroEndpoint,
 		PushSignEventEndpoint:     PushSignEventZeroEndpoint,
 		PushTaskEventEndpoint:     PushTaskEventZeroEndpoint,
 	}, nil
@@ -283,6 +294,33 @@ func DecodeHTTPClaimRewardResponse(_ context.Context, r *http.Response) (interfa
 	}
 
 	var resp pb.ShareGenericReply
+	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
+		return nil, errorDecoder(buf)
+	}
+
+	return &resp, nil
+}
+
+// DecodeHTTPGetMasterResponse is a transport/http.DecodeResponseFunc that decodes
+// a JSON-encoded ShareGetMasterReply response from the HTTP response body.
+// If the response has a non-200 status code, we will interpret that as an
+// error and attempt to decode the specific error message from the response
+// body. Primarily useful in a client.
+func DecodeHTTPGetMasterResponse(_ context.Context, r *http.Response) (interface{}, error) {
+	defer r.Body.Close()
+	buf, err := ioutil.ReadAll(r.Body)
+	if err == io.EOF {
+		return nil, errors.New("response http body empty")
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot read http body")
+	}
+
+	if r.StatusCode != http.StatusOK {
+		return nil, errors.Wrapf(errorDecoder(buf), "status code: '%d'", r.StatusCode)
+	}
+
+	var resp pb.ShareGetMasterReply
 	if err = jsonpb.UnmarshalString(string(buf), &resp); err != nil {
 		return nil, errorDecoder(buf)
 	}
@@ -534,6 +572,40 @@ func EncodeHTTPClaimRewardZeroRequest(_ context.Context, r *http.Request, reques
 		return errors.Wrapf(err, "couldn't encode body as json %v", toRet)
 	}
 	r.Body = ioutil.NopCloser(&buf)
+	return nil
+}
+
+// EncodeHTTPGetMasterZeroRequest is a transport/http.EncodeRequestFunc
+// that encodes a getmaster request into the various portions of
+// the http request (path, query, and body).
+func EncodeHTTPGetMasterZeroRequest(_ context.Context, r *http.Request, request interface{}) error {
+	strval := ""
+	_ = strval
+	req := request.(*pb.ShareGetMasterRequest)
+	_ = req
+
+	r.Header.Set("transport", "HTTPJSON")
+	r.Header.Set("request-url", r.URL.Path)
+
+	// Set the path parameters
+	path := strings.Join([]string{
+		"",
+		"get-master",
+		fmt.Sprint(req.Id),
+	}, "/")
+	u, err := url.Parse(path)
+	if err != nil {
+		return errors.Wrapf(err, "couldn't unmarshal path %q", path)
+	}
+	r.URL.RawPath = u.RawPath
+	r.URL.Path = u.Path
+
+	// Set the query parameters
+	values := r.URL.Query()
+	var tmp []byte
+	_ = tmp
+
+	r.URL.RawQuery = values.Encode()
 	return nil
 }
 

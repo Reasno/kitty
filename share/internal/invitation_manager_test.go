@@ -448,3 +448,96 @@ func TestInvitationManager_ListApprentice(t *testing.T) {
 		})
 	}
 }
+
+func TestInvitationManager_ListMaster(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name            string
+		service         InvitationManager
+		apprenticeID    uint
+		expectedMasters int
+	}{
+		{
+			"两个师傅都在",
+			InvitationManager{
+				conf: getConf(),
+				rr: func() RelationRepository {
+					var ur mocks.RelationRepository
+					ur.On("QueryRelations", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, condition entity.Relation) []entity.Relation {
+						return []entity.Relation{{
+							MasterID:     1,
+							Master:       user(1),
+							ApprenticeID: condition.ApprenticeID,
+							Depth:        1,
+						}, {
+							MasterID:     2,
+							Master:       user(2),
+							ApprenticeID: condition.ApprenticeID,
+							Depth:        2,
+						}}
+					}, nil).Once()
+					return &ur
+				}(),
+				tokenizer: code.NewTokenizer("foo"),
+			},
+			3,
+			2,
+		},
+		{
+			"只有一个师傅了",
+			InvitationManager{
+				conf: getConf(),
+				rr: func() RelationRepository {
+					var ur mocks.RelationRepository
+					ur.On("QueryRelations", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, condition entity.Relation) []entity.Relation {
+						return []entity.Relation{{
+							MasterID:     1,
+							Master:       user(1),
+							ApprenticeID: condition.ApprenticeID,
+							Depth:        1,
+						}}
+					}, nil).Once()
+					return &ur
+				}(),
+				tokenizer: code.NewTokenizer("foo"),
+			},
+			3,
+			1,
+		},
+		{
+			"没有师傅",
+			InvitationManager{
+				conf: getConf(),
+				rr: func() RelationRepository {
+					var ur mocks.RelationRepository
+					ur.On("QueryRelations", mock.Anything, mock.Anything, mock.Anything).Return(func(ctx context.Context, condition entity.Relation) []entity.Relation {
+						return []entity.Relation{}
+					}, nil).Once()
+					return &ur
+				}(),
+				tokenizer: code.NewTokenizer("foo"),
+			},
+			3,
+			0,
+		},
+	}
+	for _, c := range cases {
+		cc := c
+		t.Run(cc.name, func(t *testing.T) {
+			master, grandMaster, err := cc.service.ListMaster(context.Background(), uint64(cc.apprenticeID))
+			assert.NoError(t, err)
+			if cc.expectedMasters >= 2 {
+				assert.NotNil(t, master)
+				assert.NotNil(t, grandMaster)
+			}
+			if cc.expectedMasters == 1 {
+				assert.NotNil(t, master)
+				assert.Nil(t, grandMaster)
+			}
+			if cc.expectedMasters == 0 {
+				assert.Nil(t, master)
+				assert.Nil(t, grandMaster)
+			}
+		})
+	}
+}

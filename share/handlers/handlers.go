@@ -33,6 +33,7 @@ type InvitationManager interface {
 	ClaimReward(ctx context.Context, masterId uint64, apprenticeId uint64) error
 	CompleteStep(ctx context.Context, apprenticeId uint64, event internal.ReceivedEvent) error
 	ListApprentices(ctx context.Context, masterId uint64, depth int) ([]internal.RelationWithRewardAmount, error)
+	ListMaster(ctx context.Context, apprenticeId uint64) (master *entity.User, grandMaster *entity.User, err error)
 	GetToken(ctx context.Context, id uint) string
 	GetUrl(ctx context.Context, claim *kittyjwt.Claim) string
 }
@@ -213,4 +214,54 @@ func (s shareService) PushTaskEvent(ctx context.Context, in *pb.TaskEvent) (*pb.
 	}
 	var resp pb.ShareGenericReply
 	return &resp, nil
+}
+
+func (s shareService) GetMaster(ctx context.Context, in *pb.ShareGetMasterRequest) (*pb.ShareGetMasterReply, error) {
+	var masterInfo, grandMasterInfo *pb.UserInfo
+	if in.Id == 0 {
+		claim := kittyjwt.ClaimFromContext(ctx)
+		in.Id = claim.UserId
+	}
+
+	master, grandMaster, err := s.manager.ListMaster(ctx, in.Id)
+	if err != nil {
+		return nil, kerr.InternalErr(err, msg.ErrorDatabaseFailure)
+	}
+	if master != nil {
+		masterInfo = &pb.UserInfo{
+			Id:           uint64(master.ID),
+			UserName:     master.UserName,
+			Wechat:       master.WechatOpenId.String,
+			HeadImg:      master.HeadImg,
+			Gender:       pb.Gender(master.Gender),
+			Birthday:     master.Birthday,
+			ThirdPartyId: master.ThirdPartyId,
+			IsNew:        master.IsNew,
+			IsInvited:    master.InviteCode != "",
+			CreatedAt:    master.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+	}
+
+	if grandMaster != nil {
+		grandMasterInfo = &pb.UserInfo{
+			Id:           uint64(grandMaster.ID),
+			UserName:     grandMaster.UserName,
+			Wechat:       grandMaster.WechatOpenId.String,
+			HeadImg:      grandMaster.HeadImg,
+			Gender:       pb.Gender(grandMaster.Gender),
+			Birthday:     grandMaster.Birthday,
+			ThirdPartyId: grandMaster.ThirdPartyId,
+			IsNew:        grandMaster.IsNew,
+			IsInvited:    grandMaster.InviteCode != "",
+			CreatedAt:    grandMaster.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+	}
+
+	return &pb.ShareGetMasterReply{
+		Code: 0,
+		Data: &pb.ShareGetMasterReply_Data{
+			Master:      masterInfo,
+			GrandMaster: grandMasterInfo,
+		},
+	}, nil
 }

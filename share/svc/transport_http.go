@@ -90,6 +90,13 @@ func MakeHTTPHandler(endpoints Endpoints, options ...httptransport.ServerOption)
 		serverOptions...,
 	))
 
+	m.Methods("GET").Path("/get-master/{id}").Handler(httptransport.NewServer(
+		endpoints.GetMasterEndpoint,
+		DecodeHTTPGetMasterZeroRequest,
+		EncodeHTTPGenericResponse,
+		serverOptions...,
+	))
+
 	m.Methods("POST").Path("/event/sign").Handler(httptransport.NewServer(
 		endpoints.PushSignEventEndpoint,
 		DecodeHTTPPushSignEventZeroRequest,
@@ -341,6 +348,49 @@ func DecodeHTTPClaimRewardZeroRequest(_ context.Context, r *http.Request) (inter
 
 	queryParams := r.URL.Query()
 	_ = queryParams
+
+	return &req, err
+}
+
+// DecodeHTTPGetMasterZeroRequest is a transport/http.DecodeRequestFunc that
+// decodes a JSON-encoded getmaster request from the HTTP request
+// body. Primarily useful in a server.
+func DecodeHTTPGetMasterZeroRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	defer r.Body.Close()
+	var req pb.ShareGetMasterRequest
+	buf, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read body of http request")
+	}
+	if len(buf) > 0 {
+		// AllowUnknownFields stops the unmarshaler from failing if the JSON contains unknown fields.
+		unmarshaller := jsonpb.Unmarshaler{
+			AllowUnknownFields: true,
+		}
+		if err = unmarshaller.Unmarshal(bytes.NewBuffer(buf), &req); err != nil {
+			const size = 8196
+			if len(buf) > size {
+				buf = buf[:size]
+			}
+			return nil, httpError{errors.Wrapf(err, "request body '%s': cannot parse non-json request body", buf),
+				http.StatusBadRequest,
+				nil,
+			}
+		}
+	}
+
+	pathParams := mux.Vars(r)
+	_ = pathParams
+
+	queryParams := r.URL.Query()
+	_ = queryParams
+
+	IdGetMasterStr := pathParams["id"]
+	IdGetMaster, err := strconv.ParseUint(IdGetMasterStr, 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("Error while extracting IdGetMaster from path, pathParams: %v", pathParams))
+	}
+	req.Id = IdGetMaster
 
 	return &req, err
 }
