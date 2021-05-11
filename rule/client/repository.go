@@ -70,7 +70,7 @@ func NewRepositoryWithConfig(client *clientv3.Client, logger log.Logger, config 
 	var count = 0
 	for k, v := range configMap {
 		name := dbKeyToName(k)
-		if config.Regex != nil && !config.Regex.Match([]byte(name)) {
+		if config.Regex != nil && !config.Regex.MatchString(name) {
 			continue
 		}
 		count++
@@ -126,13 +126,24 @@ func NewRepository(client *clientv3.Client, logger log.Logger, activeContainers 
 }
 
 func (r *repository) updateRuleSetByDbKey(dbKey string, rules entity.Ruler) {
+	name := dbKeyToName(dbKey)
+
+	if r.regexp != nil && r.regexp.MatchString(name) {
+		c := repository2.Container{DbKey: dbKey, Name: name, RuleSet: rules}
+
+		r.rwLock.Lock()
+		r.containers[name] = c
+		r.rwLock.Unlock()
+		return
+	}
+
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
-	for i, v := range r.containers {
-		if dbKey == r.containers[i].DbKey {
-			v.RuleSet = rules
-			r.containers[i] = v
-		}
+
+	if v, ok := r.containers[name]; ok {
+		v.RuleSet = rules
+
+		r.containers[name] = v
 	}
 }
 

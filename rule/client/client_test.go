@@ -5,7 +5,9 @@ import (
 	"flag"
 	"regexp"
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/assert"
 	kconf "glab.tagtic.cn/ad_gains/kitty/pkg/config"
 	"glab.tagtic.cn/ad_gains/kitty/rule/dto"
 	repository2 "glab.tagtic.cn/ad_gains/kitty/rule/repository"
@@ -33,6 +35,7 @@ func TestClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	client.Delete(context.Background(), repository2.OtherConfigPathPrefix+"/atty-testing")
 	client.Put(context.Background(), repository2.OtherConfigPathPrefix+"/kitty-testing", `
 style: basic
 rule:
@@ -91,6 +94,18 @@ rule:
 				return dynConf
 			}(),
 			func(t *testing.T, e *RuleEngine) {
+				go e.Watch(context.Background())
+
+				time.Sleep(time.Second)
+				client.Put(context.Background(), repository2.OtherConfigPathPrefix+"/atty-testing", `
+style: basic
+rule:
+  foo: atty
+`)
+				time.Sleep(time.Second)
+				conf, err := e.Of("atty-testing").Payload(&dto.Payload{})
+				assert.NoError(t, err)
+				assert.Equal(t, conf.Get("foo"), "atty")
 			},
 		},
 		{
