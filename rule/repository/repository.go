@@ -50,25 +50,19 @@ func NewRepository(client *clientv3.Client, logger log.Logger) (*repository, err
 	}
 
 	// 读取配置中心
-	activeContainers, err := repo.readCentralConfig()
-	if err != nil {
-		return nil, err
+	if err := repo.resetActiveContainers(context.Background()); err != nil {
+		return nil, errors.Wrap(err, "error reading all configs from etcd")
 	}
-
-	repo.resetActiveContainers(activeContainers)
 
 	return repo, nil
 }
 
 func (r *repository) updateRuleSetByDbKey(dbKey string, rules entity.Ruler) {
+	name := dbKeyToName(dbKey)
+
 	r.rwLock.Lock()
 	defer r.rwLock.Unlock()
-	for i, v := range r.containers {
-		if dbKey == r.containers[i].DbKey {
-			v.RuleSet = rules
-			r.containers[i] = v
-		}
-	}
+	r.containers[name] = Container{DbKey: dbKey, Name: name, RuleSet: rules}
 }
 
 func (r *repository) WatchConfigUpdate(ctx context.Context) error {
@@ -87,11 +81,9 @@ func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 				return cresp.Err()
 			}
 			for _, ev := range cresp.Events {
-				activeContainers, err := r.readCentralConfig()
-				if err != nil {
-					return err
+				if err := r.resetActiveContainers(ctx); err != nil {
+					return errors.Wrap(err, "error while refreshing all configs from etcd")
 				}
-				r.resetActiveContainers(activeContainers)
 				level.Info(r.logger).Log("msg", fmt.Sprintf("中心配置已更新 %+v", ev.Kv))
 			}
 			if r.updateChan != nil {
@@ -104,7 +96,7 @@ func (r *repository) WatchConfigUpdate(ctx context.Context) error {
 			for _, ev := range wresp.Events {
 				rules := entity.NewRules(bytes.NewReader(ev.Kv.Value), r.logger)
 				r.updateRuleSetByDbKey(string(ev.Kv.Key), rules)
-				level.Info(r.logger).Log("msg", fmt.Sprintf("配置已更新 %+v", ev.Kv))
+				level.Info(r.logger).Log("msg", fmt.Sprintf("普通配置已更新 %+v", ev.Kv))
 			}
 			if r.updateChan != nil {
 				r.updateChan <- struct{}{}
@@ -175,7 +167,7 @@ func collect(containers map[string]string, path string, tabs []string, p string)
 func (r *repository) GetRaw(ctx context.Context, name string) (value []byte, e error) {
 	c, ok := r.containers[name]
 	if !ok {
-		return nil, fmt.Errorf("unknown rule set %s", name)
+		return nil, nil
 	}
 	return r.getRawRuleSetFromDbKey(ctx, c.DbKey)
 }
@@ -193,11 +185,8 @@ func (r *repository) getRawRuleSetFromDbKey(ctx context.Context, dbKey string) (
 }
 
 func (r *repository) SetRaw(ctx context.Context, name string, value string) error {
-	c, ok := r.containers[name]
-	if !ok {
-		return fmt.Errorf("unknown rule set %s", name)
-	}
-	return r.setRawRuleSetFromDbKey(ctx, c.DbKey, value)
+	dbKey := nameToDBKey(name)
+	return r.setRawRuleSetFromDbKey(ctx, dbKey, value)
 }
 
 func (r *repository) setRawRuleSetFromDbKey(ctx context.Context, dbKey string, value string) error {
@@ -230,7 +219,7 @@ func (r *repository) ValidateRules(ruleName string, reader io.Reader) error {
 func (r *repository) IsNewest(ctx context.Context, key, value string) (bool, error) {
 	c, ok := r.containers[key]
 	if !ok {
-		return false, fmt.Errorf("unknown rule set %s", key)
+		return true, nil
 	}
 
 	v, err := r.client.Get(ctx, c.DbKey)
@@ -252,36 +241,56 @@ func (r *repository) GetCompiled(ruleName string) entity.Ruler {
 	return nil
 }
 
-func (r *repository) resetActiveContainers(activeContainers map[string]string) {
+func (r *repository) resetActiveContainers(ctx context.Context) error {
+	count := 0
+	newContainers := make(map[string]Container)
+	key := OtherConfigPathPrefix
+	end := clientv3.GetPrefixRangeEnd(OtherConfigPathPrefix)
 
-	// 更新容器
-	newContainers := make(map[string]Container, len(activeContainers)+1)
-	for k, v := range activeContainers {
-		newContainers[k] = Container{DbKey: v, Name: k, RuleSet: nil}
-	}
-	newContainers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: nil}
-
-	// 依次拉取规则
-	var count = 0
-	for k, v := range newContainers {
-		count++
-		value, err := r.getRawRuleSetFromDbKey(context.Background(), v.DbKey)
+	for {
+		resp, err := r.client.Get(ctx, key, clientv3.WithRange(end), clientv3.WithLimit(500))
 		if err != nil {
-			level.Warn(r.logger).Log("err", errors.Wrap(err, fmt.Sprintf(msg.ErrorInvalidConfig, v.Name)))
-			value = []byte("{}")
+			return errors.Wrapf(err, "path not found %s", OtherConfigPathPrefix)
 		}
-		v.RuleSet = entity.NewRules(bytes.NewReader(value), r.logger)
-		newContainers[k] = v
+		for _, ev := range resp.Kvs {
+			dbKey := string(ev.Key)
+			name := dbKeyToName(dbKey)
+			rule := entity.NewRules(bytes.NewReader(ev.Value), r.logger)
+			newContainers[name] = Container{DbKey: dbKey, Name: name, RuleSet: rule}
+			count++
+		}
+		if !resp.More {
+			break
+		}
+		// move to next key
+		key = string(append(resp.Kvs[len(resp.Kvs)-1].Key, 0))
 	}
+
+	newContainers["central-config"] = Container{DbKey: CentralConfigPath, Name: "central-config", RuleSet: nil}
 
 	r.rwLock.Lock()
 	r.containers = newContainers
 	r.rwLock.Unlock()
 	level.Info(r.logger).Log("msg", fmt.Sprintf("%d rules have been added", count))
+	return nil
 }
 
 func getMd5(orig []byte) string {
 	m := md5.New()
 	m.Write(orig)
 	return fmt.Sprintf("%x", m.Sum(nil))
+}
+
+func dbKeyToName(dbKey string) string {
+	if dbKey == CentralConfigPath {
+		return "central-config"
+	}
+	return strings.Replace(dbKey, OtherConfigPathPrefix+"/", "", 1)
+}
+
+func nameToDBKey(name string) string {
+	if name == "central-config" {
+		return CentralConfigPath
+	}
+	return OtherConfigPathPrefix + "/" + name
 }

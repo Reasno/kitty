@@ -195,7 +195,6 @@ func (r *repository) getRawRuleSetsFromPrefix(ctx context.Context) (value map[st
 		// move to next key
 		key = string(append(resp.Kvs[len(resp.Kvs)-1].Key, 0))
 	}
-
 }
 
 func (r *repository) GetCompiled(ruleName string) entity.Ruler {

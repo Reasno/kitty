@@ -192,9 +192,10 @@ rule:
 		t.Fatal(err)
 	}
 	conf, err := dynConf.Of("kitty2-testing").Payload(&dto.Payload{
-		Channel:     "walk",
-		Suuid:       "DoNews1a674f54-6889-4798-bddf-1cb5ca5c6164",
-		PackageName: "com.walk.qnjb",
+		UserId:      620963,
+		Channel:     "v10mogul",
+		Suuid:       "DoNews73c78bd1-c96f-4695-9df1-3bc78f9425cc",
+		PackageName: "com.skin.v10mogul",
 		DMP:         dto.Dmp{},
 		Context:     context.Background(),
 	})

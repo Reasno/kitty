@@ -86,7 +86,7 @@ func TestRepository_WatchConfigUpdate(t *testing.T) {
 			//assert.Equal(t, repo.containers[c.name].RuleSet.(*entity.AdvancedRuleCollection).items[0].then["foo"], c.dataFoo)
 			continue
 		}
-		assert.Equal(t, c.dataFoo, "n/a")
+		t.Fail()
 	}
 
 	// 等待watch准备就绪后再继续测试
@@ -119,7 +119,7 @@ func TestRepository_WatchConfigUpdate(t *testing.T) {
 			//assert.Equal(t, repo.containers[c.name].RuleSet[0].Then["foo"], c.dataFoo)
 			continue
 		}
-		assert.Equal(t, c.dataFoo, "n/a")
+		t.Fail()
 	}
 
 	client.Put(context.Background(), CentralConfigPath, configCentralManyLines)
@@ -147,9 +147,8 @@ func TestRepository_WatchConfigUpdate(t *testing.T) {
 			assert.Equal(t, repo.containers[c.name].Name, c.name)
 			continue
 		}
-		assert.Equal(t, c.dataFoo, "n/a")
+		t.Fail()
 	}
-
 	client.Put(context.Background(), OtherConfigPathPrefix+"/egg-testing", foobar)
 	<-repo.updateChan
 	cases = caseList{
@@ -170,8 +169,8 @@ func TestRepository_WatchConfigUpdate(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		assert.Equal(t, repo.containers[c.name].DbKey, c.dbKey)
-		assert.Equal(t, repo.containers[c.name].Name, c.name)
+		assert.Equal(t, c.dbKey, repo.containers[c.name].DbKey)
+		assert.Equal(t, c.name, repo.containers[c.name].Name)
 	}
 
 	client.Put(context.Background(), CentralConfigPath, configCentralFewLines)
@@ -200,7 +199,7 @@ func TestRepository_WatchConfigUpdate(t *testing.T) {
 			assert.Equal(t, repo.containers[c.name].Name, c.name)
 			continue
 		}
-		assert.Equal(t, c.dataFoo, "n/a")
+		t.Fail()
 	}
 }
 
@@ -239,7 +238,7 @@ func TestRepository_IsNewest(t *testing.T) {
 	for _, c := range cases {
 		cc := c
 		t.Run("", func(t *testing.T) {
-			ok, err := repo.IsNewest(context.Background(), OtherConfigPathPrefix+"/kitty-testing", getMd5([]byte(cc.data)))
+			ok, err := repo.IsNewest(context.Background(), "kitty-testing", getMd5([]byte(cc.data)))
 			if err != nil {
 				t.Fatal(err)
 			}
